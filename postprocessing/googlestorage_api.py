@@ -47,10 +47,12 @@ class GCSClient:
                 local_file_path = os.path.join(root, file)
                 print("   Uploading File: ", local_file_path)
                 file_time = datetime.fromtimestamp(os.path.getmtime(local_file_path),tz=timezone.utc)
+                print("   File Time: ", file_time, "\n   Most Recent Time: ", most_recent_creation_time)
                 if file_time > most_recent_creation_time:
                     relative_path = os.path.relpath(local_file_path, source_folder)
                     destination_blob_name = os.path.join(destination_folder_prefix, relative_path).replace("\\", "/")
                     self.upload_file(bucket_name, local_file_path, destination_blob_name)
+                    print("Done.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Google Cloud Storage operations")
