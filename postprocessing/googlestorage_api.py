@@ -32,15 +32,26 @@ class GCSClient:
                 self.upload_file(bucket_name, local_file_path, destination_blob_name)
         print(f"Uploaded folder {source_folder} to {bucket_name}/{destination_folder_prefix}")
 
-    def get_most_recent_file_creation_time(self, bucket_name):
-        print(f"Getting most recent file creation time in {bucket_name}...")
+    def get_most_recent_file_creation_time(self, bucket_name, prefix=None):
+        print(f"Getting most recent file creation time in {bucket_name}/{prefix}...")
         bucket = self.client.bucket(bucket_name)
-        blobs = bucket.list_blobs()
-        most_recent_blob = max(blobs, key=lambda blob: blob.time_created)
+        if prefix:
+            blobs = bucket.list_blobs(prefix=prefix)
+        else:
+            blobs = bucket.list_blobs()
+        
+        # Filter out folder blobs
+        file_blobs = [blob for blob in blobs if not blob.name.endswith('/')]
+        if not file_blobs:
+            print("No files found.")
+            return None
+        # print([blob.name for blob in file_blobs])
+        most_recent_blob = max(file_blobs, key=lambda blob: blob.time_created)
+        print(f"The most recent file is: {most_recent_blob.name}")
         return most_recent_blob.time_created
 
     def upload_new_files(self, bucket_name, source_folder, destination_folder_prefix=""):
-        most_recent_creation_time = self.get_most_recent_file_creation_time(bucket_name)
+        most_recent_creation_time = self.get_most_recent_file_creation_time(bucket_name, destination_folder_prefix)
         print(f"Uploaded new files from {source_folder} to {bucket_name}/{destination_folder_prefix}")
         for root, _, files in os.walk(source_folder):
             for file in files:
@@ -48,7 +59,7 @@ class GCSClient:
                 print("   Uploading File: ", local_file_path)
                 file_time = datetime.fromtimestamp(os.path.getmtime(local_file_path)).astimezone(timezone.utc)
                 print("   File Time: ", file_time, "\n   Most Recent Time: ", most_recent_creation_time)
-                if file_time > most_recent_creation_time:
+                if most_recent_creation_time==None or file_time > most_recent_creation_time:
                     relative_path = os.path.relpath(local_file_path, source_folder)
                     destination_blob_name = os.path.join(destination_folder_prefix, relative_path).replace("\\", "/")
                     self.upload_file(bucket_name, local_file_path, destination_blob_name)
@@ -88,7 +99,7 @@ if __name__ == "__main__":
         gcs_client.upload_folder(args.bucket_name, args.source_folder, args.destination_folder)
     elif args.operation == "get_most_recent_file_creation_time":
         print("Getting most recent file creation time...")
-        creation_time = gcs_client.get_most_recent_file_creation_time(args.bucket_name)
+        creation_time = gcs_client.get_most_recent_file_creation_time(args.bucket_name, args.destination_folder)
         print(f"The most recent file was created at: {creation_time}")
     elif args.operation == "upload_new_files":
         print("Uploading new files...")
