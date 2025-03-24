@@ -1,0 +1,16 @@
+#nano /etc/systemd/system/googlestorage.service
+
+[Unit]
+Description=Google Storage Upload Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 ~/autopotter/postprocessing/googlestorage_api.py upload_new_files --api_key_path ~/Downloads/autopot-cloud-6cb17ee04664.json --bucket_name autopot1-printdump --source_folder ~/timelapse --destination_folder auto_uploads
+Restart=always
+User=pi
+StandardOutput=append:~/printer_data/logs/googlestorage.log
+StandardError=append:~/printer_data/logs/googlestorage.log
+
+
+[Install]
+WantedBy=multi-user.target
