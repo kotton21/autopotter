@@ -1,7 +1,7 @@
 import os
 import argparse
 from google.cloud import storage
-from datetime import datetime
+from datetime import datetime, timezone
 
 class GCSClient:
     def __init__(self, api_key_path):
@@ -33,6 +33,7 @@ class GCSClient:
         print(f"Uploaded folder {source_folder} to {bucket_name}/{destination_folder_prefix}")
 
     def get_most_recent_file_creation_time(self, bucket_name):
+        print(f"Getting most recent file creation time in {bucket_name}...")
         bucket = self.client.bucket(bucket_name)
         blobs = bucket.list_blobs()
         most_recent_blob = max(blobs, key=lambda blob: blob.time_created)
@@ -40,14 +41,16 @@ class GCSClient:
 
     def upload_new_files(self, bucket_name, source_folder, destination_folder_prefix=""):
         most_recent_creation_time = self.get_most_recent_file_creation_time(bucket_name)
+        print(f"Uploaded new files from {source_folder} to {bucket_name}/{destination_folder_prefix}")
         for root, _, files in os.walk(source_folder):
             for file in files:
                 local_file_path = os.path.join(root, file)
-                if datetime.fromtimestamp(os.path.getmtime(local_file_path)) > most_recent_creation_time:
+                print("   Uploading File: ", local_file_path)
+                file_time = datetime.fromtimestamp(os.path.getmtime(local_file_path),tz=timezone.utc)
+                if file_time > most_recent_creation_time:
                     relative_path = os.path.relpath(local_file_path, source_folder)
                     destination_blob_name = os.path.join(destination_folder_prefix, relative_path).replace("\\", "/")
                     self.upload_file(bucket_name, local_file_path, destination_blob_name)
-        print(f"Uploaded new files from {source_folder} to {bucket_name}/{destination_folder_prefix}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Google Cloud Storage operations")
