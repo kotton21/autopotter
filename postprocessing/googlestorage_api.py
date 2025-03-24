@@ -46,7 +46,7 @@ class GCSClient:
             for file in files:
                 local_file_path = os.path.join(root, file)
                 print("   Uploading File: ", local_file_path)
-                file_time = datetime.fromtimestamp(os.path.getmtime(local_file_path),tz=timezone.utc)
+                file_time = datetime.fromtimestamp(os.path.getmtime(local_file_path)).astimezone(timezone.utc)
                 print("   File Time: ", file_time, "\n   Most Recent Time: ", most_recent_creation_time)
                 if file_time > most_recent_creation_time:
                     relative_path = os.path.relpath(local_file_path, source_folder)
