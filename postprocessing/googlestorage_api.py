@@ -8,13 +8,17 @@ class GCSClient:
         self.client = storage.Client.from_service_account_json(api_key_path)
 
     def list_files(self, bucket_name, prefix=None):
-        bucket = self.client.get_bucket(bucket_name)
-        blobs = bucket.list_blobs(prefix=prefix)
+        print(f"Listing files in {bucket_name}/{prefix}...")
+        bucket = self.client.bucket(bucket_name)
+        if prefix != None: 
+            blobs = bucket.list_blobs(prefix=prefix)
+        else: 
+            blobs = bucket.list_blobs()
         file_list = [blob.name for blob in blobs]
         return file_list
 
     def upload_file(self, bucket_name, source_file_path, destination_blob_name):
-        bucket = self.client.get_bucket(bucket_name)
+        bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_filename(source_file_path)
         print(f"Uploaded {source_file_path} to {bucket_name}/{destination_blob_name}")
@@ -29,7 +33,7 @@ class GCSClient:
         print(f"Uploaded folder {source_folder} to {bucket_name}/{destination_folder_prefix}")
 
     def get_most_recent_file_creation_time(self, bucket_name):
-        bucket = self.client.get_bucket(bucket_name)
+        bucket = self.client.bucket(bucket_name)
         blobs = bucket.list_blobs()
         most_recent_blob = max(blobs, key=lambda blob: blob.time_created)
         return most_recent_blob.time_created
@@ -53,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("--source_file", type=str, help="Path to the source file for upload_file operation")
     parser.add_argument("--destination_blob", type=str, help="Destination blob name for upload_file operation")
     parser.add_argument("--source_folder", type=str, help="Path to the source folder for upload_folder operation")
-    parser.add_argument("--destination_folder", type=str, help="Destination folder prefix for upload_folder operation")
+    parser.add_argument("--destination_folder", type=str, default=None, help="Destination folder prefix for upload_folder operation")
 
     args = parser.parse_args()
 
@@ -61,8 +65,10 @@ if __name__ == "__main__":
 
     if args.operation == "list":
         print("Listing files...")
+        # if not args.destination_folder:
+        #     parser.error("list_files operation requires --destination_folder")
         file_list = gcs_client.list_files(args.bucket_name, args.destination_folder)
-        print(f"Files in {args.bucket_name}/{args.folder_prefix}:")
+        print(f"Files in {args.bucket_name}/{args.destination_folder}:")
         for file in file_list:
             print(f"- {file}")
     elif args.operation == "upload_file":
