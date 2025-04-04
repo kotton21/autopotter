@@ -10,6 +10,7 @@ Restart=always
 #User=pi
 StandardOutput=append:~/printer_data/logs/googlestorage.log
 StandardError=append:~/printer_data/logs/googlestorage.log
+CPUQuota=50%  # Limit the service to 50% of the CPU
 
 
 #[Install]
