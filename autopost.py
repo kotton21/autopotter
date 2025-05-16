@@ -6,6 +6,8 @@ from datetime import datetime
 from autopotter_tools.gptassistant_api import GPTAssistant
 from autopotter_tools.instagram_api import InstagramVideoUploader
 from moviepy.video.io.VideoFileClip import VideoFileClip
+import re
+
 
 # Default config file path
 DEFAULT_CONFIG_PATH = os.path.expanduser("~/printer_data/config/autopost_config.json")
@@ -17,7 +19,7 @@ def load_or_create_config(config_path):
             "video_folder": os.path.expanduser("~/printer_data/timelapse"),
             "uploaded_videos": [],
             "log_file": os.path.expanduser("~/printer_data/logs/autopotter.log"),
-            "caption_prompt": "Write a new instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
+            "caption_prompt": "Write a new short instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
             "config_gpt_path": os.path.expanduser("~/printer_data/config/config_gpt.json"),
             "config_ig_path": os.path.expanduser("~/printer_data/config/config_fb.json"),
         }
@@ -79,6 +81,7 @@ def main():
     try:
         gpt_assistant = GPTAssistant(config_path=config["config_gpt_path"])
         caption = gpt_assistant.prompt(caption_prompt)
+        caption = re.sub(r"[\u201c\u201d]", "", caption)
         # caption = generate_caption(caption_prompt)
         log_message(log_file, f"Generated caption: {caption}")
     except Exception as e:
