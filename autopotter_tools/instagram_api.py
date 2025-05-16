@@ -24,7 +24,8 @@ class InstagramConfig:
                 "TOKEN_EXPIRATION": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
             self.save_config()
-            print("No config_fb.json file found....  Creating new one.")
+            print("No config file found....  Creating new one.")
+            print("self.config_path:", self.config_path)
             print("Please populate it and re-execute.")
             exit()
     

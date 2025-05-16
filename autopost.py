@@ -19,7 +19,7 @@ def load_or_create_config(config_path):
             "log_file": os.path.expanduser("~/printer_data/logs/autopotter.log"),
             "caption_prompt": "Write a new instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
             "config_gpt_path": os.path.expanduser("~/printer_data/config/config_gpt.json"),
-            "config_ig_path": os.path.expanduser("~/printer_data/config/config_ig.json"),
+            "config_ig_path": os.path.expanduser("~/printer_data/config/config_fb.json"),
         }
         os.makedirs(os.path.dirname(config_path), exist_ok=True)
         with open(config_path, "w") as f:
