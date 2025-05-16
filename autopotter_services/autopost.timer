@@ -2,8 +2,9 @@
 Description=Run Autopost Instagram Video Service every 24 hours
 
 [Timer]
-OnBootSec=5min
-OnUnitActiveSec=24h
+#OnBootSec=5min
+#OnUnitActiveSec=24h
+OnCalendar=Mon..Sun *-*-* 19:00:00
 Persistent=true
 
 [Install]
