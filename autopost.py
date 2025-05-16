@@ -3,20 +3,20 @@ import json
 import argparse
 import sys
 from datetime import datetime
-from autopotter_tools.gptassistant_api import generate_caption
-from autopotter_tools.instagram_api import upload_and_publish
+from autopotter_tools.gptassistant_api import GPTAssistant
+from autopotter_tools.instagram_api import InstagramVideoUploader
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 # Default config file path
-DEFAULT_CONFIG_PATH = os.path.expanduser("~/printerdata/config/autopost_config.json")
+DEFAULT_CONFIG_PATH = os.path.expanduser("~/printer_data/config/autopost_config.json")
 
 def load_or_create_config(config_path):
     """Load the config file or create a default one if it doesn't exist."""
     if not os.path.exists(config_path):
         default_config = {
-            "video_folder": os.path.expanduser("~/printerdata/videos"),
+            "video_folder": os.path.expanduser("~/printer_data/timelapse"),
             "uploaded_videos": [],
-            "log_file": os.path.expanduser("~/printerdata/logs/autopotter.log"),
+            "log_file": os.path.expanduser("~/printer_data/logs/autopotter.log"),
             "caption_prompt": "Write a new instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality."
         }
         os.makedirs(os.path.dirname(config_path), exist_ok=True)
@@ -75,7 +75,9 @@ def main():
 
     # Generate a caption using GPT
     try:
-        caption = generate_caption(caption_prompt)
+        gpt_assistant = GPTAssistant()
+        caption = gpt_assistant.prompt(caption_prompt)
+        # caption = generate_caption(caption_prompt)
         log_message(log_file, f"Generated caption: {caption}")
     except Exception as e:
         log_message(log_file, f"Error generating caption: {e}")
@@ -83,7 +85,9 @@ def main():
 
     # Upload the video to Instagram
     try:
-        upload_and_publish(video_path, caption)
+        ig_uploader = InstagramVideoUploader()
+        ig_uploader.upload_and_publish(video_path, caption)
+        # upload_and_publish(video_path, caption)
         log_message(log_file, f"Successfully uploaded video: {video_path}")
         # Save both the video filename and caption into the config
         uploaded_videos.append({"video": os.path.basename(video_path), "caption": caption})
