@@ -17,7 +17,9 @@ def load_or_create_config(config_path):
             "video_folder": os.path.expanduser("~/printer_data/timelapse"),
             "uploaded_videos": [],
             "log_file": os.path.expanduser("~/printer_data/logs/autopotter.log"),
-            "caption_prompt": "Write a new instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality."
+            "caption_prompt": "Write a new instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
+            "config_gpt_path": os.path.expanduser("~/printer_data/config/config_gpt.json"),
+            "config_ig_path": os.path.expanduser("~/printer_data/config/config_ig.json"),
         }
         os.makedirs(os.path.dirname(config_path), exist_ok=True)
         with open(config_path, "w") as f:
@@ -75,7 +77,7 @@ def main():
 
     # Generate a caption using GPT
     try:
-        gpt_assistant = GPTAssistant()
+        gpt_assistant = GPTAssistant(config_path=config["config_gpt_path"])
         caption = gpt_assistant.prompt(caption_prompt)
         # caption = generate_caption(caption_prompt)
         log_message(log_file, f"Generated caption: {caption}")
@@ -85,7 +87,7 @@ def main():
 
     # Upload the video to Instagram
     try:
-        ig_uploader = InstagramVideoUploader()
+        ig_uploader = InstagramVideoUploader(config_path=config["config_ig_path"])
         ig_uploader.upload_and_publish(video_path, caption)
         # upload_and_publish(video_path, caption)
         log_message(log_file, f"Successfully uploaded video: {video_path}")

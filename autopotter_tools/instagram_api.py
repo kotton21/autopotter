@@ -64,8 +64,8 @@ class InstagramConfig:
             print("Failed to obtain long-lived token:", response_data)
 
 class InstagramVideoUploader:
-    def __init__(self):
-        self.IGconfig = InstagramConfig()
+    def __init__(self, config_path="config_fb.json"):
+        self.IGconfig = InstagramConfig(config_path=config_path)
         if self.IGconfig.is_token_expired():
             self.IGconfig.refresh_access_token()
 
