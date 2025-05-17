@@ -82,7 +82,7 @@ def main():
     try:
         gpt_assistant = GPTAssistant(config_path=config["config_gpt_path"], log_file=log_file)
         caption = gpt_assistant.prompt(caption_prompt)
-        caption = "".join(caption)  # Join the list of strings into a single string
+        # caption = "".join(caption)  # Join the list of strings into a single string
         caption = re.sub(r"[\u201c\u201d]", "", caption)
         # caption = generate_caption(caption_prompt)
         log_message(log_file, f"Generated caption: {caption}")
