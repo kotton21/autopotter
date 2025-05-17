@@ -3,7 +3,7 @@ Description=Autopost Instagram Video Service
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 ~/autopotter/autopost.py --config ~/printer_data/config/autopost_config.json
+ExecStart=/usr/bin/python3 %h/autopotter/autopost.py --config %h/printer_data/config/autopost_config.json
 Restart=on-failure
-StandardOutput=append:~/printer_data/logs/autopotter.log
-StandardError=append:~/printer_data/logs/autopotter.log
+StandardOutput=append:%h/printer_data/logs/autopotter.log
+StandardError=append:%h/printer_data/logs/autopotter.log
