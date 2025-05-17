@@ -58,7 +58,7 @@ class InstagramConfig:
             self.config["ACCESS_TOKEN"] = response_data["access_token"]
             expiration_timestamp = int(time.time()) + response_data["expires_in"]
             self.config["TOKEN_EXPIRATION"] = datetime.fromtimestamp(expiration_timestamp).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"Expiration datetime: {self.config["TOKEN_EXPIRATION"]}")
+            print(f"Expiration datetime: {self.config['TOKEN_EXPIRATION']}")
             self.save_config()
             print("Config file updated successfully.")
         else:
