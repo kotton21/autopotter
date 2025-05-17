@@ -78,6 +78,7 @@ def main():
     log_message(log_file, f"Found new video to upload: {video_path}")
 
     # Generate a caption using GPT
+    log_message(log_file, f"Generate caption")
     try:
         gpt_assistant = GPTAssistant(config_path=config["config_gpt_path"])
         caption = gpt_assistant.prompt(caption_prompt)
@@ -89,6 +90,7 @@ def main():
         sys.exit(2)  # Exit with error code 2 for caption generation failure
 
     # Upload the video to Instagram
+    log_message(log_file, f"Upload Video")
     try:
         ig_uploader = InstagramVideoUploader(config_path=config["config_ig_path"])
         ig_uploader.upload_and_publish(video_path, caption)
