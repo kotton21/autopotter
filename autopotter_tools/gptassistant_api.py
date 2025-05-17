@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 class GPTAssistant:
-    def __init__(self, config_path="config_gpt.json", log_file="gptassistant.log"):
+    def __init__(self, config_path="config_gpt.json", log_file=None):
         self.log_file = log_file
         self.log_message("Initializing GPTAssistant...")
         
@@ -55,9 +55,14 @@ class GPTAssistant:
     def log_message(self, message):
         """Log a message to the log file with a timestamp."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with open(self.log_file, "a") as f:
-            f.write(f"[{timestamp}] GPTAssistant: {message}\n")
+        msg = f"[{timestamp}] InstagramUploader: {message}\n"
+        if self.log_file is None:
+            print(msg)
+        else:
+            with open(self.log_file, "a") as f:
+                f.write(msg)
 
+        
 if __name__ == "__main__":
     assistant = GPTAssistant()
     user_input = input("Enter your message: ")
