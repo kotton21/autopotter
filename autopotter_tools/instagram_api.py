@@ -58,14 +58,15 @@ class InstagramConfig:
             self.config["ACCESS_TOKEN"] = response_data["access_token"]
             expiration_timestamp = int(time.time()) + response_data["expires_in"]
             self.config["TOKEN_EXPIRATION"] = datetime.fromtimestamp(expiration_timestamp).strftime("%Y-%m-%d %H:%M:%S")
-            print("Expiration datetime:", self.config["TOKEN_EXPIRATION"])
+            print(f"Expiration datetime: {self.config["TOKEN_EXPIRATION"]}")
             self.save_config()
             print("Config file updated successfully.")
         else:
             print("Failed to obtain long-lived token:", response_data)
 
 class InstagramVideoUploader:
-    def __init__(self, config_path="config_fb.json"):
+    def __init__(self, config_path="config_fb.json", log_file=None):
+        self.log_file = log_file
         self.IGconfig = InstagramConfig(config_path=config_path)
         if self.IGconfig.is_token_expired():
             self.IGconfig.refresh_access_token()
@@ -106,19 +107,30 @@ class InstagramVideoUploader:
         return response.json()
 
     def upload_and_publish(self, video_path, caption):
-        print("Creating media container...")
+        self.log_message("Creating media container...")
         creation_id, _ = self.create_media_container(caption)
-        print(f"Media container created: {creation_id}")
+        self.log_message(f"Media container created: {creation_id}")
         
-        print("Uploading video...")
+        self.log_message("Uploading video...")
         upload_result = self.upload_video(creation_id, video_path)
-        print("Upload result:", upload_result)
+        self.log_message(f"Upload result: {upload_result}")
         
-        print("Publishing video...")
+        self.log_message("Publishing video...")
         publish_result = self.publish_video(creation_id)
-        print("Publish result:", publish_result)
+        self.log_message(f"Publish result: {publish_result}")
         
-        print("Video uploaded successfully!")
+        self.log_message("Video uploaded successfully!")
+
+    
+    def log_message(self, message):
+        """Log a message to the log file with a timestamp."""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        msg = f"[{timestamp}] InstagramUploader: {message}\n"
+        if self.log_file is None:
+            print(msg)
+        else:
+            with open(self.log_file, "a") as f:
+                f.write(msg)
 
 if __name__ == "__main__":
     #  Generate a new access token here:

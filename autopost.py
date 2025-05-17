@@ -34,7 +34,7 @@ def log_message(log_file, message):
     """Log a message to the log file with a timestamp."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a") as f:
-        f.write(f"[{timestamp}] {message}\n")
+        f.write(f"[{timestamp}] Autopost: {message}\n")
 
 def find_new_video(video_folder, uploaded_videos, log_file=None):
     """Find the most recent video file that hasn't been uploaded yet and is at least 2 seconds long."""
@@ -80,7 +80,7 @@ def main():
     # Generate a caption using GPT
     log_message(log_file, f"Generate caption")
     try:
-        gpt_assistant = GPTAssistant(config_path=config["config_gpt_path"])
+        gpt_assistant = GPTAssistant(config_path=config["config_gpt_path"], log_file=log_file)
         caption = gpt_assistant.prompt(caption_prompt)
         caption = re.sub(r"[\u201c\u201d]", "", caption)
         # caption = generate_caption(caption_prompt)
@@ -92,7 +92,7 @@ def main():
     # Upload the video to Instagram
     log_message(log_file, f"Upload Video")
     try:
-        ig_uploader = InstagramVideoUploader(config_path=config["config_ig_path"])
+        ig_uploader = InstagramVideoUploader(config_path=config["config_ig_path"], log_file=log_file)
         ig_uploader.upload_and_publish(video_path, caption)
         # upload_and_publish(video_path, caption)
         log_message(log_file, f"Successfully uploaded video: {video_path}")
