@@ -44,9 +44,6 @@ class GPTAssistant:
             
             # Step 4: Extract only assistant responses
             responses = [msg.content[0].text.value for msg in messages if msg.role == "assistant"]
-            # for response in responses:
-            #     print(response)
-            # self.log_message("Retrieved responses from GPT successfully.")
             if responses:
                 self.log_message(f"Most recent response: {responses[0]}")
                 return responses[0]  # Return the most recent response
