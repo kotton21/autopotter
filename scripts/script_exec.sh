@@ -14,14 +14,14 @@ fi
 script_to_execute="$1"
 shift # Remove the script name from the arguments list
 
-# Check if the script to execute exists and is executable
-if [ ! -x "$script_to_execute" ]; then
-  echo "Error: Script '$script_to_execute' not found or not executable."
+# Check if the script to execute exists
+if [ ! -f "$script_to_execute" ]; then
+  echo "Error: Script '$script_to_execute' not found."
   exit 1
 fi
 
-# Execute the script with the remaining parameters
-"./$script_to_execute" "$@"
+# Execute the script with bash, even if it's not marked as executable
+bash "./$script_to_execute" "$@"
 
 # Check the exit status of the executed script (optional)
 exit_status=$?
