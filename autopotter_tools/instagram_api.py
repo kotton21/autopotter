@@ -71,7 +71,44 @@ class InstagramVideoUploader:
         if self.IGconfig.is_token_expired():
             self.IGconfig.refresh_access_token()
 
-    def create_media_container(self, caption="Test Caption"):
+    def search_music(self, query):
+        """Search for music tracks based on a query (e.g., genre or playlist)."""
+        url = "https://graph.facebook.com/v22.0/search"
+        params = {
+            "type": "music",
+            "q": query,
+            "access_token": self.IGconfig.config["ACCESS_TOKEN"]
+        }
+        response = requests.get(url, params=params)
+        response_data = response.json()
+
+        if "data" in response_data:
+            self.log_message(f"Music search results: {response_data['data']}")
+            return response_data["data"]
+        else:
+            self.log_message(f"Failed to search for music: {response_data}")
+            return []
+        
+
+    def recommend_music(self):
+        """Get music recommendations from the Facebook API."""
+        url = "https://graph.facebook.com/v22.0/audio/recommendations"
+        params = {
+            "type": "FACEBOOK_FOR_YOU", #"FACEBOOK_NEW_MUSIC",#"FACEBOOK_POPULAR_MUSIC",
+            "access_token": self.IGconfig.config["ACCESS_TOKEN"]
+        }
+        response = requests.get(url, params=params)
+        response_data = response.json()
+
+        if "data" in response_data:
+            self.log_message(f"Music recommendations: {response_data['data']}")
+            return response_data["data"]
+        else:
+            self.log_message(f"Failed to get music recommendations: {response_data}")
+            return []
+    
+
+    def create_media_container(self, caption="Test Caption", audio_id=None):
         url = f"https://graph.facebook.com/v22.0/{self.IGconfig.config['USER_ID']}/media"
         payload = {
             "media_type": "REELS",
@@ -79,9 +116,19 @@ class InstagramVideoUploader:
             "caption": caption,
             "access_token": self.IGconfig.config["ACCESS_TOKEN"]
         }
+        if audio_id:
+            payload["audio_id"] = audio_id  # Add the audio_id if provided
+
         response = requests.post(url, data=payload)
         response_data = response.json()
+
+        if "id" in response_data and "uri" in response_data:
+            self.log_message(f"Media container created successfully with audio. ID: {response_data['id']}")
+        else:
+            self.log_message(f"Failed to create media container: {response_data}")
+
         return response_data.get("id"), response_data.get("uri")
+
 
     def upload_video(self, creation_id, video_path):
         file_size = os.path.getsize(video_path)
@@ -133,11 +180,15 @@ class InstagramVideoUploader:
                 f.write(msg)
 
 if __name__ == "__main__":
-    #  Generate a new access token here:
-    #  https://developers.facebook.com/tools/explorer
+    # Generate a new access token here:
+    # https://developers.facebook.com/tools/explorer
 
     description = (
-        "Upload and publish a video to Instagram.\n"
+        "Instagram Video Uploader Tool.\n"
+        "Actions:\n"
+        "  upload_and_publish: Upload and publish a video to Instagram.\n"
+        "  search_music: Search for music tracks based on a query.\n"
+        "  rec_music: Get music recommendations from the Facebook API.\n"
         "Generate a new access token here:\n"
         "https://developers.facebook.com/tools/explorer"
     )
@@ -145,13 +196,49 @@ if __name__ == "__main__":
         description=description,
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("video_path", type=str, help="Path to the video file")
-    parser.add_argument("caption", type=str, help="Caption for the video")
-    
-    parser.print_help()
+    parser.add_argument(
+        "action",
+        type=str,
+        choices=["upload_and_publish", "search_music", "rec_music"],
+        help="Action to perform: 'upload_and_publish', 'search_music', or 'rec_music'"
+    )
+    parser.add_argument(
+        "--video_path",
+        type=str,
+        help="Path to the video file (required for upload_and_publish)"
+    )
+    parser.add_argument(
+        "--caption",
+        type=str,
+        help="Caption for the video (required for upload_and_publish)"
+    )
+    parser.add_argument(
+        "--query",
+        type=str,
+        help="Text to search for music (required for search_music)"
+    )
+
     args = parser.parse_args()
-    
+
     uploader = InstagramVideoUploader()
-    uploader.upload_and_publish(args.video_path, args.caption)
 
+    if args.action == "upload_and_publish":
+        if not args.video_path or not args.caption:
+            print("Error: --video_path and --caption are required for upload_and_publish.")
+            exit(1)
+        uploader.upload_and_publish(args.video_path, args.caption)
 
+    elif args.action == "search_music":
+        if not args.query:
+            print("Error: --query is required for search_music.")
+            exit(1)
+        results = uploader.search_music(args.query)
+        print("Music Search Results:")
+        for track in results:
+            print(f"ID: {track['id']}, Title: {track['title']}, Artist: {track['artist']}")
+
+    elif args.action == "rec_music":
+        results = uploader.recommend_music()
+        print("Music Recommendations:")
+        for track in results:
+            print(f"ID: {track['id']}, Title: {track['title']}, Artist: {track['artist']}")
