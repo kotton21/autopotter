@@ -3,7 +3,7 @@ Description=Autopost Instagram Video Service
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/bayer3d/autopotter/autopost.py --config /home/bayer3d/printer_data/config/autopost_config.json
+ExecStart=/home/bayer3d/autopotter/my-venv/bin/python3 /home/bayer3d/autopotter/autopost.py --config /home/bayer3d/printer_data/config/autopost_config.json
 Restart=on-failure
 StandardOutput=append:/home/bayer3d/printer_data/logs/autopotter.log
 StandardError=append:/home/bayer3d/printer_data/logs/autopotter.log
