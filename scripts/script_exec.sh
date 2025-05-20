@@ -5,6 +5,11 @@
 # Change to the autopotter/scripts directory
 cd "$(dirname "$0")" || { echo "Error: Failed to change directory to autopotter/scripts."; exit 1; }
 
+# Confirm the current directory
+current_dir=$(pwd)
+echo "Running from directory: $current_dir"
+
+
 # Check if at least one argument is provided (the script to execute)
 if [ -z "$1" ]; then
   echo "Usage: $0 <script_to_execute> [parameters...]"
