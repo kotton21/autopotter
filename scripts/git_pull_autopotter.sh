@@ -11,3 +11,5 @@ git pull origin main || { echo "Failed to pull updates from the repository!"; ex
 
 
 echo "Updates pulled successfully!"
+
+
