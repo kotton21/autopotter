@@ -1,0 +1,9 @@
+[Unit]
+Description=Autopost Instagram Video Service
+After=network.target
+
+[Service]
+ExecStart=gcloud storage rsync --dry-run --recursive /home/bayer3d/printer_data/timelapse gs://autopot1-printdump/video_uploads
+Restart=on-failure
+StandardOutput=append:/home/bayer3d/printer_data/logs/gcloud_rsync.log
+StandardError=append:/home/bayer3d/printer_data/logs/gcloud_rsync.log

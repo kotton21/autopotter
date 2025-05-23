@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Gcloud Rsync Uploader Service every 24 hours
+
+[Timer]
+#OnBootSec=5min
+#OnUnitActiveSec=4h
+#OnActiveSec=1m
+OnCalendar=Mon..Sun *-*-* 05:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
