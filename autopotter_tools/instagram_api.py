@@ -301,6 +301,12 @@ if __name__ == "__main__":
         default="config_fb.json",
         help="Path to the configuration file (default: config_fb.json)"
     )
+    parser.add_argument(
+        "--log_file",
+        type=str,
+        default=None,
+        help="Path to the log file (default: None)"
+    )
 
 
     args = parser.parse_args()
@@ -348,7 +354,7 @@ if __name__ == "__main__":
         if not args.config_path:
             print("Error: --config_path is required for upload_and_publish.")
             exit(1)
-        config = InstagramConfig(config_path=args.config_path)
+        config = InstagramConfig(config_path=args.config_path, log_file=args.log_file)
 
         print("Checking if the access token is expired...")
         try:
