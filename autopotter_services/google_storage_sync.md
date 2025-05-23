@@ -34,3 +34,6 @@ sudo systemctl start gcloud_rsync.timer
 
 # Enable the timer to start on boot
 sudo systemctl enable gcloud_rsync.timer
+
+# List timers
+systemctl list-timers --all
