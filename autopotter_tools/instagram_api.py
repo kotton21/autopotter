@@ -5,12 +5,18 @@ import argparse
 import time
 from datetime import datetime
 
+import json
+import requests
+from datetime import datetime, timedelta
+
 class InstagramConfig:
+
+    DAYS_LEFT_TO_REFRESH = 7  # Number of days before expiration to consider the token as expired
+
     def __init__(self, config_path="config_fb.json", log_file=None):
         self.log_file = log_file
         self.config_path = config_path
         self.config = self.load_config()
-        self.log_message("InstagramConfig initialized successfully.")
 
     def load_config(self):
         try:
@@ -22,8 +28,8 @@ class InstagramConfig:
         except (FileNotFoundError, json.JSONDecodeError):
             self.log_message("No valid config file found. Creating a new one...")
             self.config = {
-                "APP_ID": "your app_id",
-                "APP_SECRET": "your app_secret",
+                "APP_ID": "your_app_id",
+                "APP_SECRET": "your_app_secret",
                 "USER_ID": "your_user_id",
                 "ACCESS_TOKEN": "your_new_long_lived_token",
                 "TOKEN_EXPIRATION": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -38,21 +44,66 @@ class InstagramConfig:
             json.dump(self.config, f, indent=4)
         self.log_message("Configuration saved successfully.")
 
-    def is_token_expired(self):
-        if not self.config["TOKEN_EXPIRATION"]:
-            self.log_message("Token expiration date is missing. Assuming token is expired.")
-            return True
-        expiration_date = datetime.strptime(self.config["TOKEN_EXPIRATION"], "%Y-%m-%d %H:%M:%S")
-        days_left = (expiration_date - datetime.now()).days
-        self.log_message(f"Token expires in {days_left} days.")
-        return days_left <= 2
+    # def compute_access_token(self):
+    #     """Compute the ACCESS_TOKEN dynamically using APP_ID and APP_SECRET."""
+    #     if not self.config.get("APP_ID") or not self.config.get("APP_SECRET"):
+    #         raise Exception("APP_ID or APP_SECRET is missing in the configuration.")
+        
+    #     access_token = f"{self.config.get("APP_ID")}|{self.config.get("APP_SECRET")}"
+    #     return access_token
 
-    def refresh_access_token(self):
-        self.log_message("Refreshing access token...")
-        self.get_long_lived_token()
+    def get_token_expiration(self):
+        """Poll the Facebook API to get the token expiration date."""
+        #self.log_message("Checking token expiration using the debug_token endpoint...")
+        url = "https://graph.facebook.com/debug_token"
+        params = {
+            "input_token": self.config["ACCESS_TOKEN"],
+            # "access_token": self.compute_access_token()  # Use app_id|app_secret for validation
+            "access_token": self.config.get("APP_ID") + "|" + self.config.get("APP_SECRET")
+        }
+        response = requests.get(url, params=params)
+        response_data = response.json()
+
+        if "data" in response_data and "expires_at" in response_data["data"]:
+            expiration_timestamp = response_data["data"]["expires_at"]
+            expiration_date = datetime.fromtimestamp(expiration_timestamp)
+            # self.log_message(f"Token expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
+            
+            # Check if the expiration date is different from the one saved in the config
+            current_expiration = self.config.get("TOKEN_EXPIRATION")
+            new_expiration = expiration_date.strftime("%Y-%m-%d %H:%M:%S")
+            if current_expiration != new_expiration:
+                self.log_message(f"Updating token expiration date from {current_expiration} to {new_expiration}.")
+                self.config["TOKEN_EXPIRATION"] = new_expiration
+                self.save_config()
+            
+            return expiration_date
+        else:
+            # self.log_message(f"Failed to retrieve token expiration: {response_data}")
+            raise Exception("Unable to retrieve token expiration from the Facebook API.")
+
+    def is_token_expired(self):
+        """Check if the token is expired or expiring soon."""
+        try:
+            expiration_date = self.get_token_expiration()
+            days_left = (expiration_date - datetime.now()).days
+            self.log_message(f"Token expires in {days_left} days.")
+            return days_left <= InstagramConfig.DAYS_LEFT_TO_REFRESH
+        except Exception as e:
+            self.log_message(f"Error checking token expiration: {e}")
+            return True  # Assume the token is expired if there's an error
+
+    def check_refresh_access_token(self):
+        """Refresh the access token if it is expired or expiring soon."""
+        if self.is_token_expired():
+            self.log_message("Token is expired or expiring soon. Refreshing access token...")
+            self.get_long_lived_token()
+        else:
+            self.log_message("Token is valid and not expiring soon. No refresh needed.")
 
     def get_long_lived_token(self):
-        self.log_message("Requesting a long-lived access token...")
+        """Request a new long-lived access token."""
+        #self.log_message("Requesting a long-lived access token...")
         url = f"https://graph.facebook.com/v22.0/oauth/access_token"
         params = {
             "grant_type": "fb_exchange_token",
@@ -65,13 +116,14 @@ class InstagramConfig:
 
         if "access_token" in response_data and "expires_in" in response_data:
             self.config["ACCESS_TOKEN"] = response_data["access_token"]
-            expiration_timestamp = int(time.time()) + response_data["expires_in"]
-            self.config["TOKEN_EXPIRATION"] = datetime.fromtimestamp(expiration_timestamp).strftime("%Y-%m-%d %H:%M:%S")
-            self.log_message(f"New access token obtained. Token expires on {self.config['TOKEN_EXPIRATION']}.")
+            expiration_timestamp = int(datetime.now().timestamp()) + response_data["expires_in"]
+            expiration_date = datetime.fromtimestamp(expiration_timestamp)
+            self.config["TOKEN_EXPIRATION"] = expiration_date.strftime("%Y-%m-%d %H:%M:%S")
+            self.log_message(f"New access token obtained. Token expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
             self.save_config()
-            self.log_message("Config file updated successfully with the new token.")
         else:
             self.log_message(f"Failed to obtain long-lived token: {response_data}")
+            raise Exception("Unable to refresh access token.")
 
     def log_message(self, message):
         """Log a message to the log file with a timestamp."""
@@ -82,15 +134,14 @@ class InstagramConfig:
         else:
             with open(self.log_file, "a") as f:
                 f.write(msg)
-
-
+                
 
 class InstagramVideoUploader:
     def __init__(self, config_path="config_fb.json", log_file=None):
         self.log_file = log_file
         self.IGconfig = InstagramConfig(config_path=config_path, log_file=log_file)
-        if self.IGconfig.is_token_expired():
-            self.IGconfig.refresh_access_token()
+        #if self.IGconfig.is_token_expired():
+        self.IGconfig.check_refresh_access_token()
 
     def search_music(self, query):
         """Search for music tracks based on a query (e.g., genre or playlist)."""
@@ -226,7 +277,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "action",
         type=str,
-        choices=["upload_and_publish", "search_music", "rec_music"],
+        choices=["upload_and_publish", "search_music", "rec_music", "test_config"],
         help="Action to perform: 'upload_and_publish', 'search_music', or 'rec_music'"
     )
     parser.add_argument(
@@ -244,12 +295,24 @@ if __name__ == "__main__":
         type=str,
         help="Text to search for music (required for search_music)"
     )
+    parser.add_argument(
+        "--config_path",
+        type=str,
+        default="config_fb.json",
+        help="Path to the configuration file (default: config_fb.json)"
+    )
+
 
     args = parser.parse_args()
 
-    uploader = InstagramVideoUploader()
+    
 
     if args.action == "upload_and_publish":
+        if not args.config_path:
+            print("Error: --config_path is required for upload_and_publish.")
+            exit(1)
+        uploader = InstagramVideoUploader(config_path=args.config_path)
+
         if not args.video_path or not args.caption:
             print("Error: --video_path and --caption are required for upload_and_publish.")
             exit(1)
@@ -259,13 +322,39 @@ if __name__ == "__main__":
         if not args.query:
             print("Error: --query is required for search_music.")
             exit(1)
+        if not args.config_path:
+            print("Error: --config_path is required for upload_and_publish.")
+            exit(1)
+        uploader = InstagramVideoUploader(config_path=args.config_path)
+
         results = uploader.search_music(args.query)
         print("Music Search Results:")
         for track in results:
             print(f"ID: {track['id']}, Title: {track['title']}, Artist: {track['artist']}")
 
     elif args.action == "rec_music":
+        if not args.config_path:
+            print("Error: --config_path is required for rec_music.")
+            exit(1)
+        uploader = InstagramVideoUploader(config_path=args.config_path)
+
         results = uploader.recommend_music()
         print("Music Recommendations:")
         for track in results:
             print(f"ID: {track['id']}, Title: {track['title']}, Artist: {track['artist']}")
+    
+    elif args.action == "test_config":
+        print("Initializing InstagramConfig...")
+        if not args.config_path:
+            print("Error: --config_path is required for upload_and_publish.")
+            exit(1)
+        config = InstagramConfig(config_path=args.config_path)
+
+        print("Checking if the access token is expired...")
+        try:
+            config.check_refresh_access_token()
+            print("Access token checked.")
+        except Exception as e:
+            print(f"Failed to check access token: {e}")
+        else:
+            print("Access token is valid.")
