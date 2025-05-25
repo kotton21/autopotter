@@ -64,8 +64,9 @@ class InstagramConfig:
         response = requests.get(url, params=params)
         response_data = response.json()
 
-        if "data" in response_data and "expires_at" in response_data["data"]:
-            expiration_timestamp = response_data["data"]["expires_at"]
+        if "data" in response_data and "data_access_expires_at" in response_data["data"]:
+            print(response_data)
+            expiration_timestamp = response_data["data"]["data_access_expires_at"]
             expiration_date = datetime.fromtimestamp(expiration_timestamp)
             # self.log_message(f"Token expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
             
@@ -114,12 +115,13 @@ class InstagramConfig:
         response = requests.get(url, params=params)
         response_data = response.json()
 
-        if "access_token" in response_data and "expires_in" in response_data:
+        if "access_token" in response_data:# and "expires_in" in response_data::
             self.config["ACCESS_TOKEN"] = response_data["access_token"]
-            expiration_timestamp = int(datetime.now().timestamp()) + response_data["expires_in"]
-            expiration_date = datetime.fromtimestamp(expiration_timestamp)
-            self.config["TOKEN_EXPIRATION"] = expiration_date.strftime("%Y-%m-%d %H:%M:%S")
-            self.log_message(f"New access token obtained. Token expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
+            # expiration_timestamp = int(datetime.now().timestamp()) + response_data["expires_in"]
+            #expiration_date = datetime.fromtimestamp(expiration_timestamp)
+            #self.config["TOKEN_EXPIRATION"] = expiration_date.strftime("%Y-%m-%d %H:%M:%S")
+            self.config["TOKEN_EXPIRATION"] = None
+            self.log_message(f"New access token obtained. ")#Token expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
             self.save_config()
         else:
             self.log_message(f"Failed to obtain long-lived token: {response_data}")
@@ -350,17 +352,17 @@ if __name__ == "__main__":
             print(f"ID: {track['id']}, Title: {track['title']}, Artist: {track['artist']}")
     
     elif args.action == "test_config":
-        print("Initializing InstagramConfig...")
+        print("main: running test_config")
         if not args.config_path:
             print("Error: --config_path is required for upload_and_publish.")
             exit(1)
         config = InstagramConfig(config_path=args.config_path, log_file=args.log_file)
 
-        print("Checking if the access token is expired...")
+        print("main: Checking if the access token is expired...")
         try:
             config.check_refresh_access_token()
             print("Access token checked.")
         except Exception as e:
-            print(f"Failed to check access token: {e}")
+            print(f"main: Failed to check access token: {e}")
         else:
-            print("Access token is valid.")
+            print("main: Access token is valid.")
