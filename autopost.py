@@ -10,7 +10,7 @@ import re
 
 
 # Default config file path
-DEFAULT_CONFIG_PATH = os.path.expanduser("~/printer_data/config/autopost_config.json")
+DEFAULT_CONFIG_PATH = os.path.expanduser("./autopost_config.json")
 
 def load_or_create_config(config_path):
     """Load the config file or create a default one if it doesn't exist."""
@@ -26,15 +26,21 @@ def load_or_create_config(config_path):
         os.makedirs(os.path.dirname(config_path), exist_ok=True)
         with open(config_path, "w") as f:
             json.dump(default_config, f, indent=4)
-        return default_config
+        #return default_config
+        print(f"Config file created at {config_path}. Please edit it to set your preferences.")
+        exit(1)
     with open(config_path, "r") as f:
         return json.load(f)
 
 def log_message(log_file, message):
     """Log a message to the log file with a timestamp."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(log_file, "a") as f:
-        f.write(f"[{timestamp}] Autopost: {message}\n")
+    msg = f"[{timestamp}] Autopost: {message}\n"
+    if log_file is None:
+        print(msg)
+    else:
+        with open(log_file, "a") as f:
+            f.write(msg)
 
 def find_new_video(video_folder, uploaded_videos, log_file=None):
     """Find the most recent video file that hasn't been uploaded yet and is at least 2 seconds long."""
