@@ -368,7 +368,7 @@ if __name__ == "__main__":
         print("main: Checking if the access token is expired...")
         try:
             config.check_refresh_access_token()
-            print("Access token checked.")
+            print("main: Access token checked.")
         except Exception as e:
             print(f"main: Failed to check access token: {e}")
         else:
