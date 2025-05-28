@@ -64,11 +64,18 @@ class InstagramConfig:
         response = requests.get(url, params=params)
         response_data = response.json()
 
-        if "data" in response_data and "data_access_expires_at" in response_data["data"]:
-            print(response_data)
-            expiration_timestamp = response_data["data"]["data_access_expires_at"]
+        if "data" in response_data and (
+            "expires_at" in response_data["data"] #or
+            # "data_access_expires_at" in response_data["data"] #data_access_expires_at
+        ):
+            if "expires_at" in response_data["data"]:
+                exp = response_data["data"]["expires_at"]
+            # else:
+            #     exp = response_data["data"]["data_access_expires_at"]
+            
+            expiration_timestamp = exp #response_data["data"]["data_access_expires_at"]
             expiration_date = datetime.fromtimestamp(expiration_timestamp)
-            # self.log_message(f"Token expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
+            self.log_message(f"Debug_Token -> expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
             
             # Check if the expiration date is different from the one saved in the config
             current_expiration = self.config.get("TOKEN_EXPIRATION")
