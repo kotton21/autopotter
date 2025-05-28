@@ -66,13 +66,17 @@ class InstagramConfig:
 
         if "data" in response_data and (
             "expires_at" in response_data["data"] #or
-            # "data_access_expires_at" in response_data["data"] #data_access_expires_at
+            #"data_access_expires_at" in response_data["data"] #data_access_expires_at
         ):
-            if "expires_at" in response_data["data"]:
-                exp = response_data["data"]["expires_at"]
-            # else:
-            #     exp = response_data["data"]["data_access_expires_at"]
-            
+            exp = response_data["data"]["expires_at"]
+            if exp==0:
+                self.log_message(f"expires_at found in response: {exp}")
+                if "data_access_expires_at" in response_data["data"]:
+                    exp = response_data["data"]["data_access_expires_at"]
+                else:
+                    self.log_message("No valid expiration date found in the response.")
+                    raise Exception("No valid expiration date found in the response.")
+            print(response_data)
             expiration_timestamp = exp #response_data["data"]["data_access_expires_at"]
             expiration_date = datetime.fromtimestamp(expiration_timestamp)
             self.log_message(f"Debug_Token -> expires on {expiration_date.strftime('%Y-%m-%d %H:%M:%S')}.")
