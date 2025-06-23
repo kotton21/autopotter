@@ -7,6 +7,7 @@ from autopotter_tools.gptassistant_api import GPTAssistant
 from autopotter_tools.instagram_api import InstagramVideoUploader
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import re
+import random
 
 
 # Default config file path
@@ -19,7 +20,14 @@ def load_or_create_config(config_path):
             "video_folder": os.path.expanduser("~/printer_data/timelapse"),
             "uploaded_videos": [],
             "log_file": os.path.expanduser("~/printer_data/logs/autopotter.log"),
-            "caption_prompt": "Write a new short instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
+            #"caption_prompt": "Write a new short instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
+            "caption_prompt_list": [
+                "Write a new short instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
+                "You're about to upload a new video. Give a short caption that describes what you were thinking about when you created it. You were thinking about some aspect of your backstory.",
+                "You're about to upload a new video. Give a short caption that comments on the current lack of civil right for robots",
+                "You're about to upload a new video. Give a short caption that comments on human gender constructs from the perspective of a robot.",
+                "You're about to upload a video of a new print which you think is absolutely stunning. Give a short caption that describes how you felt printing it.",
+            ],
             "config_gpt_path": os.path.expanduser("~/printer_data/config/config_gpt.json"),
             "config_ig_path": os.path.expanduser("~/printer_data/config/config_fb.json"),
         }
@@ -70,7 +78,7 @@ def main():
     video_folder = config["video_folder"]
     uploaded_videos = config["uploaded_videos"]
     log_file = config["log_file"]
-    caption_prompt = config["caption_prompt"]
+    caption_prompt = config["caption_prompt_list"][random.randint(0, len(config["caption_prompt_list"]) - 1)]
 
     log_message(log_file, "Starting autopost script.")
 

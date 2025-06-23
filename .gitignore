@@ -1,2 +1,4 @@
 */config_fb*
 */config_gpt*
+autopost_config.json
+autopotter_tools/__pycache__/*
