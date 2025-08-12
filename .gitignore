@@ -2,3 +2,4 @@
 */config_gpt*
 autopost_config.json
 autopotter_tools/__pycache__/*
+*.mp4
