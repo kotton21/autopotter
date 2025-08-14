@@ -1,5 +1,13 @@
-*/config_fb*
-*/config_gpt*
-autopost_config.json
+# Exclude sensitive files
+.env
+*.json.key
+service-account*.json
+autopot-cloud-*.json
+
+# Exclude old config files with sensitive data (if they exist)
+# */config_fb*
+# */config_gpt*
+
+# Exclude cache and temporary files
 autopotter_tools/__pycache__/*
 *.mp4

@@ -35,6 +35,9 @@ class Json2VideoConfig:
             with open(self.config_path, "r") as f:
                 config = json.load(f)
                 self.log_message("Configuration loaded successfully.")
+                
+                # Resolve environment variables
+                config = self.resolve_environment_variables(config)
                 return config
         except (FileNotFoundError, json.JSONDecodeError):
             self.log_message("No valid config file found. Creating a new one...")
@@ -54,6 +57,24 @@ class Json2VideoConfig:
             self.save_config()
             self.log_message(f"New config file created at {self.config_path}. Please edit it to set your API key and preferences.")
             exit(1)
+
+    def resolve_environment_variables(self, config):
+        """Replace ${ENV_VAR} placeholders with actual environment variable values"""
+        resolved_config = {}
+        
+        for key, value in config.items():
+            if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+                env_var = value[2:-1]  # Remove ${ and }
+                env_value = os.getenv(env_var)
+                if env_value:
+                    resolved_config[key] = env_value
+                    self.log_message(f"Resolved {key} from environment variable {env_var}")
+                else:
+                    raise ValueError(f"Environment variable {env_var} not set for {key}")
+            else:
+                resolved_config[key] = value
+        
+        return resolved_config
     
     def save_config(self):
         """Save the current configuration to file."""

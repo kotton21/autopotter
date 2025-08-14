@@ -1,5 +1,6 @@
 import openai
 import json
+import os
 from datetime import datetime
 
 class GPTAssistant:
@@ -8,10 +9,31 @@ class GPTAssistant:
         self.log_message("Initializing GPTAssistant...")
         
         with open(config_path, "r") as f:
-            self.config = json.load(f)
+            config = json.load(f)
+        
+        # Resolve environment variables
+        self.config = self.resolve_environment_variables(config)
         
         self.client = openai.OpenAI(api_key=self.config["API_KEY"])
         self.log_message("GPTAssistant initialized successfully.")
+
+    def resolve_environment_variables(self, config):
+        """Replace ${ENV_VAR} placeholders with actual environment variable values"""
+        resolved_config = {}
+        
+        for key, value in config.items():
+            if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+                env_var = value[2:-1]  # Remove ${ and }
+                env_value = os.getenv(env_var)
+                if env_value:
+                    resolved_config[key] = env_value
+                    self.log_message(f"Resolved {key} from environment variable {env_var}")
+                else:
+                    raise ValueError(f"Environment variable {env_var} not set for {key}")
+            else:
+                resolved_config[key] = value
+        
+        return resolved_config
 
 
     def prompt(self, message, role="user"):
