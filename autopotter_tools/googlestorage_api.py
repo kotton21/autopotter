@@ -2,6 +2,7 @@ import os
 import argparse
 from google.cloud import storage
 from datetime import datetime, timezone
+import random
 
 class GCSClient:
     def __init__(self, api_key_path):
@@ -64,6 +65,100 @@ class GCSClient:
                     destination_blob_name = os.path.join(destination_folder_prefix, relative_path).replace("\\", "/")
                     self.upload_file(bucket_name, local_file_path, destination_blob_name)
                     print("Done.")
+
+    def get_available_videos(self, bucket_name="autopot1-printdump"):
+        """Get list of available video files from video_uploads folder"""
+        all_files = self.list_files(bucket_name, "video_uploads/")
+        
+        # Filter for video files only
+        video_extensions = ['.mp4', '.mov', '.avi', '.mkv']
+        video_files = []
+        
+        for file_path in all_files:
+            if any(file_path.lower().endswith(ext) for ext in video_extensions):
+                # Get blob metadata for additional info
+                blob = self.client.bucket(bucket_name).blob(file_path)
+                
+                # Reload blob to get full metadata
+                blob.reload()
+                
+                # Handle None values for time fields
+                created_time = blob.time_created if blob.time_created else blob.updated
+                updated_time = blob.updated if blob.updated else created_time
+                
+                video_files.append({
+                    'name': file_path,
+                    'size': blob.size,
+                    'created': created_time,
+                    'updated': updated_time,
+                    'public_url': f"https://storage.googleapis.com/{bucket_name}/{file_path}"
+                })
+        
+        # Sort by creation time (newest first), filtering out None values
+        video_files = [v for v in video_files if v['created'] is not None]
+        video_files.sort(key=lambda x: x['created'], reverse=True)
+        return video_files
+
+    def select_next_video(self, bucket_name, uploaded_videos, log_file=None):
+        """Select the next video to process based on upload history"""
+        available_videos = self.get_available_videos(bucket_name)
+        
+        # Filter out already uploaded videos
+        uploaded_video_names = [item["video"] for item in uploaded_videos]
+        new_videos = [v for v in available_videos if v['name'] not in uploaded_video_names]
+        
+        if not new_videos:
+            return None
+        
+        # Select the most recent new video
+        selected_video = new_videos[0]
+        
+        # Optional: Check for minimum video quality/size
+        if selected_video['size'] < 1024 * 1024:  # Less than 1MB
+            if log_file:
+                print(f"Warning: Selected video {selected_video['name']} is very small ({selected_video['size']} bytes)")
+        
+        return selected_video
+
+    def get_audio_options(self, bucket_name="autopot1-printdump"):
+        """Get list of available audio files from music_uploads folder"""
+        all_files = self.list_files(bucket_name, "music_uploads/")
+        
+        # Filter for audio files only
+        audio_extensions = ['.mp3', '.wav', '.m4a', '.aac', '.flac']
+        audio_files = []
+        
+        for file_path in all_files:
+            if any(file_path.lower().endswith(ext) for ext in audio_extensions):
+                blob = self.client.bucket(bucket_name).blob(file_path)
+                
+                # Reload blob to get full metadata
+                blob.reload()
+                
+                audio_files.append({
+                    'name': file_path,
+                    'size': blob.size,
+                    'created': blob.time_created,
+                    'public_url': f"https://storage.googleapis.com/{bucket_name}/{file_path}"
+                })
+        
+        return audio_files
+
+    def select_random_audio(self, audio_options, exclude_recent=None):
+        """Select a random audio file, optionally excluding recently used ones"""
+        if not audio_options:
+            return None
+            
+        if exclude_recent and len(audio_options) > exclude_recent:
+            # Exclude the N most recently used audio files
+            available_audio = audio_options[exclude_recent:]
+        else:
+            available_audio = audio_options
+        
+        if not available_audio:
+            return audio_options[0] if audio_options else None
+        
+        return random.choice(available_audio)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Google Cloud Storage operations")
