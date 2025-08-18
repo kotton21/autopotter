@@ -155,6 +155,180 @@ class InstagramAnalyticsManager:
                 'missing_scopes': []
             }
     
+    def test_available_fields(self) -> Dict[str, Any]:
+        """
+        Test different field combinations to see what's available from Instagram API.
+        
+        Returns:
+            Dictionary containing test results for different field combinations
+        """
+        if not self.instagram_account_id:
+            return {}
+        
+        field_combinations = [
+            "id,username",
+            "id,username,name",
+            "id,username,biography",
+            "id,username,website",
+            "id,username,profile_picture_url",
+            "id,username,followers_count",
+            "id,username,follows_count",
+            "id,username,media_count",
+            "id,username,name,biography,website,profile_picture_url,followers_count,follows_count,media_count"
+        ]
+        
+        results = {}
+        
+        for fields in field_combinations:
+            try:
+                url = f"{self.base_url}/{self.instagram_account_id}"
+                params = {
+                    "fields": fields,
+                    "access_token": self.page_access_token
+                }
+                
+                response = requests.get(url, params=params)
+                if response.status_code == 200:
+                    data = response.json()
+                    results[fields] = {
+                        'status': 'success',
+                        'fields_returned': list(data.keys()),
+                        'data': data
+                    }
+                else:
+                    results[fields] = {
+                        'status': 'error',
+                        'status_code': response.status_code,
+                        'error': response.text
+                    }
+                    
+            except Exception as e:
+                results[fields] = {
+                    'status': 'exception',
+                    'error': str(e)
+                }
+        
+        return results
+    
+    def test_insights_configurations(self) -> Dict[str, Any]:
+        """
+        Test different insights API configurations to find what works.
+        
+        Returns:
+            Dictionary containing test results for different configurations
+        """
+        if not self.instagram_account_id:
+            return {}
+        
+        configurations = [
+            {"metric": "follower_count", "period": "day"},
+            {"metric": "follower_count", "period": "week"},
+            {"metric": "follower_count", "period": "month"},
+            {"metric": "follower_count"},
+            {"metric": "impressions", "period": "day"},
+            {"metric": "reach", "period": "day"},
+            {"metric": "profile_views", "period": "day"},
+            {"metric": "follower_count,impressions", "period": "day"},
+            {"metric": "follower_count,impressions", "period": "week"}
+        ]
+        
+        results = {}
+        
+        for config in configurations:
+            try:
+                url = f"{self.base_url}/{self.instagram_account_id}/insights"
+                params = {
+                    "access_token": self.page_access_token,
+                    **config
+                }
+                
+                response = requests.get(url, params=params)
+                results[str(config)] = {
+                    'status_code': response.status_code,
+                    'success': response.status_code == 200,
+                    'response': response.text[:200] if response.status_code != 200 else 'Success'
+                }
+                
+            except Exception as e:
+                results[str(config)] = {
+                    'status_code': 'Exception',
+                    'success': False,
+                    'response': str(e)
+                }
+        
+        return results
+    
+    def get_account_insights(self) -> Dict[str, Any]:
+        """
+        Get Instagram account insights including follower count and other metrics.
+        
+        Returns:
+            Dictionary containing account insights
+        """
+        if not self.instagram_account_id:
+            return {}
+        
+        try:
+            # Aggregate insights across multiple valid configurations and periods
+            url = f"{self.base_url}/{self.instagram_account_id}/insights"
+            aggregated: Dict[str, Dict[str, Any]] = {}
+            
+            # Define per-metric rules to maximize success
+            metrics_info = [
+                {"name": "follower_count", "periods": ["day"], "extra": {}},
+                {"name": "reach", "periods": ["day", "days_28"], "extra": {}},
+                {"name": "accounts_engaged", "periods": ["day", "days_28"], "extra": {}},
+                {"name": "total_interactions", "periods": ["day", "days_28"], "extra": {}},
+                {"name": "likes", "periods": ["day", "days_28"], "extra": {}},
+                {"name": "comments", "periods": ["day", "days_28"], "extra": {}},
+                {"name": "website_clicks", "periods": ["day", "days_28"], "extra": {}},
+                {"name": "profile_views", "periods": ["day", "days_28"], "extra": {"metric_type": "total_value"}},
+                {"name": "online_followers", "periods": ["day"], "extra": {}}
+            ]
+            
+            for metric in metrics_info:
+                metric_name = metric["name"]
+                for period in metric["periods"]:
+                    params = {
+                        "metric": metric_name,
+                        "period": period,
+                        "access_token": self.page_access_token,
+                        **metric.get("extra", {})
+                    }
+                    response = requests.get(url, params=params)
+                    if response.status_code != 200:
+                        self.logger.debug(f"Insights request failed metric={metric_name} period={period}: {response.status_code} - {response.text}")
+                        continue
+                    insights_data = response.json()
+                    self.logger.debug(f"Insights response for {metric_name} {period}: {insights_data}")
+                    for insight in insights_data.get('data', []):
+                        name = insight.get('name')
+                        if name not in aggregated:
+                            aggregated[name] = {}
+                        # Prefer total_value, otherwise take the last value in 'values'
+                        value_to_store = None
+                        total_value = insight.get('total_value')
+                        if isinstance(total_value, dict) and 'value' in total_value:
+                            value_to_store = total_value['value']
+                        else:
+                            values = insight.get('values') or []
+                            if len(values) > 0 and 'value' in values[-1]:
+                                value_to_store = values[-1]['value']
+                        if value_to_store is not None:
+                            aggregated[name][period] = value_to_store
+                            self.logger.debug(f"Stored {name}[{period}] = {value_to_store}")
+                        else:
+                            self.logger.debug(f"No value found for {name} {period}, insight: {insight}")
+            
+            self.logger.info(f"Successfully aggregated {len(aggregated)} metrics: {list(aggregated.keys())}")
+            for metric, periods in aggregated.items():
+                self.logger.info(f"  {metric}: {periods}")
+            return aggregated
+                
+        except Exception as e:
+            self.logger.warning(f"Could not retrieve account insights: {e}")
+            return {}
+    
     def get_account_info(self) -> Dict[str, Any]:
         """
         Retrieve comprehensive Instagram account information.
@@ -169,26 +343,20 @@ class InstagramAnalyticsManager:
             return {
                 'account_id': self.user_id,
                 'username': 'Unknown',
-                'account_type': 'unknown',
                 'media_count': 0,
                 'followers_count': 0,
                 'following_count': 0,
                 'biography': '',
                 'website': '',
                 'profile_picture_url': '',
-                'retrieved_at': datetime.now().isoformat(),
-                'api_limitations': {
-                    'basic_fields_only': True,
-                    'available_fields': ['id', 'name'],
-                    'error': 'No Instagram Business Account found'
-                }
+                'retrieved_at': datetime.now().isoformat()
             }
         
         try:
-            # Get Instagram Business Account info with available fields
+            # Get Instagram Business Account info with comprehensive fields
             url = f"{self.base_url}/{self.instagram_account_id}"
             params = {
-                "fields": "id,username",
+                "fields": "id,username,name,biography,website,profile_picture_url,followers_count,follows_count,media_count",
                 "access_token": self.page_access_token
             }
             
@@ -199,7 +367,6 @@ class InstagramAnalyticsManager:
                 return {
                     'account_id': self.instagram_account_id,
                     'username': 'Instagram Account',
-                    'account_type': 'business',
                     'media_count': 0,
                     'followers_count': 0,
                     'following_count': 0,
@@ -207,32 +374,28 @@ class InstagramAnalyticsManager:
                     'website': '',
                     'profile_picture_url': '',
                     'retrieved_at': datetime.now().isoformat(),
-                    'api_limitations': {
-                        'basic_fields_only': True,
-                        'available_fields': ['id'],
-                        'error': f'API error: {response.status_code}'
-                    }
+                    
                 }
             
             account_data = response.json()
             self.logger.debug(f"Instagram account data retrieved: {account_data}")
             
+            # Get account insights for additional metrics
+            account_insights = self.get_account_insights()
+            followers_count = account_data.get('followers_count', 0) or account_insights.get('follower_count', 0)
+            
             return {
                 'account_id': account_data.get('id'),
                 'username': account_data.get('username', 'Unknown'),
-                'account_type': 'business',  # Instagram Business Account
-                'media_count': 0,  # Not available via basic API
-                'followers_count': 0,  # Not available via basic API
-                'following_count': 0,  # Not available via basic API
-                'biography': '',  # Not available via basic API
-                'website': '',  # Not available via basic API
-                'profile_picture_url': '',  # Not available via basic API
+                'name': account_data.get('name', ''),
+                'media_count': account_data.get('media_count', 0),
+                'followers_count': followers_count,
+                'following_count': account_data.get('follows_count', 0),
+                'biography': account_data.get('biography', ''),
+                'website': account_data.get('website', ''),
+                'profile_picture_url': account_data.get('profile_picture_url', ''),
                 'retrieved_at': datetime.now().isoformat(),
-                'api_limitations': {
-                    'basic_fields_only': True,
-                    'available_fields': list(account_data.keys()),
-                    'note': 'Instagram Business Account - limited field access'
-                }
+                'account_insights': account_insights
             }
             
         except Exception as e:
@@ -555,7 +718,7 @@ class InstagramAnalyticsManager:
                     'source': 'instagram_analytics_manager'
                 },
                 'account_info': self.get_account_info(),
-                'recent_media': self.get_recent_media(limit=25),
+                'recent_media': self.get_recent_media(limit=5),
                 'recent_activity': self.get_recent_activity(limit=20),
                 'hashtag_performance': self.get_hashtag_performance(),
                 'summary_metrics': {}
@@ -721,12 +884,34 @@ def main():
         print(f"  Can Manage Comments: {account_info.get('can_manage_comments', False)}")
         print(f"  Can View Insights: {account_info.get('can_view_insights', False)}")
         
+        # Test available fields
+        print(f"\n🔬 Testing available Instagram API fields...")
+        field_test_results = analytics_manager.test_available_fields()
+        
+        print(f"📋 Field Test Results:")
+        for fields, result in field_test_results.items():
+            if result.get('status') == 'success':
+                print(f"  ✅ {fields}: {len(result.get('fields_returned', []))} fields returned")
+                for field in result.get('fields_returned', []):
+                    print(f"    • {field}")
+            else:
+                print(f"  ❌ {fields}: {result.get('status')} - {result.get('error', 'Unknown error')}")
+        
+        # Test insights configurations
+        print(f"\n🔍 Testing Instagram insights configurations...")
+        insights_test_results = analytics_manager.test_insights_configurations()
+        
+        print(f"📊 Insights Test Results:")
+        for config, result in insights_test_results.items():
+            if result.get('success'):
+                print(f"  ✅ {config}: Success")
+            else:
+                print(f"  ❌ {config}: {result.get('status_code')} - {result.get('response', 'Unknown error')}")
+        
         # Export to JSON
         output_file = "instagram_analytics_result.json"
-        print(f"\n💾 Exporting to JSON...")
-        with open(output_file, 'w') as f:
-            import json
-            json.dump(account_info, f, indent=2)
+        print(f"\n💾 Testing export_to_json()...")
+        analytics_manager.export_to_json(output_file)
         
         print(f"✅ Instagram Analytics Manager exported results to: {output_file}")
         print("\n🎉 Test completed successfully!")
