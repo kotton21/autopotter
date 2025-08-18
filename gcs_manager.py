@@ -36,7 +36,7 @@ class GCSManager:
         self.bucket = self.client.bucket(self.bucket_name)
         
         # Configure folders to scan
-        self.folders_to_scan = self.gcs_config.get('folders', [
+        self.folders_to_scan = self.gcs_config.get('gcs_folders', [
             'video_uploads', 'music_uploads', 'completed_works', 
             'wip_photos', 'build_photos'
         ])
@@ -450,7 +450,7 @@ def main():
     parser = argparse.ArgumentParser(description="Unified Google Cloud Storage operations")
     parser.add_argument("operation", choices=["inventory", "upload_file", "upload_folder", "upload_new_files", "get_videos", "get_audio"], 
                        help="Operation to perform")
-    parser.add_argument("--config", type=str, default="autopost_config.json", help="Path to config file")
+    parser.add_argument("--config", type=str, default="autopost_config.enhanced.json", help="Path to config file")
     parser.add_argument("--output", type=str, default="gcs_inventory_result.json", help="Output file for inventory")
     parser.add_argument("--source_file", type=str, help="Path to source file for upload operations")
     parser.add_argument("--destination_blob", type=str, help="Destination blob name for upload operations")
