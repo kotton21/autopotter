@@ -11,3 +11,6 @@ autopot-cloud-*.json
 # Exclude cache and temporary files
 autopotter_tools/__pycache__/*
 *.mp4
+autopotter_tools/config_fb copy.json
+autopotter_tools/config_gpt copy.json
+.DS_Store

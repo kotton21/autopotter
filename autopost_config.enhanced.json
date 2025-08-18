@@ -1,0 +1,40 @@
+{
+    "instagram_app_id": "${FB_APP_ID}",
+    "instagram_app_secret": "${FB_APP_SECRET}",
+    "instagram_user_id": "${INSTAGRAM_USER_ID}",
+    "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
+    "instagram_token_expiration": "2025-08-23 21:00:33",
+    "instagram_days_before_refresh": 7,
+    
+    "gcs_bucket": "autopot1-printdump",
+    "gcs_api_key_path": "${GCS_API_KEY_PATH}",
+    "gcs_folders": [
+        "video_uploads",
+        "music_uploads", 
+        "completed_works",
+        "wip_photos",
+        "build_photos"
+    ],
+    "gcs_draft_folder": "draft_videos",
+    
+    "openai_api_key": "${OPENAI_API_KEY}",
+    "gpt_assistant_id": null,
+    "gpt_thread_id": null,
+    "gpt_creation_prompt": "You are a creative AI assistant for 3D printing pottery content. You help generate engaging social media content ideas based on available resources and account analytics.",
+    
+    "json2video_api_key": "${JSON2VIDEO_API_KEY}",
+    "json2video_base_url": "https://api.json2video.com/v2",
+    "json2video_timeout": 300,
+    
+    "sheets_spreadsheet_id": "${GOOGLE_SHEETS_ID}",
+    "sheets_credentials_path": "${GOOGLE_CREDENTIALS_PATH}",
+    
+    "autopost_timeout": 300,
+    "autopost_poll_interval": 30,
+    
+    "log_level": "INFO",
+    "log_file": null,
+    "log_max_size": "10MB",
+    "log_backup_count": 5,
+    "log_console_output": true
+}
