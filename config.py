@@ -10,7 +10,7 @@ class ConfigManager:
     Provides flat key-value structure with environment variable resolution.
     """
     
-    def __init__(self, config_path: str = "autopost_config.json"):
+    def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config_path = config_path
         self.logger = get_logger('config')
         self.config = {}

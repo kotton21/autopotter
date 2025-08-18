@@ -19,7 +19,7 @@ class GCSManager:
     Unified GCS manager that handles both inventory operations and upload operations.
     """
     
-    def __init__(self, config_path: str = "autopost_config.json"):
+    def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config = get_config(config_path)
         self.logger = get_logger('gcs_manager')
         self.gcs_config = self.config.get_gcs_config()

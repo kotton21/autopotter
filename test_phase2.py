@@ -72,7 +72,7 @@ def test_gcs_inventory():
     try:
         # Test initialization
         print("1. Testing GCS Inventory Manager initialization...")
-        inventory_manager = GCSManager()
+        inventory_manager = GCSManager("autopost_config.enhanced.json")
         print("✓ GCS Inventory Manager initialized successfully")
         
         # Test folder scanning
@@ -153,11 +153,11 @@ def test_integration():
         print("3. Testing data flow...")
         try:
             # Test Instagram manager
-            instagram_manager = InstagramAnalyticsManager()
+            instagram_manager = InstagramAnalyticsManager("autopost_config.enhanced.json")
             print("  ✓ Instagram Analytics Manager integrated")
             
             # Test GCS manager
-            gcs_manager = GCSManager()
+            gcs_manager = GCSManager("autopost_config.enhanced.json")
             print("  ✓ GCS Inventory Manager integrated")
             
         except Exception as e:

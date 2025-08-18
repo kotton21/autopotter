@@ -18,7 +18,7 @@ class InstagramAnalyticsManager:
     Integrates with the new Phase 1 logging and configuration systems.
     """
     
-    def __init__(self, config_path: str = "autopost_config.json"):
+    def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config = get_config(config_path)
         self.logger = get_logger('instagram_analytics')
         self.instagram_config = self.config.get_instagram_config()

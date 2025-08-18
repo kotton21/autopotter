@@ -1,40 +1,25 @@
 {
-    "instagram_app_id": "${FB_APP_ID}",
-    "instagram_app_secret": "${FB_APP_SECRET}",
-    "instagram_user_id": "${INSTAGRAM_USER_ID}",
-    "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
-    "instagram_token_expiration": "2025-08-23 21:00:33",
-    "instagram_days_before_refresh": 7,
-    
-    "gcs_bucket": "autopot1-printdump",
-    "gcs_api_key_path": "${GCS_API_KEY_PATH}",
-    "gcs_folders": [
-        "video_uploads",
-        "music_uploads", 
-        "completed_works",
-        "wip_photos",
-        "build_photos"
+    "video_folder": "/Users/karlbayer/Desktop/SomeVids",
+    "uploaded_videos": [
+        {
+            "video": "video_uploads/timelapse_female.gcode_20250520_0243.mp4",
+            "caption": "\"Creating while dreaming of a world where robots have rights, voices, and artistic freedom. #RobotsDeserveRights #ArtForEquality #VisionOfTheFuture\"\n\nDoes this align with your vision of progress? \ud83e\udd16\u2728\ud83c\udffa"
+        }
     ],
-    "gcs_draft_folder": "draft_videos",
-    
-    "openai_api_key": "${OPENAI_API_KEY}",
-    "gpt_assistant_id": null,
-    "gpt_thread_id": null,
-    "gpt_creation_prompt": "You are a creative AI assistant for 3D printing pottery content. You help generate engaging social media content ideas based on available resources and account analytics.",
-    
-    "json2video_api_key": "${JSON2VIDEO_API_KEY}",
-    "json2video_base_url": "https://api.json2video.com/v2",
-    "json2video_timeout": 300,
-    
-    "sheets_spreadsheet_id": "${GOOGLE_SHEETS_ID}",
-    "sheets_credentials_path": "${GOOGLE_CREDENTIALS_PATH}",
-    
-    "autopost_timeout": 300,
-    "autopost_poll_interval": 30,
-    
-    "log_level": "INFO",
     "log_file": null,
-    "log_max_size": "10MB",
-    "log_backup_count": 5,
-    "log_console_output": true
+    "caption_prompt_list": [
+        "Write a new short instagram reel caption. The new caption should be totally different from previous prompts you've provided, but align with your personality.",
+        "You're about to upload a new video. Give a short caption that describes what you were thinking about when you created it. You were thinking about some aspect of your backstory.",
+        "You're about to upload a new video. Give a short caption that comments on the current lack of civil right for robots",
+        "You're about to upload a new video. Give a short caption that comments on human gender constructs from the perspective of a robot.",
+        "You're about to upload a video of a new print which you think is absolutely stunning. Give a short caption that describes how you felt printing it."
+    ],
+    "config_gpt_path": "/Users/karlbayer/Pottery/autopotter/autopotter_tools/config_gpt.json",
+    "config_ig_path": "/Users/karlbayer/Pottery/autopotter/autopotter_tools/config_fb.json",
+    "gcs_bucket": "autopot1-printdump",
+    "gcs_api_key_path": "/Users/karlbayer/Downloads/autopot-cloud-6cb17ee04664.json",
+    "json2video_config_path": "/Users/karlbayer/Pottery/autopotter/autopotter_tools/config_json2video.json",
+    "use_gcs_videos": true,
+    "use_json2video": true,
+    "audio_exclude_recent_count": 3
 }

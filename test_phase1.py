@@ -130,7 +130,7 @@ def test_configuration_system():
         'static_value': 'unchanged'
     }
     
-    config = ConfigManager()
+    config = ConfigManager("autopost_config.enhanced.json")
     resolved = config.resolve_environment_variables(test_config)
     
     print(f"✓ Environment variables resolved: {resolved['app_id']}")
@@ -186,7 +186,7 @@ def test_integration():
     
     try:
         # Create config with logging enabled
-        config = ConfigManager(config_file)
+        config = ConfigManager("autopost_config.enhanced.json")
         
         # Verify logger is working
         logger = get_logger('integration_test')
