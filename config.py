@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Union
 from logger import get_logger
@@ -96,6 +97,9 @@ class ConfigManager:
             "autopost_timeout": 300,
             "autopost_poll_interval": 30,
             
+            # Environment Configuration
+            "env_file_path": ".env",
+            
             # Logging Configuration (all optional - defaults to terminal output)
             "log_level": "INFO",
             "log_file": None,
@@ -164,6 +168,54 @@ class ConfigManager:
             self.logger.error(f"Failed to save configuration: {e}")
             raise
     
+    def _update_env_file(self, key: str, value: str) -> bool:
+        """Update a key-value pair in the .env file."""
+        env_file_path = self.config.get('env_file_path', '.env')
+        
+        try:
+            if not os.path.exists(env_file_path):
+                # Create .env file if it doesn't exist
+                with open(env_file_path, 'w') as f:
+                    f.write(f"{key}={value}\n")
+                self.logger.info(f"Created new .env file at {env_file_path}")
+                return True
+            
+            # Read existing .env file
+            with open(env_file_path, 'r') as f:
+                lines = f.readlines()
+            
+            # Update or add the key-value pair
+            key_found = False
+            for i, line in enumerate(lines):
+                if line.strip().startswith(f"{key}="):
+                    lines[i] = f"{key}={value}\n"
+                    key_found = True
+                    break
+            
+            if not key_found:
+                lines.append(f"{key}={value}\n")
+            
+            # Write back to .env file
+            with open(env_file_path, 'w') as f:
+                f.writelines(lines)
+            
+            self.logger.debug(f"Updated {key} in .env file {env_file_path}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Failed to update .env file {env_file_path}: {e}")
+            return False
+    
+    def _update_environment_variable(self, key: str, value: str) -> bool:
+        """Update an environment variable in the current process."""
+        try:
+            os.environ[key] = value
+            self.logger.debug(f"Updated environment variable {key}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to update environment variable {key}: {e}")
+            return False
+    
     def get_instagram_config(self) -> Dict[str, Any]:
         """Get Instagram-specific configuration."""
         return {
@@ -212,10 +264,18 @@ class ConfigManager:
         }
     
     def update_instagram_tokens(self, access_token: str, expiration: str):
-        """Update Instagram access token and expiration."""
+        """Update Instagram access token and expiration with full persistence."""
+        # Update in-memory configuration
         self.config['instagram_access_token'] = access_token
         self.config['instagram_token_expiration'] = expiration
-        self.logger.info("Instagram tokens updated")
+        
+        # Update environment variable for current process
+        self._update_environment_variable('INSTAGRAM_ACCESS_TOKEN', access_token)
+        
+        # Update .env file for persistence across restarts
+        self._update_env_file('INSTAGRAM_ACCESS_TOKEN', access_token)
+        
+        self.logger.info("Instagram tokens updated and persisted to environment and .env file")
     
     def is_instagram_token_expired(self) -> bool:
         """Check if Instagram token is expired or expiring soon."""

@@ -33,70 +33,256 @@ class InstagramAnalyticsManager:
         self.access_token = self.instagram_config['access_token']
         self.user_id = self.instagram_config['user_id']
         
+        # Find Instagram Business Account through Facebook pages
+        self.instagram_account_id = None
+        self.page_access_token = None
+        self._find_instagram_account()
+        
         self.logger.info("Instagram Analytics Manager initialized")
     
-    def get_account_info(self) -> Dict[str, Any]:
+    def _find_instagram_account(self):
+        """Find the Instagram Business Account through Facebook pages."""
+        try:
+            # Get user's Facebook pages
+            url = f"{self.base_url}/{self.user_id}/accounts"
+            params = {"access_token": self.access_token}
+            
+            response = requests.get(url, params=params)
+            if response.status_code == 200:
+                accounts_data = response.json()
+                
+                for page in accounts_data.get('data', []):
+                    page_id = page.get('id')
+                    page_token = page.get('access_token')
+                    
+                    if page_id and page_token:
+                        # Check if this page has an Instagram account
+                        ig_url = f"{self.base_url}/{page_id}"
+                        ig_params = {
+                            "fields": "instagram_business_account",
+                            "access_token": page_token
+                        }
+                        
+                        ig_response = requests.get(ig_url, params=ig_params)
+                        if ig_response.status_code == 200:
+                            ig_data = ig_response.json()
+                            if ig_data.get('instagram_business_account'):
+                                self.instagram_account_id = ig_data['instagram_business_account']['id']
+                                self.page_access_token = page_token
+                                self.logger.info(f"Found Instagram Business Account: {self.instagram_account_id}")
+                                return
+            
+            if not self.instagram_account_id:
+                self.logger.warning("No Instagram Business Account found")
+                
+        except Exception as e:
+            self.logger.error(f"Failed to find Instagram account: {e}")
+    
+    def check_token_permissions(self) -> Dict[str, Any]:
         """
-        Retrieve comprehensive account information including followers, following, and basic stats.
+        Check the permissions and scopes available on the current access token.
         
         Returns:
-            Dictionary containing account analytics
+            Dictionary containing token permission information
         """
-        self.logger.info("Retrieving account information")
+        self.logger.info("Checking token permissions and scopes")
         
         try:
-            # Get basic account info with minimal fields first
-            url = f"{self.base_url}/{self.user_id}"
+            url = "https://graph.facebook.com/debug_token"
             params = {
-                "fields": "id,name",
+                "input_token": self.access_token,
                 "access_token": self.access_token
             }
             
             response = requests.get(url, params=params)
-            response.raise_for_status()
-            account_data = response.json()
-            
-            self.logger.debug(f"Account data retrieved: {account_data}")
-            
-            # Try to get additional fields if available
-            additional_fields = {}
-            try:
-                extended_params = {
-                    "fields": "username,account_type,media_count,followers_count,follows_count,biography,website,profile_picture_url",
-                    "access_token": self.access_token
+            if response.status_code != 200:
+                self.logger.error(f"Failed to check token permissions: {response.status_code} - {response.text}")
+                return {
+                    'error': f'API error: {response.status_code}',
+                    'available_scopes': [],
+                    'missing_scopes': []
                 }
-                extended_response = requests.get(url, params=extended_params)
-                if extended_response.status_code == 200:
-                    extended_data = extended_response.json()
-                    additional_fields = extended_data
-                    self.logger.debug(f"Extended account data retrieved: {extended_data}")
-            except Exception as e:
-                self.logger.warning(f"Could not retrieve extended account info: {e}")
+            
+            token_data = response.json()
+            if 'data' not in token_data:
+                self.logger.error("No token data in response")
+                return {
+                    'error': 'No token data in response',
+                    'available_scopes': [],
+                    'missing_scopes': []
+                }
+            
+            data = token_data['data']
+            available_scopes = data.get('scopes', [])
+            
+            # Define required scopes for Instagram operations
+            required_scopes = [
+                'instagram_basic',
+                'instagram_content_publish', 
+                'instagram_manage_comments',
+                'instagram_manage_insights',
+                'pages_read_engagement',
+                'pages_manage_metadata'
+            ]
+            
+            # Find missing scopes
+            missing_scopes = [scope for scope in required_scopes if scope not in available_scopes]
+            
+            # Check if we have Instagram Business Account access
+            has_instagram_access = 'instagram_basic' in available_scopes
+            
+            permission_info = {
+                'app_id': data.get('app_id'),
+                'user_id': data.get('user_id'),
+                'available_scopes': available_scopes,
+                'missing_scopes': missing_scopes,
+                'has_instagram_access': has_instagram_access,
+                'expires_at': data.get('expires_at'),
+                'data_access_expires_at': data.get('data_access_expires_at'),
+                'is_valid': len(missing_scopes) == 0,
+                'scope_count': len(available_scopes),
+                'missing_count': len(missing_scopes)
+            }
+            
+            self.logger.info(f"Token permissions checked: {len(available_scopes)} scopes available, {len(missing_scopes)} missing")
+            return permission_info
+            
+        except Exception as e:
+            self.logger.error(f"Failed to check token permissions: {e}")
+            return {
+                'error': str(e),
+                'available_scopes': [],
+                'missing_scopes': []
+            }
+    
+    def get_account_info(self) -> Dict[str, Any]:
+        """
+        Retrieve comprehensive Instagram account information.
+        
+        Returns:
+            Dictionary containing Instagram account analytics
+        """
+        self.logger.info("Retrieving Instagram account information")
+        
+        if not self.instagram_account_id:
+            self.logger.warning("No Instagram Business Account found")
+            return {
+                'account_id': self.user_id,
+                'username': 'Unknown',
+                'account_type': 'unknown',
+                'media_count': 0,
+                'followers_count': 0,
+                'following_count': 0,
+                'biography': '',
+                'website': '',
+                'profile_picture_url': '',
+                'retrieved_at': datetime.now().isoformat(),
+                'api_limitations': {
+                    'basic_fields_only': True,
+                    'available_fields': ['id', 'name'],
+                    'error': 'No Instagram Business Account found'
+                }
+            }
+        
+        try:
+            # Get Instagram Business Account info with available fields
+            url = f"{self.base_url}/{self.instagram_account_id}"
+            params = {
+                "fields": "id,username",
+                "access_token": self.page_access_token
+            }
+            
+            response = requests.get(url, params=params)
+            if response.status_code != 200:
+                self.logger.error(f"Failed to retrieve Instagram account info: {response.status_code} - {response.text}")
+                # Fallback to basic info
+                return {
+                    'account_id': self.instagram_account_id,
+                    'username': 'Instagram Account',
+                    'account_type': 'business',
+                    'media_count': 0,
+                    'followers_count': 0,
+                    'following_count': 0,
+                    'biography': '',
+                    'website': '',
+                    'profile_picture_url': '',
+                    'retrieved_at': datetime.now().isoformat(),
+                    'api_limitations': {
+                        'basic_fields_only': True,
+                        'available_fields': ['id'],
+                        'error': f'API error: {response.status_code}'
+                    }
+                }
+            
+            account_data = response.json()
+            self.logger.debug(f"Instagram account data retrieved: {account_data}")
             
             return {
                 'account_id': account_data.get('id'),
-                'username': account_data.get('username') or account_data.get('name', 'Unknown'),
-                'account_type': additional_fields.get('account_type', 'unknown'),
-                'media_count': additional_fields.get('media_count', 0),
-                'followers_count': additional_fields.get('followers_count', 0),
-                'following_count': additional_fields.get('follows_count', 0),
-                'biography': additional_fields.get('biography', ''),
-                'website': additional_fields.get('website', ''),
-                'profile_picture_url': additional_fields.get('profile_picture_url', ''),
+                'username': account_data.get('username', 'Unknown'),
+                'account_type': 'business',  # Instagram Business Account
+                'media_count': 0,  # Not available via basic API
+                'followers_count': 0,  # Not available via basic API
+                'following_count': 0,  # Not available via basic API
+                'biography': '',  # Not available via basic API
+                'website': '',  # Not available via basic API
+                'profile_picture_url': '',  # Not available via basic API
                 'retrieved_at': datetime.now().isoformat(),
                 'api_limitations': {
-                    'basic_fields_only': len(additional_fields) == 0,
-                    'available_fields': list(account_data.keys())
+                    'basic_fields_only': True,
+                    'available_fields': list(account_data.keys()),
+                    'note': 'Instagram Business Account - limited field access'
                 }
             }
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve account info: {e}")
+            self.logger.error(f"Failed to retrieve Instagram account info: {e}")
             raise
+    
+    def get_comprehensive_account_info(self) -> Dict[str, Any]:
+        """
+        Get comprehensive account information including token permissions and Instagram data.
+        
+        Returns:
+            Dictionary containing complete account analytics with permissions
+        """
+        self.logger.info("Retrieving comprehensive Instagram account information")
+        
+        # Get basic account info
+        account_info = self.get_account_info()
+        
+        # Check token permissions
+        permissions = self.check_token_permissions()
+        
+        # Get recent media count
+        recent_media = self.get_recent_media(limit=1)
+        media_count = len(recent_media) if recent_media else 0
+        
+        # Combine all information
+        comprehensive_info = {
+            **account_info,
+            'token_permissions': permissions,
+            'recent_media_count': media_count,
+            'instagram_account_found': self.instagram_account_id is not None,
+            'instagram_account_id': self.instagram_account_id,
+            'analysis_timestamp': datetime.now().isoformat()
+        }
+        
+        # Add permission-based insights
+        if permissions.get('is_valid'):
+            comprehensive_info['permission_status'] = 'full_access'
+            comprehensive_info['can_publish'] = 'instagram_content_publish' in permissions.get('available_scopes', [])
+            comprehensive_info['can_manage_comments'] = 'instagram_manage_comments' in permissions.get('available_scopes', [])
+            comprehensive_info['can_view_insights'] = 'instagram_manage_insights' in permissions.get('available_scopes', [])
+        else:
+            comprehensive_info['permission_status'] = 'limited_access'
+            comprehensive_info['missing_permissions'] = permissions.get('missing_scopes', [])
+        
+        return comprehensive_info
     
     def get_recent_media(self, limit: int = 25) -> List[Dict[str, Any]]:
         """
-        Retrieve recent media posts with basic engagement metrics.
+        Retrieve recent media posts from Instagram Business Account.
         
         Args:
             limit: Maximum number of media items to retrieve
@@ -104,76 +290,54 @@ class InstagramAnalyticsManager:
         Returns:
             List of media items with engagement data
         """
-        self.logger.info(f"Retrieving recent media (limit: {limit})")
+        self.logger.info(f"Retrieving recent Instagram media (limit: {limit})")
+        
+        if not self.instagram_account_id:
+            self.logger.warning("No Instagram Business Account found")
+            return []
         
         try:
-            # Try with minimal fields first
-            url = f"{self.base_url}/{self.user_id}/media"
+            # Get media from Instagram Business Account
+            url = f"{self.base_url}/{self.instagram_account_id}/media"
             params = {
-                "fields": "id,media_type",
-                "access_token": self.access_token,
+                "fields": "id,media_type,media_url,thumbnail_url,permalink,timestamp,caption,like_count,comments_count",
+                "access_token": self.page_access_token,
                 "limit": limit
             }
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                # Try with even more basic fields
-                params["fields"] = "id"
-                response = requests.get(url, params=params)
-                if response.status_code != 200:
-                    self.logger.warning("Instagram API does not support media access for this user/app combination")
-                    return []
+                self.logger.error(f"Failed to retrieve Instagram media: {response.status_code} - {response.text}")
+                return []
             
             media_data = response.json()
-            
             media_items = []
+            
             for item in media_data.get('data', []):
                 media_item = {
                     'id': item.get('id'),
                     'media_type': item.get('media_type', 'unknown'),
-                    'media_url': None,
-                    'thumbnail_url': None,
-                    'permalink': None,
-                    'timestamp': None,
-                    'caption': '',
-                    'like_count': 0,
-                    'comments_count': 0,
-                    'insights': {},
-                    'api_limitations': {
-                        'limited_fields': True,
-                        'available_fields': list(item.keys())
-                    }
+                    'media_url': item.get('media_url'),
+                    'thumbnail_url': item.get('thumbnail_url'),
+                    'permalink': item.get('permalink'),
+                    'timestamp': item.get('timestamp'),
+                    'caption': item.get('caption', ''),
+                    'like_count': item.get('like_count', 0),
+                    'comments_count': item.get('comments_count', 0),
+                    'insights': {}
                 }
                 
-                # Try to get additional fields if available
-                try:
-                    extended_params = {
-                        "fields": "media_url,thumbnail_url,permalink,timestamp,caption,like_count,comments_count",
-                        "access_token": self.access_token
-                    }
-                    extended_response = requests.get(f"{self.base_url}/{item['id']}", params=extended_params)
-                    if extended_response.status_code == 200:
-                        extended_data = extended_response.json()
-                        media_item.update({
-                            'media_url': extended_data.get('media_url'),
-                            'thumbnail_url': extended_data.get('thumbnail_url'),
-                            'permalink': extended_data.get('permalink'),
-                            'timestamp': extended_data.get('timestamp'),
-                            'caption': extended_data.get('caption', {}).get('text', '') if isinstance(extended_data.get('caption'), dict) else extended_data.get('caption', ''),
-                            'like_count': extended_data.get('like_count', 0),
-                            'comments_count': extended_data.get('comments_count', 0)
-                        })
-                        media_item['api_limitations']['limited_fields'] = False
-                except Exception as e:
-                    self.logger.debug(f"Could not retrieve extended media info for {item['id']}: {e}")
+                # Handle caption format (sometimes it's a dict with 'text' field)
+                if isinstance(media_item['caption'], dict):
+                    media_item['caption'] = media_item['caption'].get('text', '')
                 
                 media_items.append(media_item)
             
-            self.logger.debug(f"Retrieved {len(media_items)} media items")
+            self.logger.info(f"Retrieved {len(media_items)} Instagram media items")
             return media_items
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve recent media: {e}")
+            self.logger.error(f"Failed to retrieve Instagram media: {e}")
             return []
     
     def get_video_insights(self, media_id: str) -> Dict[str, Any]:
@@ -254,7 +418,7 @@ class InstagramAnalyticsManager:
     
     def get_recent_activity(self, limit: int = 20) -> List[Dict[str, Any]]:
         """
-        Retrieve recent account activity including follows, unfollows, and mentions.
+        Retrieve recent account activity from Instagram Business Account.
         
         Args:
             limit: Maximum number of activity items to retrieve
@@ -262,38 +426,30 @@ class InstagramAnalyticsManager:
         Returns:
             List of recent activity items
         """
-        self.logger.info(f"Retrieving recent activity (limit: {limit})")
+        self.logger.info(f"Retrieving recent Instagram activity (limit: {limit})")
+        
+        if not self.instagram_account_id:
+            self.logger.warning("No Instagram Business Account found")
+            return []
         
         try:
-            # Note: Instagram Graph API has limited access to real-time activity
-            # This method provides what's available through the API
-            url = f"{self.base_url}/{self.user_id}/media"
+            # Get recent media from Instagram Business Account
+            url = f"{self.base_url}/{self.instagram_account_id}/media"
             params = {
-                "fields": "id,media_type,timestamp,like_count,comments_count,insights.metric(impressions,reach,engagement)",
-                "access_token": self.access_token,
+                "fields": "id,media_type,timestamp,like_count,comments_count",
+                "access_token": self.page_access_token,
                 "limit": limit
             }
             
             response = requests.get(url, params=params)
-            response.raise_for_status()
-            media_data = response.json()
+            if response.status_code != 200:
+                self.logger.error(f"Failed to retrieve Instagram activity: {response.status_code} - {response.text}")
+                return []
             
+            media_data = response.json()
             activity_items = []
+            
             for item in media_data.get('data', []):
-                # Calculate engagement rate
-                impressions = 0
-                reach = 0
-                if 'insights' in item and 'data' in item['insights']:
-                    for insight in item['insights']['data']:
-                        if insight['name'] == 'impressions':
-                            impressions = insight['values'][0]['value']
-                        elif insight['name'] == 'reach':
-                            reach = insight['values'][0]['value']
-                
-                engagement_rate = 0
-                if impressions > 0:
-                    engagement_rate = ((item.get('like_count', 0) + item.get('comments_count', 0)) / impressions) * 100
-                
                 activity_item = {
                     'media_id': item.get('id'),
                     'media_type': item.get('media_type'),
@@ -301,20 +457,18 @@ class InstagramAnalyticsManager:
                     'engagement_metrics': {
                         'likes': item.get('like_count', 0),
                         'comments': item.get('comments_count', 0),
-                        'impressions': impressions,
-                        'reach': reach,
-                        'engagement_rate': round(engagement_rate, 2)
+                        'total_engagement': item.get('like_count', 0) + item.get('comments_count', 0)
                     }
                 }
                 
                 activity_items.append(activity_item)
             
-            self.logger.debug(f"Retrieved {len(activity_items)} activity items")
+            self.logger.info(f"Retrieved {len(activity_items)} Instagram activity items")
             return activity_items
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve recent activity: {e}")
-            raise
+            self.logger.error(f"Failed to retrieve Instagram activity: {e}")
+            return []
     
     def get_hashtag_performance(self, hashtags: List[str] = None) -> Dict[str, Any]:
         """
@@ -504,20 +658,81 @@ class InstagramAnalyticsManager:
 def main():
     """Test the Instagram Analytics Manager."""
     try:
+        print("🚀 Instagram Analytics Manager Test")
+        print("=" * 50)
+        
         # Initialize the manager
         analytics_manager = InstagramAnalyticsManager()
+        print("✅ Manager initialized successfully")
         
-        # Generate comprehensive analytics
-        analytics_data = analytics_manager.export_to_json("instagram_analytics.json")
+        # Get account info with permissions
+        print("\n🔍 Retrieving account information and permissions...")
+        account_info = analytics_manager.get_comprehensive_account_info()
         
-        print("✅ Instagram analytics generated successfully!")
-        print(f"📊 Account: {analytics_data['account_info']['username']}")
-        print(f"👥 Followers: {analytics_data['account_info']['followers_count']}")
-        print(f"📱 Media count: {analytics_data['account_info']['media_count']}")
-        print(f"📈 Recent posts analyzed: {analytics_data['summary_metrics']['media_count_analyzed']}")
+        # Display complete account information
+        print(f"\n📊 Account Information:")
+        print(f"  Username: {account_info.get('username', 'Unknown')}")
+        print(f"  Account ID: {account_info.get('account_id', 'Unknown')}")
+        print(f"  Account Type: {account_info.get('account_type', 'Unknown')}")
+        print(f"  Instagram Connected: {account_info.get('instagram_account_found', False)}")
+        print(f"  Instagram Account ID: {account_info.get('instagram_account_id', 'None')}")
+        print(f"  Recent Media Count: {account_info.get('recent_media_count', 0)}")
+        print(f"  Retrieved At: {account_info.get('retrieved_at', 'Unknown')}")
+        print(f"  Analysis Timestamp: {account_info.get('analysis_timestamp', 'Unknown')}")
+        
+        # Display API limitations if any
+        api_limitations = account_info.get('api_limitations', {})
+        if api_limitations:
+            print(f"\n⚠️  API Limitations:")
+            print(f"  Note: {api_limitations.get('note', 'None')}")
+            print(f"  Available Fields: {', '.join(api_limitations.get('available_fields', []))}")
+        
+        # Display complete permission information
+        permissions = account_info.get('token_permissions', {})
+        if permissions:
+            print(f"\n🔐 Token Permissions:")
+            print(f"  App ID: {permissions.get('app_id', 'Unknown')}")
+            print(f"  User ID: {permissions.get('user_id', 'Unknown')}")
+            print(f"  Available Scopes: {permissions.get('scope_count', 0)}")
+            print(f"  Missing Scopes: {permissions.get('missing_count', 0)}")
+            print(f"  Has Instagram Access: {permissions.get('has_instagram_access', False)}")
+            print(f"  Is Valid: {permissions.get('is_valid', False)}")
+            print(f"  Expires At: {permissions.get('expires_at', 'Unknown')}")
+            print(f"  Data Access Expires At: {permissions.get('data_access_expires_at', 'Unknown')}")
+            
+            # Show all available scopes
+            available_scopes = permissions.get('available_scopes', [])
+            if available_scopes:
+                print(f"  Available Scopes List:")
+                for scope in available_scopes:
+                    print(f"    • {scope}")
+            
+            # Show missing scopes if any
+            missing_scopes = permissions.get('missing_scopes', [])
+            if missing_scopes:
+                print(f"  Missing Scopes:")
+                for scope in missing_scopes:
+                    print(f"    • {scope}")
+        
+        # Display capability information
+        print(f"\n🎯 Capabilities:")
+        print(f"  Permission Status: {account_info.get('permission_status', 'unknown')}")
+        print(f"  Can Publish: {account_info.get('can_publish', False)}")
+        print(f"  Can Manage Comments: {account_info.get('can_manage_comments', False)}")
+        print(f"  Can View Insights: {account_info.get('can_view_insights', False)}")
+        
+        # Export to JSON
+        output_file = "instagram_analytics_result.json"
+        print(f"\n💾 Exporting to JSON...")
+        with open(output_file, 'w') as f:
+            import json
+            json.dump(account_info, f, indent=2)
+        
+        print(f"✅ Instagram Analytics Manager exported results to: {output_file}")
+        print("\n🎉 Test completed successfully!")
         
     except Exception as e:
-        print(f"❌ Failed to generate Instagram analytics: {e}")
+        print(f"❌ Test failed: {e}")
         import traceback
         traceback.print_exc()
 

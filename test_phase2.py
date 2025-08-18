@@ -27,20 +27,31 @@ def test_instagram_analytics():
         analytics_manager = InstagramAnalyticsManager()
         print("✓ Instagram Analytics Manager initialized successfully")
         
-        # Test account info retrieval
-        print("2. Testing account info retrieval...")
+        # Test comprehensive account info retrieval
+        print("2. Testing comprehensive account info retrieval...")
         try:
-            account_info = analytics_manager.get_account_info()
-            print(f"✓ Account info retrieved: {account_info.get('username', 'Unknown')}")
+            comprehensive_info = analytics_manager.get_comprehensive_account_info()
+            print(f"✓ Comprehensive account info retrieved: {comprehensive_info.get('username', 'Unknown')}")
+            print(f"  Instagram Account Found: {comprehensive_info.get('instagram_account_found', False)}")
+            print(f"  Permission Status: {comprehensive_info.get('permission_status', 'unknown')}")
+            print(f"  Can Publish: {comprehensive_info.get('can_publish', False)}")
+            print(f"  Can Manage Comments: {comprehensive_info.get('can_manage_comments', False)}")
+            print(f"  Can View Insights: {comprehensive_info.get('can_view_insights', False)}")
+            print(f"  Recent Media Count: {comprehensive_info.get('recent_media_count', 0)}")
+            
+            # Show token permissions summary
+            permissions = comprehensive_info.get('token_permissions', {})
+            if permissions:
+                print(f"  Token Scopes: {permissions.get('scope_count', 0)} available, {permissions.get('missing_count', 0)} missing")
             
             # Save to JSON file
             output_file = "instagram_analytics_result.json"
             with open(output_file, 'w') as f:
-                json.dump(account_info, f, indent=2)
+                json.dump(comprehensive_info, f, indent=2)
             print(f"✓ Instagram analytics saved to: {output_file}")
             
         except Exception as e:
-            print(f"⚠️  Account info retrieval failed: {e}")
+            print(f"⚠️  Comprehensive account info retrieval failed: {e}")
         
         # Test recent media retrieval
         print("3. Testing recent media retrieval...")

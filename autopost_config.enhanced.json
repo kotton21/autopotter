@@ -32,6 +32,8 @@
     "autopost_timeout": 300,
     "autopost_poll_interval": 30,
     
+    "env_file_path": ".env",
+    
     "log_level": "INFO",
     "log_file": null,
     "log_max_size": "10MB",
