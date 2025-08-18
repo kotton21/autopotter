@@ -17,10 +17,56 @@ class ConfigManager:
         self.config = {}
         self.load_config()
     
+    def load_dotenv(self, env_file_path: str = ".env") -> bool:
+        """
+        Load environment variables from a .env file.
+        
+        Args:
+            env_file_path: Path to the .env file
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if not os.path.exists(env_file_path):
+                self.logger.warning(f"Environment file {env_file_path} not found")
+                return False
+            
+            with open(env_file_path, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        
+                        # Remove quotes if present
+                        if (value.startswith('"') and value.endswith('"')) or \
+                           (value.startswith("'") and value.endswith("'")):
+                            value = value[1:-1]
+                        
+                        # Only set if not already in environment
+                        if key not in os.environ:
+                            os.environ[key] = value
+                            self.logger.debug(f"Loaded environment variable: {key}")
+                        else:
+                            self.logger.debug(f"Environment variable {key} already set, skipping")
+            
+            self.logger.info(f"Environment variables loaded from {env_file_path}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Failed to load environment variables from {env_file_path}: {e}")
+            return False
+    
     def load_config(self) -> Dict[str, Any]:
         """Load configuration from file with environment variable resolution."""
         try:
             self.logger.info(f"Loading configuration from {self.config_path}")
+            
+            # First, load environment variables from .env file
+            env_file_path = ".env"  # Default .env file path
+            self.load_dotenv(env_file_path)
             
             if not os.path.exists(self.config_path):
                 self.logger.warning(f"Config file {self.config_path} not found. Creating default configuration.")
