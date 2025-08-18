@@ -20,3 +20,4 @@ __pycache__/*
 gcs_inventory_result.json
 instagram_analytics_result.json
 instagram_analytics_result.json
+.env.backup
