@@ -14,3 +14,9 @@ autopotter_tools/__pycache__/*
 autopotter_tools/config_fb copy.json
 autopotter_tools/config_gpt copy.json
 .DS_Store
+__pycache__/*
+*.pyc
+
+gcs_inventory_result.json
+instagram_analytics_result.json
+instagram_analytics_result.json

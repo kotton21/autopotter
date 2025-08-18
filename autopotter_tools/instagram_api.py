@@ -177,42 +177,6 @@ class InstagramVideoUploader:
         #if self.IGconfig.is_token_expired():
         self.IGconfig.check_refresh_access_token()
 
-    def search_music(self, query):
-        """Search for music tracks based on a query (e.g., genre or playlist)."""
-        url = "https://graph.facebook.com/v22.0/search"
-        params = {
-            "type": "music",
-            "q": query,
-            "access_token": self.IGconfig.config["ACCESS_TOKEN"]
-        }
-        response = requests.get(url, params=params)
-        response_data = response.json()
-
-        if "data" in response_data:
-            self.log_message(f"Music search results: {response_data['data']}")
-            return response_data["data"]
-        else:
-            self.log_message(f"Failed to search for music: {response_data}")
-            return []
-        
-
-    def recommend_music(self):
-        """Get music recommendations from the Facebook API."""
-        url = "https://graph.facebook.com/v22.0/audio/recommendations"
-        params = {
-            "type": "FACEBOOK_FOR_YOU", #"FACEBOOK_NEW_MUSIC",#"FACEBOOK_POPULAR_MUSIC",
-            "access_token": self.IGconfig.config["ACCESS_TOKEN"]
-        }
-        response = requests.get(url, params=params)
-        response_data = response.json()
-
-        if "data" in response_data:
-            self.log_message(f"Music recommendations: {response_data['data']}")
-            return response_data["data"]
-        else:
-            self.log_message(f"Failed to get music recommendations: {response_data}")
-            return []
-    
 
     def create_media_container(self, caption="Test Caption", audio_id=None):
         url = f"https://graph.facebook.com/v22.0/{self.IGconfig.config['USER_ID']}/media"
