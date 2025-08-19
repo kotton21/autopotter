@@ -134,6 +134,7 @@ class ConfigManager:
             "gpt_assistant_id": None,
             "gpt_thread_id": None,
             "gpt_creation_prompt": "You are a creative AI assistant for 3D printing pottery content.",
+            "always_create_new_thread": True,
             
             # JSON2Video Configuration
             "json2video_api_key": "${JSON2VIDEO_API_KEY}",
@@ -198,22 +199,40 @@ class ConfigManager:
         """Set a configuration value."""
         self.config[key] = value
     
+
+    
     def save_config(self):
         """Save the current configuration to file."""
         try:
-            # Create a copy without resolved environment variables for saving
-            save_config = {}
+            # Load the original file to preserve all fields
+            original_config = {}
+            if os.path.exists(self.config_path):
+                try:
+                    with open(self.config_path, 'r') as f:
+                        original_config = json.load(f)
+                except Exception as e:
+                    self.logger.warning(f"Could not read original config file: {e}")
+            
+            # Merge current config with original, preserving all fields
+            merged_config = original_config.copy()
+            
+            # Update only the fields that have actually changed
             for key, value in self.config.items():
-                # Skip saving sensitive fields that should come from environment
+                # For sensitive fields, preserve the original placeholder if it exists
                 if key in ['instagram_app_secret', 'instagram_access_token', 'openai_api_key', 
                           'json2video_api_key', 'gcs_api_key_path']:
-                    continue
-                save_config[key] = value
+                    # Only update if the original didn't have this field
+                    if key not in original_config:
+                        merged_config[key] = value
+                else:
+                    # Update non-sensitive fields
+                    merged_config[key] = value
             
+            # Save the merged configuration
             with open(self.config_path, 'w') as f:
-                json.dump(save_config, f, indent=4)
+                json.dump(merged_config, f, indent=4)
             
-            self.logger.info(f"Configuration saved to {self.config_path}")
+            self.logger.info(f"Configuration saved to {self.config_path} (preserved existing fields)")
             
         except Exception as e:
             self.logger.error(f"Failed to save configuration: {e}")
@@ -293,7 +312,8 @@ class ConfigManager:
             'api_key': self.get('openai_api_key'),
             'assistant_id': self.get('gpt_assistant_id'),
             'thread_id': self.get('gpt_thread_id'),
-            'creation_prompt': self.get('gpt_creation_prompt')
+            'creation_prompt': self.get('gpt_creation_prompt'),
+            'always_create_new_thread': self.get('always_create_new_thread', True)
         }
     
     def get_json2video_config(self) -> Dict[str, Any]:

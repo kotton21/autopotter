@@ -72,12 +72,12 @@ This document outlines the enhanced video generation system that replaces the cu
 ### Phase 3: AI Assistant Integration
 
 #### GPT Assistant Manager (`gpt_assistant.py`)
-- Create gpt_thread_manager.py with the following features.
-- Initialize using using the assistent_id in config. Fail gracefully if there is no assistent_id. 
+- Crewate gpt_thread_manager.py by directly copying gpt_assistant.py. Don't break any of the existing functionality in gpt_assistent. gpt_thread_manager should be a generic interface to a gpt assistant. Modify it's config to use the new configuration system and modify its code to the following specifications:
+- Initialize using using an assistent_id in config. Fail gracefully if there is no assistent_id. Do not try to create new assistants.
 - Other relevant config options are always_create_new_thread (default to true), and thread_id (only used if always_create_new_thread is false).  
 - the thread_manager initialization should create a new thread if always_create_new_thread is true. It should attempt to load an existing thread using thread_id if always_create_new_thread is false. 
 - Handle thread creation failures gracefully.
-- Support for uploading JSON data and additional context files into the "prompt" method
+- Add support for uploading JSON data and additional context files into the "prompt" method
 - Maintain support for "user" and "system" roles in prompts
 - Don't try to maintain backward compatibility with old configuration mechonism. Just use the new config system. 
 
