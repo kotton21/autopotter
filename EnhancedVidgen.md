@@ -13,7 +13,7 @@ This document outlines the enhanced video generation system that replaces the cu
 - **Configuration Management** (`config.py`)
 
 #### 2. AI Assistant Layer
-- **GPT Assistant Manager** (`gpt_assistant.py`)
+- **GPT Thread Manager** (`gpt_thread_manager.py`)
 - **Thread Management**
 - **File Upload Capabilities**
 
@@ -72,10 +72,15 @@ This document outlines the enhanced video generation system that replaces the cu
 ### Phase 3: AI Assistant Integration
 
 #### GPT Assistant Manager (`gpt_assistant.py`)
-- Create new assistant threads if none exist
-- Handle thread creation failures gracefully
-- Support for uploading JSON data files and additional context files
-- Store assistant ID and thread ID in configuration
+- Create gpt_thread_manager.py with the following features.
+- Initialize using using the assistent_id in config. Fail gracefully if there is no assistent_id. 
+- Other relevant config options are always_create_new_thread (default to true), and thread_id (only used if always_create_new_thread is false).  
+- the thread_manager initialization should create a new thread if always_create_new_thread is true. It should attempt to load an existing thread using thread_id if always_create_new_thread is false. 
+- Handle thread creation failures gracefully.
+- Support for uploading JSON data and additional context files into the "prompt" method
+- Maintain support for "user" and "system" roles in prompts
+- Don't try to maintain backward compatibility with old configuration mechonism. Just use the new config system. 
+
 
 ### Phase 4: Video Generation Workflow
 
@@ -139,6 +144,12 @@ openai_api_key: "${OPENAI_API_KEY}"
 gpt_assistant_id: null  # Will be populated after creation
 gpt_thread_id: null     # Will be populated after creation
 gpt_creation_prompt: "You are a creative AI assistant for 3D printing pottery content."
+always_create_new_thread: true  # Default to creating new threads
+intent_prompts: [
+  "Utilize the instagram insights and your knowledge of popular short form video formats to design 3 different draft videos using the content stored in my gcs bucket. Output the video intent, and the json2video config in json format.",
+  "Produce a video demonstrating the technical aspects of 3D printed pottery",
+  "Create engaging content about the creative design process behind the pottery"
+]
 
 # JSON2Video Configuration
 json2video_api_key: "${JSON2VIDEO_API_KEY}"
@@ -205,7 +216,7 @@ The configuration system maintains essential Instagram token capabilities:
 - `extract_metadata()` - Get file attributes
 - `generate_inventory()` - Create file catalog JSON
 
-### GPTAssistantManager
+### GPTThreadManager
 - `create_or_get_thread()` - Handle thread lifecycle
 - `upload_files()` - Add context files to assistant
 - `generate_proposals()` - Request video ideas
