@@ -85,8 +85,18 @@ This document outlines the enhanced video generation system that replaces the cu
 ### Phase 4: Video Generation Workflow
 
 #### Main Generation Flow
+Create a new autopost file called enhanced_autopost.py to include the features below. It should act as the primary entry point so should contain main method parameterization for the config file, and a prompt_intent overwride. Keep it very simple and linear flow and learn from autopost.py. 
+
+Requirements: 
+- Load Config and check parameters
+- Gather ig analytics if the config file says to from instagram_analytics.py
+- Gather gcs file inventory from gcs_manager.py
+- Open the assistent thread from gpt_thread_manager.py
+- Query the assistent thread using the available data and the prompt-intent
+- Print the results
+
 1. **Data Acquisition & Upload**
-   - Collect Instagram analytics JSON
+   - Collect Instagram analytics JSON if include_ig_insights_in_prompt is true (add a config option called include_ig_insights_in_prompt)
    - Gather GCS file inventory JSON
    - Create or retrieve existing assistant thread
    - Upload additional context files
@@ -99,18 +109,21 @@ This document outlines the enhanced video generation system that replaces the cu
      - Resource utilization plan
      - The draft's JSON2Video configuration
 
-3. **Draft Generation & Storage**
-   - Execute JSON2Video API calls for each draft
-   - Upload generated videos to GCS draft folder
-   - Log entries in Google Sheets with columns:
-     - Status (Draft/Approved/Posted/Denied)
-     - Video number
-     - Production date
-     - Caption
-     - Link
-     - Strategy description
 
-### Phase 5: Approval & Posting Workflow
+### Phase 5: Draft Generation & Storage
+
+- Execute JSON2Video API calls for each draft
+- Upload generated videos to GCS draft folder
+- Log entries in Google Sheets with columns:
+  - Status (Draft/Approved/Posted/Denied)
+  - Video number
+  - Production date
+  - Caption
+  - Link
+  - Strategy description
+
+
+### Phase 6: Approval & Posting Workflow
 
 #### Auto-posting System (`autopost.py`)
 - Poll Google Sheets for status changes to "Approved"
