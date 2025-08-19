@@ -310,10 +310,14 @@ class ConfigManager:
         """Get OpenAI-specific configuration."""
         return {
             'api_key': self.get('openai_api_key'),
-            'assistant_id': self.get('gpt_assistant_id'),
-            'thread_id': self.get('gpt_thread_id'),
+            'assistant_id': self.get('gpt_assistant_id'),  # Kept for backward compatibility
+            'thread_id': self.get('gpt_thread_id'),  # Kept for backward compatibility
             'creation_prompt': self.get('gpt_creation_prompt'),
-            'always_create_new_thread': self.get('always_create_new_thread', True)
+            'always_create_new_thread': self.get('always_create_new_thread', True),
+            'model': self.get('gpt_model', 'gpt-4o'),
+            'max_tokens': self.get('gpt_max_tokens', 4000),
+            'temperature': self.get('gpt_temperature', 0.7),
+            'max_history_length': self.get('gpt_max_history_length', 10)
         }
     
     def get_json2video_config(self) -> Dict[str, Any]:
