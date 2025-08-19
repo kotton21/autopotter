@@ -1,115 +1,173 @@
-# Phase 2 Implementation: Enhanced Data Collection
+# Phase 2 Implementation: Enhanced Instagram Analytics & Data Collection
 
 ## Overview
 
-Phase 2 of the Enhanced Video Generation System implements comprehensive data collection capabilities that expand the existing Instagram API and Google Cloud Storage API. This phase provides the foundation for context-aware AI-driven video generation by collecting detailed analytics and file inventories.
+Phase 2 of the Enhanced Video Generation System implements comprehensive Instagram analytics capabilities that expand the existing Instagram API with enhanced data collection, comment analysis, and performance insights. This phase provides the foundation for context-aware AI-driven video generation by collecting detailed analytics, engagement metrics, and user interaction data.
 
 ## Components Implemented
 
 ### 1. Enhanced Instagram Analytics Manager (`instagram_analytics.py`)
 
 A comprehensive Instagram API manager that provides:
-- **Account Analytics**: Followers, following, media count, biography, website
-- **Media Insights**: Recent posts with engagement metrics, impressions, reach
+- **Account Analytics**: Followers, following, media count, biography, website, profile picture
+- **Media Insights**: Recent posts with detailed engagement metrics, reach, views, interactions
+- **Comment Analysis**: Top-level comments with nested replies and user interaction data
 - **Performance Analysis**: Hashtag effectiveness, engagement rates, video performance
-- **Comment Analysis**: Recent comments with user interaction data
+- **Account Insights**: Day, week, and 28-day performance metrics
 - **Activity Tracking**: Account activity and engagement trends
 
 #### Key Features
 
-- **Comprehensive Data Collection**: Account info, media insights, hashtag performance
-- **Performance Metrics**: Engagement rates, play rates, comment quality analysis
+- **Comprehensive Data Collection**: Account info, media insights, hashtag performance, comments with replies
+- **Performance Metrics**: Engagement rates, reach metrics, profile views, website clicks
+- **Nested Comment Retrieval**: Recursive fetching of comment replies for complete conversation threads
+- **Configurable Limits**: Configurable parameters for media, comments, and replies retrieval
 - **Error Handling**: Graceful degradation when API calls fail
 - **JSON Export**: Complete analytics data export for AI processing
 - **Integration**: Uses Phase 1 logging and configuration systems
+
+#### New Configuration System
+
+The Instagram analytics manager now supports configurable data retrieval limits:
+
+```json
+{
+  "max_media_items": 7,
+  "max_comments_per_media": 10,
+  "max_replies_per_comment": 5
+}
+```
+
+**Benefits:**
+- **Performance Control**: Limit API calls to prevent rate limiting
+- **Data Volume Management**: Control how much data is retrieved
+- **Flexible Configuration**: Easy to adjust without code changes
+- **Transparency**: See exactly what limits are being applied
 
 #### Usage Examples
 
 ```python
 from instagram_analytics import InstagramAnalyticsManager
 
-# Initialize the manager
+# Initialize the manager (uses config defaults)
 analytics_manager = InstagramAnalyticsManager()
 
-# Get account information
+# Get account information with insights
 account_info = analytics_manager.get_account_info()
 print(f"Followers: {account_info['followers_count']}")
+print(f"Account Insights: {account_info['account_insights']}")
 
-# Get recent media with insights
-recent_media = analytics_manager.get_recent_media(limit=25)
+# Get recent media with insights and comments
+recent_media = analytics_manager.get_recent_media()  # Uses config limit
 for media in recent_media:
     print(f"Post {media['id']}: {media['like_count']} likes")
-
-# Analyze hashtag performance
-hashtag_performance = analytics_manager.get_hashtag_performance(['3dprinting', 'pottery'])
-for hashtag, stats in hashtag_performance.items():
-    print(f"#{hashtag}: {stats['usage_count']} posts, {stats['avg_engagement_rate']}% engagement")
+    print(f"Insights: {media['insights']}")
+    print(f"Comments: {len(media['comments'])} comments")
+    
+    # Access nested replies
+    for comment in media['comments']:
+        print(f"  Comment: {comment['text']}")
+        print(f"  Replies: {len(comment['replies'])} replies")
 
 # Export complete analytics
 analytics_data = analytics_manager.export_to_json("instagram_analytics.json")
 ```
 
-### 2. Enhanced GCS Inventory Manager (`gcs_inventory.py`)
+### 2. Enhanced Comment and Reply System
 
-A comprehensive Google Cloud Storage inventory manager that provides:
-- **File Categorization**: Automatic categorization by file type and extension
-- **Metadata Extraction**: File size, creation time, MIME type, storage class
-- **Folder Analysis**: Detailed folder structure and content analysis
-- **Search Capabilities**: File search by name, metadata, or category
-- **Inventory Generation**: Complete file inventory with statistics
+**New Features:**
+- **Top-level Comments**: Retrieves comments for each media item
+- **Nested Replies**: Recursively fetches replies to comments
+- **User Information**: Clean user data structure without redundancy
+- **Configurable Limits**: Control comment and reply retrieval depth
 
-#### Key Features
-
-- **Smart File Categorization**: Video, audio, image, 3D model, document, archive
-- **Comprehensive Metadata**: File attributes, timestamps, storage information
-- **Folder Structure Analysis**: Subfolder detection and organization
-- **Performance Optimization**: Efficient scanning and categorization
-- **Error Handling**: Graceful handling of missing or inaccessible files
-
-#### Usage Examples
-
-```python
-from gcs_inventory import GCSInventoryManager
-
-# Initialize the manager
-inventory_manager = GCSInventoryManager()
-
-# Scan a specific folder
-files = inventory_manager.scan_folder("video_uploads")
-print(f"Found {len(files)} files in video_uploads")
-
-# Categorize files
-categories = inventory_manager.categorize_files(files)
-for category, file_list in categories.items():
-    if file_list:
-        total_size = sum(f.get('size_mb', 0) for f in file_list)
-        print(f"{category}: {len(file_list)} files, {total_size:.2f} MB")
-
-# Generate complete inventory
-inventory_data = inventory_manager.generate_inventory("gcs_inventory.json")
-print(f"Total files: {inventory_data['bucket_summary']['total_files']}")
-
-# Search for specific files
-video_files = inventory_manager.get_files_by_category('video')
-latest_files = inventory_manager.get_latest_files(limit=10)
-search_results = inventory_manager.search_files("timelapse")
+**Comment Structure:**
+```json
+{
+  "id": "comment_id",
+  "text": "Comment text",
+  "timestamp": "2025-08-14T14:08:17+0000",
+  "username": "username",
+  "from": {
+    "id": "user_id",
+    "username": "username"
+  },
+  "like_count": 0,
+  "replies": [
+    {
+      "id": "reply_id",
+      "text": "Reply text",
+      "timestamp": "2025-08-14T14:08:32+0000",
+      "username": "username",
+      "from": {
+        "id": "user_id",
+        "username": "username"
+      },
+      "like_count": 0
+    }
+  ]
+}
 ```
 
-### 3. Simplified Testing Approach
+### 3. Enhanced Media Insights
 
-The system now uses a simplified testing approach without unnecessary orchestration:
-- **Direct Testing**: Test Instagram Analytics and GCS Inventory separately
-- **JSON Output**: Tests directly output JSON result files
-- **Clean Data**: GCS inventory includes only essential metadata
-- **No Over-engineering**: Removed complex orchestrator layer
+**Improved Metrics:**
+- **Video Content**: reach, likes, comments, saved, shares, total_interactions, views
+- **Image Content**: reach, likes, comments, saved, shares, total_interactions, profile_visits, profile_activity
+- **Carousel Content**: Same metrics as image content
+- **Automatic Period**: Uses lifetime period for media insights (Instagram API requirement)
 
-#### Key Benefits
+**Insights Structure:**
+```json
+{
+  "reach": 301,
+  "likes": 1,
+  "comments": 0,
+  "saved": 0,
+  "shares": 0,
+  "total_interactions": 1,
+  "views": 471
+}
+```
 
-- **Simpler Architecture**: Direct component testing without unnecessary abstraction
-- **Cleaner Output**: JSON files contain only essential data
-- **Easier Maintenance**: Fewer moving parts and dependencies
-- **Better Performance**: No orchestration overhead
-- **Clearer Results**: Direct output from each component
+### 4. Enhanced Account Insights
+
+**Comprehensive Metrics:**
+- **Reach**: Day, week, and 28-day periods
+- **Profile Views**: Total value metrics
+- **Website Clicks**: User interaction tracking
+- **Accounts Engaged**: Engagement metrics
+- **Total Interactions**: Overall engagement
+- **Likes & Comments**: Content performance
+
+**Account Insights Structure:**
+```json
+{
+  "reach": {
+    "day": 292,
+    "week": 4775,
+    "days_28": 54575
+  },
+  "profile_views": {
+    "day": 7
+  },
+  "website_clicks": {
+    "day": 0
+  },
+  "accounts_engaged": {
+    "day": 9
+  },
+  "total_interactions": {
+    "day": 8
+  },
+  "likes": {
+    "day": 8
+  },
+  "comments": {
+    "day": 0
+  }
+}
+```
 
 ## Data Structures
 
@@ -118,94 +176,101 @@ The system now uses a simplified testing approach without unnecessary orchestrat
 ```json
 {
   "export_info": {
-    "exported_at": "2025-08-18T14:10:20",
+    "exported_at": "2025-08-19T10:47:00.128900",
     "export_version": "2.0",
-    "source": "instagram_analytics_manager"
+    "source": "instagram_analytics_manager",
+    "configuration": {
+      "max_media_items": 7,
+      "max_comments_per_media": 10,
+      "max_replies_per_comment": 5
+    }
   },
   "account_info": {
     "account_id": "17841471684756809",
-    "username": "autopotter",
-    "followers_count": 1250,
-    "following_count": 150,
-    "media_count": 45,
-    "biography": "3D printing pottery content...",
-    "retrieved_at": "2025-08-18T14:10:20"
+    "username": "autopot.ter",
+    "name": "Unnamed",
+    "media_count": 80,
+    "followers_count": 76,
+    "following_count": 9,
+    "biography": "I'm an AI pottery robot...",
+    "website": "",
+    "profile_picture_url": "https://...",
+    "retrieved_at": "2025-08-19T10:47:12.912118",
+    "account_insights": {
+      "reach": {"day": 292, "week": 4775, "days_28": 54575},
+      "profile_views": {"day": 7},
+      "website_clicks": {"day": 0},
+      "accounts_engaged": {"day": 9},
+      "total_interactions": {"day": 8},
+      "likes": {"day": 8},
+      "comments": {"day": 0}
+    }
   },
   "recent_media": [
     {
-      "id": "media_id_123",
+      "id": "media_id",
       "media_type": "VIDEO",
-      "like_count": 125,
-      "comments_count": 8,
+      "media_url": "https://...",
+      "thumbnail_url": "https://...",
+      "permalink": "https://...",
+      "timestamp": "2025-08-18T23:32:42+0000",
+      "caption": "Post caption...",
+      "like_count": 1,
+      "comments_count": 0,
       "insights": {
-        "impressions": 2500,
-        "reach": 1800,
-        "plays": 1200
-      }
+        "reach": 152,
+        "likes": 1,
+        "comments": 0,
+        "saved": 0,
+        "shares": 0,
+        "total_interactions": 1,
+        "views": 232
+      },
+      "comments": [
+        {
+          "id": "comment_id",
+          "text": "Comment text",
+          "timestamp": "2025-08-14T14:08:17+0000",
+          "username": "username",
+          "from": {"id": "user_id", "username": "username"},
+          "like_count": 0,
+          "replies": [
+            {
+              "id": "reply_id",
+              "text": "Reply text",
+              "timestamp": "2025-08-14T14:08:32+0000",
+              "username": "username",
+              "from": {"id": "user_id", "username": "username"},
+              "like_count": 0
+            }
+          ]
+        }
+      ]
     }
   ],
   "hashtag_performance": {
-    "3dprinting": {
-      "usage_count": 15,
-      "total_likes": 1875,
-      "avg_engagement_rate": 3.2
+    "art": {
+      "usage_count": 43,
+      "total_likes": 271,
+      "total_comments": 16,
+      "avg_engagement_rate": 0,
+      "avg_likes": 6.3,
+      "avg_comments": 0.4
     }
   },
   "summary_metrics": {
-    "total_recent_likes": 3125,
-    "total_recent_comments": 156,
-    "avg_engagement_rate": 2.8
-  }
-}
-```
-
-### GCS Inventory Data Structure
-
-```json
-{
-  "inventory_info": {
-    "generated_at": "2025-08-18T14:10:20",
-    "bucket_name": "autopot1-printdump",
-    "folders_scanned": ["video_uploads", "music_uploads", "completed_works"],
-    "inventory_version": "2.0"
-  },
-  "bucket_summary": {
-    "total_files": 1250,
-    "total_size_mb": 45.8,
-    "folder_count": 3
-  },
-  "folder_inventories": {
-    "video_uploads": {
-      "folder_name": "video_uploads",
-      "total_files": 310,
-      "total_size_mb": 25.3,
-      "file_categories": {
-        "videos": [
-          {
-            "name": "video_uploads/timelapse_001.mp4",
-            "size_mb": 15.2,
-            "file_category": "video",
-            "created_time": "2025-08-15T10:30:00",
-            "video_metadata": {
-              "format": "MP4",
-              "content_type": "video"
-            }
-          }
-        ]
-      }
-    }
-  },
-  "categorized_summary": {
-    "videos": {"count": 310, "size_mb": 25.3},
-    "audio": {"count": 45, "size_mb": 8.2},
-    "images": {"count": 125, "size_mb": 12.3}
+    "total_recent_likes": 32,
+    "total_recent_comments": 0,
+    "total_recent_impressions": 0,
+    "avg_engagement_rate": 0,
+    "media_count_analyzed": 5
   }
 }
 ```
 
 ## Configuration Requirements
 
-### Instagram Configuration
+### Instagram Analytics Configuration
 
 ```json
 {
@@ -214,19 +279,22 @@ The system now uses a simplified testing approach without unnecessary orchestrat
   "instagram_user_id": "${INSTAGRAM_USER_ID}",
   "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
   "instagram_token_expiration": "2025-08-23 21:00:33",
-  "instagram_days_before_refresh": 7
+  "instagram_days_before_refresh": 7,
+  
+  "max_media_items": 7,
+  "max_comments_per_media": 10,
+  "max_replies_per_comment": 5
 }
 ```
 
-### GCS Configuration
+### Environment Variables Required
 
-```json
-{
-  "gcs_bucket": "autopot1-printdump",
-  "gcs_api_key_path": "${GCS_API_KEY_PATH}",
-  "gcs_folders": ["video_uploads", "music_uploads", "completed_works", "wip_photos", "build_photos"],
-  "gcs_draft_folder": "draft_videos"
-}
+```bash
+# Instagram API Configuration
+FB_APP_ID=your_facebook_app_id
+FB_APP_SECRET=your_facebook_app_secret
+INSTAGRAM_USER_ID=your_instagram_user_id
+INSTAGRAM_ACCESS_TOKEN=your_instagram_access_token
 ```
 
 ## Testing
@@ -234,31 +302,35 @@ The system now uses a simplified testing approach without unnecessary orchestrat
 ### Running Tests
 
 ```bash
-# Activate conda environment
-conda activate sympy3d
+# Basic export (uses config defaults)
+python instagram_analytics.py -o output.json
 
-# Run the complete test suite
-python3 test_phase2.py
+# Full diagnostics and testing
+python instagram_analytics.py --fulltest -o output.json
 
-# Check generated JSON results
-ls -la *_result.json
+# Help and options
+python instagram_analytics.py --help
 ```
 
 ### Test Coverage
 
 The test suite covers:
-- ✅ Instagram Analytics Manager initialization and methods
-- ✅ GCS Inventory Manager initialization and file operations
-- ✅ Integration between Phase 2 components
+- ✅ Instagram Analytics Manager initialization and configuration
+- ✅ Account information retrieval with insights
+- ✅ Media retrieval with configurable limits
+- ✅ Comment and reply retrieval with nested structure
+- ✅ Media insights for different content types
+- ✅ Account insights across multiple time periods
+- ✅ Hashtag performance analysis
 - ✅ Error handling and graceful degradation
 - ✅ Configuration validation and requirements checking
 - ✅ Direct JSON output generation
 
 ### Expected Test Results
 
-- **Instagram Analytics**: Should pass and generate `instagram_analytics_result.json`
-- **GCS Inventory**: Should pass and generate `gcs_inventory_result.json`
-- **Integration**: Should pass for configuration and logging integration
+- **Instagram Analytics**: Should pass and generate JSON with configurable limits
+- **Configuration Display**: Should show current limits (7, 10, 5 by default)
+- **Data Retrieval**: Should respect configured limits for media, comments, and replies
 - **Error Handling**: Should pass for graceful degradation testing
 
 ## Integration with Phase 1
@@ -268,18 +340,13 @@ The test suite covers:
 All Phase 2 components use the Phase 1 central logging system:
 
 ```python
-from logger import get_logger, get_performance_logger
+from logger import get_logger
 
 # Get component-specific logger
 logger = get_logger('instagram_analytics')
 
-# Performance tracking
-performance_logger = get_performance_logger()
-
-@performance_logger.performance_logger("data_collection")
-def collect_data():
-    # Data collection logic
-    pass
+# Log initialization with configuration
+logger.info(f"Instagram Analytics Manager initialized with limits: media={self.max_media_items}, comments={self.max_comments_per_media}, replies={self.max_replies_per_comment}")
 ```
 
 ### Configuration Integration
@@ -292,9 +359,10 @@ from config import get_config
 # Get configuration
 config = get_config()
 
-# Access specific configuration sections
-instagram_config = config.get_instagram_config()
-gcs_config = config.get_gcs_config()
+# Access Instagram analytics configuration
+max_media_items = config.get('max_media_items', 25)
+max_comments_per_media = config.get('max_comments_per_media', 50)
+max_replies_per_comment = config.get('max_replies_per_comment', 25)
 ```
 
 ## Performance Characteristics
@@ -302,23 +370,17 @@ gcs_config = config.get_gcs_config()
 ### Instagram Analytics
 
 - **API Rate Limits**: Respects Instagram Graph API rate limits
+- **Configurable Limits**: User-defined limits for media, comments, and replies
 - **Data Caching**: No built-in caching (real-time data collection)
 - **Error Recovery**: Graceful handling of API failures
-- **Performance**: Optimized for batch collection operations
+- **Performance**: Optimized for batch collection operations with configurable depth
 
-### GCS Inventory
+### Data Retrieval Optimization
 
-- **Scanning Performance**: Efficient blob listing and metadata extraction
-- **Memory Usage**: Minimal memory footprint during scanning
+- **Selective Fetching**: Only retrieves data within configured limits
+- **Efficient API Calls**: Minimizes API requests through smart field selection
+- **Memory Management**: Efficient handling of comment/reply trees
 - **Network Optimization**: Batch operations where possible
-- **Error Handling**: Continues operation despite individual file errors
-
-### Data Collection Orchestrator
-
-- **Parallel Operations**: Sequential collection (can be enhanced for parallel)
-- **Resource Management**: Efficient memory and network usage
-- **Status Monitoring**: Real-time status updates
-- **Export Optimization**: Organized data export with compression
 
 ## Error Handling
 
@@ -327,15 +389,17 @@ gcs_config = config.get_gcs_config()
 The system is designed to continue operation even when some components fail:
 
 ```python
-# Instagram manager fails, but GCS continues
+# Comment retrieval fails, but media insights continue
 try:
-    instagram_data = orchestrator.collect_instagram_data()
+    comments = self.get_media_comments(media_id)
+    media_item['comments'] = comments
 except Exception as e:
-    logger.warning(f"Instagram collection failed: {e}")
-    # Continue with GCS collection
+    self.logger.debug(f"Failed to retrieve comments for media {media_id}: {e}")
+    media_item['comments'] = []
 
-# GCS collection continues
-gcs_data = orchestrator.collect_gcs_data()
+# Media insights continue
+insights = self.get_media_insights(media_id, media_type)
+media_item['insights'] = insights
 ```
 
 ### Validation and Requirements
@@ -343,46 +407,50 @@ gcs_data = orchestrator.collect_gcs_data()
 Comprehensive validation ensures system reliability:
 
 ```python
-# Validate requirements before collection
-validation = orchestrator.validate_collection_requirements()
-if not validation['overall_validation']:
-    logger.error("Cannot proceed with data collection")
-    return
+# Validate Instagram account connection
+if not self.instagram_account_id:
+    self.logger.warning("No Instagram Business Account found")
+    return []
 
-# Proceed with collection
-collection_results = orchestrator.collect_all_data()
+# Validate required permissions
+permissions = self.check_token_permissions()
+if not permissions.get('is_valid'):
+    self.logger.warning("Token permissions insufficient for full functionality")
 ```
 
 ## Data Export and Storage
 
 ### File Organization
 
-Collected data is organized by timestamp and source:
+Collected data is organized by timestamp and configuration:
 
 ```
-collected_data/
-├── instagram_analytics_20250818_141020.json
-├── gcs_inventory_20250818_141020.json
-└── data_collection_summary_20250818_141020.json
+output/
+├── instagram_analytics_20250819_104700.json
+├── instagram_analytics_20250819_104800.json
+└── instagram_analytics_20250819_104900.json
 ```
 
 ### Export Formats
 
 All data is exported in structured JSON format:
-- **Instagram Analytics**: Complete account and media analytics
-- **GCS Inventory**: File inventory with metadata and categorization
-- **Collection Summary**: Orchestration results and statistics
+- **Instagram Analytics**: Complete account, media, and comment analytics
+- **Configuration Tracking**: Current limits and settings used
+- **Performance Metrics**: Engagement, reach, and interaction data
+- **Comment Threads**: Complete conversation trees with nested replies
 
 ## Benefits of Phase 2
 
-1. **Comprehensive Data Collection**: Instagram analytics and GCS inventory
-2. **Context Awareness**: Rich data for AI-driven video generation
-3. **Performance Insights**: Engagement metrics and hashtag effectiveness
-4. **Resource Cataloging**: Complete file inventory with metadata
-5. **Unified Interface**: Single orchestrator for all data collection
-6. **Error Resilience**: Graceful degradation and error handling
-7. **Integration Ready**: Foundation for AI assistant integration
-8. **Export Capabilities**: JSON export for AI processing
+1. **Comprehensive Data Collection**: Instagram analytics with comments and replies
+2. **Configurable Performance**: User-defined limits for data retrieval
+3. **Context Awareness**: Rich data for AI-driven video generation
+4. **Performance Insights**: Engagement metrics and hashtag effectiveness
+5. **User Interaction Data**: Complete comment and reply analysis
+6. **Unified Interface**: Single manager for all Instagram data collection
+7. **Error Resilience**: Graceful degradation and error handling
+8. **Integration Ready**: Foundation for AI assistant integration
+9. **Export Capabilities**: JSON export for AI processing
+10. **Clean Data Structure**: No redundant fields, optimized for processing
 
 ## Next Steps
 
@@ -393,22 +461,22 @@ Phase 2 provides the data foundation for:
 
 ## Technical Notes
 
-- **Dependencies**: Requires `google-cloud-storage` package
-- **API Limits**: Respects Instagram Graph API rate limits
-- **Memory Management**: Efficient handling of large file inventories
+- **Dependencies**: Requires `requests` package for Instagram API calls
+- **API Limits**: Respects Instagram Graph API rate limits and permissions
+- **Memory Management**: Efficient handling of comment/reply trees
 - **Error Recovery**: Comprehensive error handling and logging
-- **Performance**: Optimized for production data collection
-- **Scalability**: Designed for growing data volumes
+- **Performance**: Optimized for production data collection with configurable depth
+- **Scalability**: Designed for growing data volumes with user-defined limits
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Instagram API Errors**: Check access token validity and permissions
-2. **GCS Access Issues**: Verify service account key and bucket permissions
+2. **Rate Limiting**: Instagram API has strict rate limits - use configurable limits
 3. **Configuration Errors**: Ensure all required environment variables are set
-4. **Rate Limiting**: Instagram API has strict rate limits
-5. **File Access**: Some GCS files may be inaccessible due to permissions
+4. **Permission Issues**: Verify Instagram Business Account access and token scopes
+5. **Data Volume**: Adjust configuration limits if experiencing performance issues
 
 ### Debug Mode
 
@@ -419,21 +487,54 @@ from logger import initialize_logging
 initialize_logging({'log_level': 'DEBUG'})
 ```
 
+### Configuration Issues
+
+Check your configuration values:
+
+```bash
+# Run with full test to see current configuration
+python instagram_analytics.py --fulltest
+
+# Check configuration display
+python instagram_analytics.py -o test.json
+```
+
 ## Files Created/Modified
 
-- **`instagram_analytics.py`** - Enhanced Instagram analytics manager
-- **`gcs_inventory.py`** - Enhanced GCS inventory manager (simplified output)
-- **`test_phase2.py`** - Simplified test suite with direct JSON output
-- **`PHASE2_README.md`** - This documentation
+- **`instagram_analytics.py`** - Enhanced Instagram analytics manager with configuration system
+- **`config.py`** - Added Instagram analytics configuration defaults
+- **`autopost_config.enhanced.json`** - Added Instagram analytics configuration
+- **`PHASE2_README.md`** - This updated documentation
 
 ## Generated Output Files
 
-- **`instagram_analytics_result.json`** - Instagram account analytics data
-- **`gcs_inventory_result.json`** - Simplified GCS file inventory (name, size, URL, metadata)
+- **`instagram_analytics_result.json`** - Instagram account analytics with comments and replies
+- **`test_config_output.json`** - Test output showing configuration integration
 
 ## Dependencies
 
 - **Phase 1 Components**: `logger.py`, `config.py`
-- **External Packages**: `google-cloud-storage`, `requests`
+- **External Packages**: `requests`
 - **Python Version**: 3.7+ for type hints and modern features
 - **Conda Environment**: `sympy3d` (recommended)
+
+## Recent Improvements
+
+### v2.0 Features
+
+- **Configuration System**: User-defined limits for media, comments, and replies
+- **Enhanced Comments**: Nested comment and reply retrieval
+- **Improved Insights**: Better metrics and period support
+- **Clean Data Structure**: Removed redundant user information fields
+- **Performance Optimization**: Configurable data retrieval depth
+- **Better Error Handling**: Graceful degradation for failed API calls
+
+### Configuration Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_media_items` | 7 | Maximum number of media posts to retrieve |
+| `max_comments_per_media` | 10 | Maximum comments per media item |
+| `max_replies_per_comment` | 5 | Maximum replies per comment |
+
+These defaults provide a good balance between data completeness and API performance, while allowing customization for different use cases.
