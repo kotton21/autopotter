@@ -9,11 +9,10 @@ import sys
 import os
 import json
 
-# Add parent directory to path to import config and logger
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Import from parent package
 
-from config import get_config
-from autopotter_tools.gpt_thread_manager import GPTThreadManager
+from ..config import get_config
+from .gpt_thread_manager import GPTThreadManager
 
 def test_config_phase3():
     """Test the Phase 3 configuration options."""

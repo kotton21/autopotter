@@ -9,7 +9,10 @@ from typing import Dict, Any, Optional, List
 if __name__ == "__main__":
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from .logger import get_logger
+try:
+    from .logger import get_logger
+except ImportError:
+    from logger import get_logger
 
 class GPTThreadManager:
     """

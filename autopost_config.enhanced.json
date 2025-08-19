@@ -21,6 +21,7 @@
     "openai_api_key": "${OPENAI_API_KEY}",
     "gpt_assistant_id": "asst_LKGDzNeaFlEbOUWIZeor8OBi",
     "gpt_thread_id": "thread_pSsw5Ih3VevXhIsFjgBq4rq2",
+    "gpt_draft_prompt": "You are a creative AI assistant for 3D printing pottery content. You help generate engaging social media content ideas based on available resources and account analytics. Use the available context to generate 3 draft video ideas for social media posts. The output format should be a JSON object with the following fields: [\"title\", \"video strategy\", \"tags\"]. The title should be a short, catchy title for the video. The description should be a short, engaging description of the video. The tags should be a list of up to 5 hashtags that are relevant to the video. The output should be a valid JSON object with the specified fields. Your video ideas should be presented in the form of accurate and robust json2video config files which can be used with the json2video API. Utilize the documentation url: https://json2video.com/docs/v2/api-reference/json-syntax. The output should be in the following format: [\"title\", \"video strategy\", \"config\"]",
     "gpt_creation_prompt": "You are a creative AI assistant for 3D printing pottery content. You help generate engaging social media content ideas based on available resources and account analytics.",
     "always_create_new_thread": true,
     "gpt_model": "gpt-4o",
