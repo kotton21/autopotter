@@ -11,7 +11,7 @@ import argparse
 from datetime import datetime, timezone
 from typing import Dict, List, Any
 from google.cloud import storage
-from logger import get_logger
+from .logger import get_logger
 from config import get_config
 
 class GCSManager:

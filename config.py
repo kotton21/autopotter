@@ -3,7 +3,7 @@ import json
 import re
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Union
-from logger import get_logger
+from autopotter_tools.logger import get_logger
 
 class ConfigManager:
     """

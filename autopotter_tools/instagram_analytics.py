@@ -9,7 +9,7 @@ import json
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-from logger import get_logger
+from .logger import get_logger
 from config import get_config
 
 class InstagramAnalyticsManager:
