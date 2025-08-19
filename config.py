@@ -118,6 +118,11 @@ class ConfigManager:
             "instagram_token_expiration": "2025-08-23 21:00:33",
             "instagram_days_before_refresh": 7,
             
+            # Instagram Analytics Configuration
+            "max_media_items": 7,
+            "max_comments_per_media": 10,
+            "max_replies_per_comment": 5,
+            
             # GCS Configuration
             "gcs_bucket": "autopot1-printdump",
             "gcs_api_key_path": "${GCS_API_KEY_PATH}",

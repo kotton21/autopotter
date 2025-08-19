@@ -16,6 +16,12 @@ class InstagramAnalyticsManager:
     """
     Enhanced Instagram API manager that generates comprehensive account analytics.
     Integrates with the new Phase 1 logging and configuration systems.
+
+    Notes: 
+     - Summary metrics are computed localy and likely unnecessary complexity.
+     - Control parameters like post limits to grab should be in the config. 
+     - account_insights could be more thorougly explored
+     - media_insights should be more thorougly explored: https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights
     """
     
     def __init__(self, config_path: str = "autopost_config.enhanced.json"):
@@ -33,12 +39,30 @@ class InstagramAnalyticsManager:
         self.access_token = self.instagram_config['access_token']
         self.user_id = self.instagram_config['user_id']
         
+        # Configuration parameters for data retrieval limits
+        self.max_media_items = self.config.get('max_media_items', 25)
+        self.max_comments_per_media = self.config.get('max_comments_per_media', 50)
+        self.max_replies_per_comment = self.config.get('max_replies_per_comment', 25)
+        
         # Find Instagram Business Account through Facebook pages
         self.instagram_account_id = None
         self.page_access_token = None
         self._find_instagram_account()
         
-        self.logger.info("Instagram Analytics Manager initialized")
+        self.logger.info(f"Instagram Analytics Manager initialized with limits: media={self.max_media_items}, comments={self.max_comments_per_media}, replies={self.max_replies_per_comment}")
+    
+    def get_current_config(self) -> Dict[str, Any]:
+        """
+        Get the current configuration parameters for data retrieval limits.
+        
+        Returns:
+            Dictionary containing current configuration values
+        """
+        return {
+            'max_media_items': self.max_media_items,
+            'max_comments_per_media': self.max_comments_per_media,
+            'max_replies_per_comment': self.max_replies_per_comment
+        }
     
     def _find_instagram_account(self):
         """Find the Instagram Business Account through Facebook pages."""
@@ -463,16 +487,20 @@ class InstagramAnalyticsManager:
         
         return comprehensive_info
     
-    def get_recent_media(self, limit: int = 25) -> List[Dict[str, Any]]:
+    def get_recent_media(self, limit: int = None) -> List[Dict[str, Any]]:
         """
         Retrieve recent media posts from Instagram Business Account.
         
         Args:
-            limit: Maximum number of media items to retrieve
+            limit: Maximum number of media items to retrieve (defaults to config value)
             
         Returns:
             List of media items with engagement data
         """
+        # Use config limit if none specified
+        if limit is None:
+            limit = self.max_media_items
+            
         self.logger.info(f"Retrieving recent Instagram media (limit: {limit})")
         
         if not self.instagram_account_id:
@@ -548,7 +576,8 @@ class InstagramAnalyticsManager:
             url = f"{self.base_url}/{media_id}/comments"
             params = {
                 "fields": "id,text,timestamp,username,from,like_count",
-                "access_token": self.page_access_token
+                "access_token": self.page_access_token,
+                "limit": self.max_comments_per_media
             }
             
             response = requests.get(url, params=params)
@@ -569,11 +598,7 @@ class InstagramAnalyticsManager:
                     'like_count': comment.get('like_count', 0)
                 }
                 
-                # Extract user information from 'from' field if available
-                if comment_item['from'] and isinstance(comment_item['from'], dict):
-                    comment_item['user_id'] = comment_item['from'].get('id')
-                    comment_item['user_name'] = comment_item['from'].get('name')
-                    comment_item['user_username'] = comment_item['from'].get('username')
+                # Keep only the 'from' object - no need to duplicate user information
                 
                 # Fetch replies for this comment
                 replies = self.get_comment_replies(comment.get('id'))
@@ -604,7 +629,8 @@ class InstagramAnalyticsManager:
             url = f"{self.base_url}/{comment_id}/replies"
             params = {
                 "fields": "id,text,timestamp,username,from,like_count",
-                "access_token": self.page_access_token
+                "access_token": self.page_access_token,
+                "limit": self.max_replies_per_comment
             }
             
             response = requests.get(url, params=params)
@@ -625,11 +651,7 @@ class InstagramAnalyticsManager:
                     'like_count': reply.get('like_count', 0)
                 }
                 
-                # Extract user information from 'from' field if available
-                if reply_item['from'] and isinstance(reply_item['from'], dict):
-                    reply_item['user_id'] = reply_item['from'].get('id')
-                    reply_item['user_name'] = reply_item['from'].get('name')
-                    reply_item['user_username'] = reply_item['from'].get('username')
+                # Keep only the 'from' object - no need to duplicate user information
                 
                 replies.append(reply_item)
             
@@ -908,10 +930,11 @@ class InstagramAnalyticsManager:
                 'export_info': {
                     'exported_at': datetime.now().isoformat(),
                     'export_version': '2.0',
-                    'source': 'instagram_analytics_manager'
+                    'source': 'instagram_analytics_manager',
+                    'configuration': self.get_current_config()
                 },
                 'account_info': self.get_account_info(),
-                'recent_media': self.get_recent_media(limit=5),
+                'recent_media': self.get_recent_media(),
                 # 'recent_activity': self.get_recent_activity(limit=20),
                 'hashtag_performance': self.get_hashtag_performance(),
                 'summary_metrics': {}
@@ -1027,6 +1050,13 @@ def main():
         # Initialize the manager
         analytics_manager = InstagramAnalyticsManager()
         print("✅ Manager initialized successfully")
+        
+        # Display current configuration
+        config = analytics_manager.get_current_config()
+        print(f"\n⚙️  Current Configuration:")
+        print(f"  Max Media Items: {config['max_media_items']}")
+        print(f"  Max Comments per Media: {config['max_comments_per_media']}")
+        print(f"  Max Replies per Comment: {config['max_replies_per_comment']}")
         
         if args.fulltest:
             # Get account info with permissions
