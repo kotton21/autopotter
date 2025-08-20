@@ -10,9 +10,10 @@ This module implements the main generation flow:
 4. Initialize GPT Responses Manager
 5. Query GPT with available data and prompt intent
 6. Print results
+7. Save response to JSON file (if --outfile specified)
 
 Usage:
-    python enhanced_autopost.py [--config CONFIG_FILE] [--draft-prompt PROMPT_OVERRIDE]
+    python enhanced_autopost.py [--config CONFIG_FILE] [--draft-prompt PROMPT_OVERRIDE] [--outfile OUTPUT_FILE]
 """
 
 import os
@@ -20,6 +21,7 @@ import sys
 import argparse
 import json
 from typing import Dict, Any, Optional
+from datetime import datetime
 
 # Add autopotter_tools to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), 'autopotter_tools'))
@@ -158,6 +160,45 @@ def query_gpt_responses(config: Dict[str, Any],
         logger.error(f"Failed to query GPT: {e}")
         raise
 
+def parse_gpt_response(response: str) -> dict:
+    """
+    Parse GPT response as JSON, handling markdown code blocks.
+    
+    Args:
+        response: GPT response string
+        
+    Returns:
+        Parsed JSON object or error info
+    """
+    try:
+        # Clean the response by removing markdown code block markers
+        cleaned_response = response.strip()
+        
+        # Remove ```json and ``` markers if present
+        if cleaned_response.startswith("```json"):
+            cleaned_response = cleaned_response[7:]  # Remove ```json
+        elif cleaned_response.startswith("```"):
+            cleaned_response = cleaned_response[3:]  # Remove ```
+            
+        if cleaned_response.endswith("```"):
+            cleaned_response = cleaned_response[:-3]  # Remove trailing ```
+            
+        cleaned_response = cleaned_response.strip()
+        
+        # Try to parse the cleaned response as JSON
+        parsed_json = json.loads(cleaned_response)
+        return {
+            "success": True,
+            "data": parsed_json
+        }
+    except json.JSONDecodeError as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "raw_response": response,
+            "cleaned_response": cleaned_response
+        }
+
 def main():
     """Main entry point for enhanced autopost."""
     parser = argparse.ArgumentParser(
@@ -173,6 +214,11 @@ def main():
         "--draft-prompt", 
         type=str, 
         help="Override draft prompt from configuration"
+    )
+    parser.add_argument(
+        "--outfile",
+        type=str,
+        help="Save GPT response to specified JSON file"
     )
     
     args = parser.parse_args()
@@ -224,7 +270,50 @@ def main():
         print("\nGPT Response:")
         print("-" * 40)
         print(response)
+        
+        # Show parsing results if available
+        parsed_response = parse_gpt_response(response)
+        if parsed_response["success"]:
+            print(f"\nJSON Parsing: SUCCESS")
+            print(f"Parsed {len(parsed_response['data'])} items" if isinstance(parsed_response['data'], list) else "Parsed JSON object")
+        else:
+            print(f"\nJSON Parsing: FAILED ({parsed_response['error']})")
+        
         print("="*80)
+        
+        # 7. Save response to file if outfile parameter is specified
+        if args.outfile:
+            logger.info(f"Step 7: Saving response to {args.outfile}...")
+            try:
+                # Create output data structure
+                parsed_response = parse_gpt_response(response)
+                output_data = {
+                    "timestamp": datetime.now().isoformat(),
+                    "prompt_intent": draft_prompt,
+                    "gpt_response": parsed_response["data"] if parsed_response["success"] else response,
+                    "parsing_success": parsed_response["success"],
+                    "context_data": {
+                        "gcs_inventory_count": len(gcs_inventory.get("files", [])),
+                        "instagram_analytics_included": ig_analytics is not None,
+                        "config_source": args.config
+                    }
+                }
+                
+                # Ensure output directory exists
+                output_dir = os.path.dirname(args.outfile)
+                if output_dir:
+                    os.makedirs(output_dir, exist_ok=True)
+                
+                # Save to JSON file
+                with open(args.outfile, 'w', encoding='utf-8') as f:
+                    json.dump(output_data, f, indent=2, ensure_ascii=False)
+                
+                logger.info(f"Response saved successfully to {args.outfile}")
+                print(f"\nResponse saved to: {args.outfile}")
+                
+            except Exception as e:
+                logger.error(f"Failed to save response to file: {e}")
+                print(f"\nWARNING: Failed to save response to file: {e}")
         
         logger.info("Enhanced video generation completed successfully")
         
