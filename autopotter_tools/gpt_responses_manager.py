@@ -47,8 +47,7 @@ class GPTResponsesManager:
         self.max_history_length = self.openai_config.get('max_history_length', 10)
         
         # System prompt from configuration
-        self.system_prompt = self.openai_config.get('creation_prompt', 
-            "You are a creative AI assistant for 3D printing pottery content. You help generate engaging social media content ideas based on available resources and account analytics.")
+        self.system_prompt = self.openai_config.get('creation_prompt')
         
         self.logger.info(f"GPTResponsesManager initialized successfully with model: {self.model}")
     

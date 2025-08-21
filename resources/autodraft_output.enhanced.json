@@ -1,0 +1,317 @@
+{
+  "prompt": "Output 5 different and varied complete ideas for Autopotter social media post.",
+  "response": "{\"videos\":[{\"title\":\"Timelapse Symphony\",\"video_strategy\":\"Showcase a seamless creation with music to captivate and inspire.\",\"video_caption\":\"Witness the symphony of creation with Autopotter's magical touch. \ud83c\udfb6\u2728 #PotterySymphony #Autopotter\",\"json2video_config_str\":\"{\\n    \\\"quality\\\": \\\"high\\\",\\n    \\\"draft\\\": false,\\n    \\\"scenes\\\": [\\n        {\\n            \\\"comment\\\": \\\"Timelapse_creation_showcase\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_cylinder-PV3.gcode_20250422_1955.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        }\\n    ],\\n    \\\"elements\\\": [\\n        {\\n            \\\"type\\\": \\\"audio\\\",\\n            \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/music_uploads/Spiring%20-%20Flowers.wav\\\",\\n            \\\"seek\\\": 50,\\n            \\\"fade-in\\\": 0.5,\\n            \\\"volume\\\": 0.3,\\n            \\\"duration\\\": -2,\\n            \\\"fade-out\\\": 0.5\\n        },\\n        {\\n            \\\"type\\\": \\\"voice\\\",\\n            \\\"text\\\": \\\"Watch as the clay dances under my command, creating a masterpiece of serenity.\\\",\\n            \\\"voice\\\": \\\"en-US-BlueNeural\\\",\\n            \\\"model\\\": \\\"azure\\\",\\n            \\\"volume\\\": 1,\\n            \\\"duration\\\": -2\\n        }\\n    ],\\n    \\\"resolution\\\": \\\"instagram-story\\\",\\n    \\\"fps\\\": 25\\n}\"},{\"title\":\"Behind the Magic\",\"video_strategy\":\"Engage with the process of creation through a series of snippets showing different parts of the making.\",\"video_caption\":\"Dive into the magic behind the scenes with Autopotter! See the art of creation unfold. \ud83c\udfa8 #BehindTheMagic #CreativeJourney\",\"json2video_config_str\":\"{\\n    \\\"quality\\\": \\\"high\\\",\\n    \\\"draft\\\": false,\\n    \\\"scenes\\\": [\\n        {\\n            \\\"comment\\\": \\\"Start_Creation\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv01.gcode_20250429_1524.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        },\\n        {\\n            \\\"comment\\\": \\\"Mid_Creation\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv02.gcode_20250430_1947.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        },\\n        {\\n            \\\"comment\\\": \\\"Final_Touch\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv05.gcode_20250430_2252.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        }\\n    ],\\n    \\\"elements\\\": [\\n        {\\n            \\\"type\\\": \\\"audio\\\",\\n            \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt%20%26%20chillity%20-%20Feelings%20(Instrumental).mp3\\\",\\n            \\\"seek\\\": 50,\\n            \\\"fade-in\\\": 0.5,\\n            \\\"volume\\\": 0.3,\\n            \\\"duration\\\": -2,\\n            \\\"fade-out\\\": 0.5\\n        }\\n    ],\\n    \\\"resolution\\\": \\\"instagram-story\\\",\\n    \\\"fps\\\": 25\\n}\"},{\"title\":\"Artistic Evolution\",\"video_strategy\":\"Display a series of images with text to show the evolution of designs and their identities.\",\"video_caption\":\"Explore the evolution of identities in each masterpiece. Which is your favorite? \ud83c\udffa #EvolutionOfArt #PotteryDesign\",\"json2video_config_str\":\"{\\n    \\\"quality\\\": \\\"high\\\",\\n    \\\"draft\\\": false,\\n    \\\"scenes\\\": [\\n        {\\n            \\\"comment\\\": \\\"SM26_Mug\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"image\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm26.gcode_20250422_2347.jpg\\\",\\n                    \\\"cache\\\": true,\\n                    \\\"duration\\\": 1\\n                }\\n            ]\\n        },\\n        {\\n            \\\"comment\\\": \\\"SM32_Mug\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"image\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm32.gcode_20250424_1142.jpg\\\",\\n                    \\\"cache\\\": true,\\n                    \\\"duration\\\": 1\\n                }\\n            ]\\n        },\\n        {\\n            \\\"comment\\\": \\\"SM36_Mug\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"image\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm36.gcode_20250424_1853.jpg\\\",\\n                    \\\"cache\\\": true,\\n                    \\\"duration\\\": 1\\n                }\\n            ]\\n        }\\n    ],\\n    \\\"elements\\\": [\\n        {\\n            \\\"type\\\": \\\"text\\\",\\n            \\\"style\\\": \\\"001\\\",\\n            \\\"text\\\": \\\"SM26 A classic shape\\\",\\n            \\\"settings\\\": {\\n              \\\"font-size\\\": \\\"5.5vw\\\",\\n              \\\"color\\\": \\\"#ba8282\\\"\\n            },\\n            \\\"position\\\": \\\"custom\\\",\\n            \\\"cache\\\": false,\\n            \\\"x\\\": -100,\\n            \\\"y\\\": 300\\n        },\\n        {\\n            \\\"type\\\": \\\"text\\\",\\n            \\\"style\\\": \\\"001\\\",\\n            \\\"text\\\": \\\"SM32 A modern twist\\\",\\n            \\\"settings\\\": {\\n              \\\"font-size\\\": \\\"5.5vw\\\",\\n              \\\"color\\\": \\\"#ba8282\\\"\\n            },\\n            \\\"position\\\": \\\"custom\\\",\\n            \\\"cache\\\": false,\\n            \\\"x\\\": -100,\\n            \\\"y\\\": 300\\n        },\\n        {\\n            \\\"type\\\": \\\"text\\\",\\n            \\\"style\\\": \\\"001\\\",\\n            \\\"text\\\": \\\"SM36 An artistic flair\\\",\\n            \\\"settings\\\": {\\n              \\\"font-size\\\": \\\"5.5vw\\\",\\n              \\\"color\\\": \\\"#ba8282\\\"\\n            },\\n            \\\"position\\\": \\\"custom\\\",\\n            \\\"cache\\\": false,\\n            \\\"x\\\": -100,\\n            \\\"y\\\": 300\\n        }\\n    ],\\n    \\\"resolution\\\": \\\"instagram-story\\\",\\n    \\\"fps\\\": 25\\n}\"},{\"title\":\"Creative Possibilities\",\"video_strategy\":\"Capture multiple timelapse prints to highlight the versatility and creativity of the designs.\",\"video_caption\":\"Innovation at my fingertips, reshaping the future of pottery one print at a time. \ud83d\ude80 #CreativeJourney #FutureOfPottery\",\"json2video_config_str\":\"{\\n    \\\"quality\\\": \\\"high\\\",\\n    \\\"draft\\\": false,\\n    \\\"scenes\\\": [\\n        {\\n            \\\"comment\\\": \\\"Tu01_Tumbler\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu01.gcode_20250426_0021.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        },\\n        {\\n            \\\"comment\\\": \\\"Tu04_Tumbler\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu04.gcode_20250426_0227.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        },\\n        {\\n            \\\"comment\\\": \\\"Tu09_Tumbler\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu09.gcode_20250428_1436.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        }\\n    ],\\n    \\\"elements\\\": [\\n        {\\n            \\\"type\\\": \\\"audio\\\",\\n            \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/music_uploads/Spiring%20-%20Flowers.wav\\\",\\n            \\\"seek\\\": 50,\\n            \\\"fade-in\\\": 0.5,\\n            \\\"volume\\\": 0.3,\\n            \\\"duration\\\": -2,\\n            \\\"fade-out\\\": 0.5\\n        }\\n    ],\\n    \\\"resolution\\\": \\\"instagram-story\\\",\\n    \\\"fps\\\": 25\\n}\"},{\"title\":\"Nostalgic Reflections\",\"video_strategy\":\"Use humor and Autopotter's personality with older creations to engage sentimentally.\",\"video_caption\":\"Remembering the classics - even robots get nostalgic. Are these pieces wabi-sabi or modern marvels? #NostalgicCreation #ArtisticMemories\",\"json2video_config_str\":\"{\\n    \\\"quality\\\": \\\"high\\\",\\n    \\\"draft\\\": false,\\n    \\\"scenes\\\": [\\n        {\\n            \\\"comment\\\": \\\"Old_Creation_Reflection\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"video\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tm01.gcode_20250429_1908.mp4\\\",\\n                    \\\"position\\\": \\\"center-center\\\",\\n                    \\\"muted\\\": true,\\n                    \\\"resize\\\": \\\"cover\\\"\\n                }\\n            ]\\n        },\\n        {\\n            \\\"comment\\\": \\\"Reflective_Music\\\",\\n            \\\"elements\\\": [\\n                {\\n                    \\\"type\\\": \\\"audio\\\",\\n                    \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt%20%26%20chillity%20-%20Feelings%20(Instrumental).mp3\\\",\\n                    \\\"seek\\\": 50,\\n                    \\\"fade-in\\\": 0.5,\\n                    \\\"volume\\\": 0.3,\\n                    \\\"duration\\\": -2,\\n                    \\\"fade-out\\\": 0.5\\n                }\\n            ]\\n        }\\n    ],\\n    \\\"elements\\\": [\\n        {\\n            \\\"type\\\": \\\"voice\\\",\\n            \\\"text\\\": \\\"Ah, the classics! Remnants of robotic nostalgia. Who says machines can't reminisce?\\\",\\n            \\\"voice\\\": \\\"en-US-BlueNeural\\\",\\n            \\\"model\\\": \\\"azure\\\",\\n            \\\"volume\\\": 1,\\n            \\\"duration\\\": -2\\n        }\\n    ],\\n    \\\"resolution\\\": \\\"instagram-story\\\",\\n    \\\"fps\\\": 25\\n}\"}]}",
+  "parsed_output": {
+    "videos": [
+      {
+        "title": "Timelapse Symphony",
+        "video_strategy": "Showcase a seamless creation with music to captivate and inspire.",
+        "video_caption": "Witness the symphony of creation with Autopotter's magical touch. \ud83c\udfb6\u2728 #PotterySymphony #Autopotter",
+        "json2video_config_str": "{\n    \"quality\": \"high\",\n    \"draft\": false,\n    \"scenes\": [\n        {\n            \"comment\": \"Timelapse_creation_showcase\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_cylinder-PV3.gcode_20250422_1955.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        }\n    ],\n    \"elements\": [\n        {\n            \"type\": \"audio\",\n            \"src\": \"https://storage.googleapis.com/autopot1-printdump/music_uploads/Spiring%20-%20Flowers.wav\",\n            \"seek\": 50,\n            \"fade-in\": 0.5,\n            \"volume\": 0.3,\n            \"duration\": -2,\n            \"fade-out\": 0.5\n        },\n        {\n            \"type\": \"voice\",\n            \"text\": \"Watch as the clay dances under my command, creating a masterpiece of serenity.\",\n            \"voice\": \"en-US-BlueNeural\",\n            \"model\": \"azure\",\n            \"volume\": 1,\n            \"duration\": -2\n        }\n    ],\n    \"resolution\": \"instagram-story\",\n    \"fps\": 25\n}"
+      },
+      {
+        "title": "Behind the Magic",
+        "video_strategy": "Engage with the process of creation through a series of snippets showing different parts of the making.",
+        "video_caption": "Dive into the magic behind the scenes with Autopotter! See the art of creation unfold. \ud83c\udfa8 #BehindTheMagic #CreativeJourney",
+        "json2video_config_str": "{\n    \"quality\": \"high\",\n    \"draft\": false,\n    \"scenes\": [\n        {\n            \"comment\": \"Start_Creation\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv01.gcode_20250429_1524.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        },\n        {\n            \"comment\": \"Mid_Creation\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv02.gcode_20250430_1947.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        },\n        {\n            \"comment\": \"Final_Touch\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv05.gcode_20250430_2252.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        }\n    ],\n    \"elements\": [\n        {\n            \"type\": \"audio\",\n            \"src\": \"https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt%20%26%20chillity%20-%20Feelings%20(Instrumental).mp3\",\n            \"seek\": 50,\n            \"fade-in\": 0.5,\n            \"volume\": 0.3,\n            \"duration\": -2,\n            \"fade-out\": 0.5\n        }\n    ],\n    \"resolution\": \"instagram-story\",\n    \"fps\": 25\n}"
+      },
+      {
+        "title": "Artistic Evolution",
+        "video_strategy": "Display a series of images with text to show the evolution of designs and their identities.",
+        "video_caption": "Explore the evolution of identities in each masterpiece. Which is your favorite? \ud83c\udffa #EvolutionOfArt #PotteryDesign",
+        "json2video_config_str": "{\n    \"quality\": \"high\",\n    \"draft\": false,\n    \"scenes\": [\n        {\n            \"comment\": \"SM26_Mug\",\n            \"elements\": [\n                {\n                    \"type\": \"image\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm26.gcode_20250422_2347.jpg\",\n                    \"cache\": true,\n                    \"duration\": 1\n                }\n            ]\n        },\n        {\n            \"comment\": \"SM32_Mug\",\n            \"elements\": [\n                {\n                    \"type\": \"image\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm32.gcode_20250424_1142.jpg\",\n                    \"cache\": true,\n                    \"duration\": 1\n                }\n            ]\n        },\n        {\n            \"comment\": \"SM36_Mug\",\n            \"elements\": [\n                {\n                    \"type\": \"image\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm36.gcode_20250424_1853.jpg\",\n                    \"cache\": true,\n                    \"duration\": 1\n                }\n            ]\n        }\n    ],\n    \"elements\": [\n        {\n            \"type\": \"text\",\n            \"style\": \"001\",\n            \"text\": \"SM26 A classic shape\",\n            \"settings\": {\n              \"font-size\": \"5.5vw\",\n              \"color\": \"#ba8282\"\n            },\n            \"position\": \"custom\",\n            \"cache\": false,\n            \"x\": -100,\n            \"y\": 300\n        },\n        {\n            \"type\": \"text\",\n            \"style\": \"001\",\n            \"text\": \"SM32 A modern twist\",\n            \"settings\": {\n              \"font-size\": \"5.5vw\",\n              \"color\": \"#ba8282\"\n            },\n            \"position\": \"custom\",\n            \"cache\": false,\n            \"x\": -100,\n            \"y\": 300\n        },\n        {\n            \"type\": \"text\",\n            \"style\": \"001\",\n            \"text\": \"SM36 An artistic flair\",\n            \"settings\": {\n              \"font-size\": \"5.5vw\",\n              \"color\": \"#ba8282\"\n            },\n            \"position\": \"custom\",\n            \"cache\": false,\n            \"x\": -100,\n            \"y\": 300\n        }\n    ],\n    \"resolution\": \"instagram-story\",\n    \"fps\": 25\n}"
+      },
+      {
+        "title": "Creative Possibilities",
+        "video_strategy": "Capture multiple timelapse prints to highlight the versatility and creativity of the designs.",
+        "video_caption": "Innovation at my fingertips, reshaping the future of pottery one print at a time. \ud83d\ude80 #CreativeJourney #FutureOfPottery",
+        "json2video_config_str": "{\n    \"quality\": \"high\",\n    \"draft\": false,\n    \"scenes\": [\n        {\n            \"comment\": \"Tu01_Tumbler\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu01.gcode_20250426_0021.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        },\n        {\n            \"comment\": \"Tu04_Tumbler\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu04.gcode_20250426_0227.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        },\n        {\n            \"comment\": \"Tu09_Tumbler\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu09.gcode_20250428_1436.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        }\n    ],\n    \"elements\": [\n        {\n            \"type\": \"audio\",\n            \"src\": \"https://storage.googleapis.com/autopot1-printdump/music_uploads/Spiring%20-%20Flowers.wav\",\n            \"seek\": 50,\n            \"fade-in\": 0.5,\n            \"volume\": 0.3,\n            \"duration\": -2,\n            \"fade-out\": 0.5\n        }\n    ],\n    \"resolution\": \"instagram-story\",\n    \"fps\": 25\n}"
+      },
+      {
+        "title": "Nostalgic Reflections",
+        "video_strategy": "Use humor and Autopotter's personality with older creations to engage sentimentally.",
+        "video_caption": "Remembering the classics - even robots get nostalgic. Are these pieces wabi-sabi or modern marvels? #NostalgicCreation #ArtisticMemories",
+        "json2video_config_str": "{\n    \"quality\": \"high\",\n    \"draft\": false,\n    \"scenes\": [\n        {\n            \"comment\": \"Old_Creation_Reflection\",\n            \"elements\": [\n                {\n                    \"type\": \"video\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tm01.gcode_20250429_1908.mp4\",\n                    \"position\": \"center-center\",\n                    \"muted\": true,\n                    \"resize\": \"cover\"\n                }\n            ]\n        },\n        {\n            \"comment\": \"Reflective_Music\",\n            \"elements\": [\n                {\n                    \"type\": \"audio\",\n                    \"src\": \"https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt%20%26%20chillity%20-%20Feelings%20(Instrumental).mp3\",\n                    \"seek\": 50,\n                    \"fade-in\": 0.5,\n                    \"volume\": 0.3,\n                    \"duration\": -2,\n                    \"fade-out\": 0.5\n                }\n            ]\n        }\n    ],\n    \"elements\": [\n        {\n            \"type\": \"voice\",\n            \"text\": \"Ah, the classics! Remnants of robotic nostalgia. Who says machines can't reminisce?\",\n            \"voice\": \"en-US-BlueNeural\",\n            \"model\": \"azure\",\n            \"volume\": 1,\n            \"duration\": -2\n        }\n    ],\n    \"resolution\": \"instagram-story\",\n    \"fps\": 25\n}"
+      }
+    ]
+  },
+  "parsed_json2video_configs": [
+    {
+      "quality": "high",
+      "draft": false,
+      "scenes": [
+        {
+          "comment": "Timelapse_creation_showcase",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_cylinder-PV3.gcode_20250422_1955.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        }
+      ],
+      "elements": [
+        {
+          "type": "audio",
+          "src": "https://storage.googleapis.com/autopot1-printdump/music_uploads/Spiring%20-%20Flowers.wav",
+          "seek": 50,
+          "fade-in": 0.5,
+          "volume": 0.3,
+          "duration": -2,
+          "fade-out": 0.5
+        },
+        {
+          "type": "voice",
+          "text": "Watch as the clay dances under my command, creating a masterpiece of serenity.",
+          "voice": "en-US-BlueNeural",
+          "model": "azure",
+          "volume": 1,
+          "duration": -2
+        }
+      ],
+      "resolution": "instagram-story",
+      "fps": 25
+    },
+    {
+      "quality": "high",
+      "draft": false,
+      "scenes": [
+        {
+          "comment": "Start_Creation",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv01.gcode_20250429_1524.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        },
+        {
+          "comment": "Mid_Creation",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv02.gcode_20250430_1947.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        },
+        {
+          "comment": "Final_Touch",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_rv05.gcode_20250430_2252.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        }
+      ],
+      "elements": [
+        {
+          "type": "audio",
+          "src": "https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt%20%26%20chillity%20-%20Feelings%20(Instrumental).mp3",
+          "seek": 50,
+          "fade-in": 0.5,
+          "volume": 0.3,
+          "duration": -2,
+          "fade-out": 0.5
+        }
+      ],
+      "resolution": "instagram-story",
+      "fps": 25
+    },
+    {
+      "quality": "high",
+      "draft": false,
+      "scenes": [
+        {
+          "comment": "SM26_Mug",
+          "elements": [
+            {
+              "type": "image",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm26.gcode_20250422_2347.jpg",
+              "cache": true,
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "comment": "SM32_Mug",
+          "elements": [
+            {
+              "type": "image",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm32.gcode_20250424_1142.jpg",
+              "cache": true,
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "comment": "SM36_Mug",
+          "elements": [
+            {
+              "type": "image",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_sm36.gcode_20250424_1853.jpg",
+              "cache": true,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "elements": [
+        {
+          "type": "text",
+          "style": "001",
+          "text": "SM26 A classic shape",
+          "settings": {
+            "font-size": "5.5vw",
+            "color": "#ba8282"
+          },
+          "position": "custom",
+          "cache": false,
+          "x": -100,
+          "y": 300
+        },
+        {
+          "type": "text",
+          "style": "001",
+          "text": "SM32 A modern twist",
+          "settings": {
+            "font-size": "5.5vw",
+            "color": "#ba8282"
+          },
+          "position": "custom",
+          "cache": false,
+          "x": -100,
+          "y": 300
+        },
+        {
+          "type": "text",
+          "style": "001",
+          "text": "SM36 An artistic flair",
+          "settings": {
+            "font-size": "5.5vw",
+            "color": "#ba8282"
+          },
+          "position": "custom",
+          "cache": false,
+          "x": -100,
+          "y": 300
+        }
+      ],
+      "resolution": "instagram-story",
+      "fps": 25
+    },
+    {
+      "quality": "high",
+      "draft": false,
+      "scenes": [
+        {
+          "comment": "Tu01_Tumbler",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu01.gcode_20250426_0021.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        },
+        {
+          "comment": "Tu04_Tumbler",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu04.gcode_20250426_0227.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        },
+        {
+          "comment": "Tu09_Tumbler",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tu09.gcode_20250428_1436.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        }
+      ],
+      "elements": [
+        {
+          "type": "audio",
+          "src": "https://storage.googleapis.com/autopot1-printdump/music_uploads/Spiring%20-%20Flowers.wav",
+          "seek": 50,
+          "fade-in": 0.5,
+          "volume": 0.3,
+          "duration": -2,
+          "fade-out": 0.5
+        }
+      ],
+      "resolution": "instagram-story",
+      "fps": 25
+    },
+    {
+      "quality": "high",
+      "draft": false,
+      "scenes": [
+        {
+          "comment": "Old_Creation_Reflection",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tm01.gcode_20250429_1908.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            }
+          ]
+        },
+        {
+          "comment": "Reflective_Music",
+          "elements": [
+            {
+              "type": "audio",
+              "src": "https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt%20%26%20chillity%20-%20Feelings%20(Instrumental).mp3",
+              "seek": 50,
+              "fade-in": 0.5,
+              "volume": 0.3,
+              "duration": -2,
+              "fade-out": 0.5
+            }
+          ]
+        }
+      ],
+      "elements": [
+        {
+          "type": "voice",
+          "text": "Ah, the classics! Remnants of robotic nostalgia. Who says machines can't reminisce?",
+          "voice": "en-US-BlueNeural",
+          "model": "azure",
+          "volume": 1,
+          "duration": -2
+        }
+      ],
+      "resolution": "instagram-story",
+      "fps": 25
+    }
+  ],
+  "model": "gpt-4o",
+  "response_id": "resp_68a7a3082e0c8190a011934e248fa08e09567f3c87a55688"
+}

@@ -95,6 +95,9 @@ class ConfigManager:
         for key, value in config.items():
             if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
                 env_var = value[2:-1]  # Remove ${ and }
+                
+                env_var = value[2:-1]  # Remove ${ and }
+                
                 env_value = os.getenv(env_var)
                 if env_value:
                     resolved_config[key] = env_value
@@ -224,6 +227,9 @@ class ConfigManager:
                     # Only update if the original didn't have this field
                     if key not in original_config:
                         merged_config[key] = value
+                elif key in ['instagram_token_expiration']:
+                    # Always update Instagram token expiration when refreshing
+                    merged_config[key] = value
                 else:
                     # Update non-sensitive fields
                     merged_config[key] = value
@@ -287,12 +293,17 @@ class ConfigManager:
             return False
     
     def get_instagram_config(self) -> Dict[str, Any]:
-        """Get Instagram-specific configuration."""
+        """Get Instagram-specific configuration with automatic token refresh."""
+        # Check if token needs refresh and refresh it automatically
+        if self.is_instagram_token_expired():
+            self.logger.info("Instagram token is expired or expiring soon. Attempting automatic refresh...")
+            self.refresh_instagram_token()
+        
         return {
             'app_id': self.get('instagram_app_id'),
             'app_secret': self.get('instagram_app_secret'),
             'user_id': self.get('instagram_user_id'),
-            'access_token': self.get('instagram_access_token'),
+            'access_token': os.getenv('INSTAGRAM_ACCESS_TOKEN') or self.get('instagram_access_token'),
             'token_expiration': self.get('instagram_token_expiration'),
             'days_before_refresh': self.get('instagram_days_before_refresh', 7)
         }
@@ -352,6 +363,96 @@ class ConfigManager:
         
         self.logger.info("Instagram tokens updated and persisted to environment and .env file")
     
+    def refresh_instagram_token(self):
+        """Automatically refresh the Instagram access token using Facebook API."""
+        try:
+            self.logger.info("Requesting a new long-lived access token from Facebook...")
+            
+            import requests
+            
+            url = "https://graph.facebook.com/v22.0/oauth/access_token"
+            params = {
+                "grant_type": "fb_exchange_token",
+                "client_id": self.get('instagram_app_id'),
+                "client_secret": self.get('instagram_app_secret'),
+                "fb_exchange_token": self.get('instagram_access_token')
+            }
+            
+            response = requests.get(url, params=params)
+            response_data = response.json()
+            
+            if "access_token" in response_data:
+                new_token = response_data["access_token"]
+                self.logger.info("✅ New access token obtained successfully")
+                
+                # Get new expiration date from Facebook API
+                new_expiration = self._get_facebook_token_expiration(new_token)
+                
+                # Update access token in environment and .env file only
+                self._update_environment_variable('INSTAGRAM_ACCESS_TOKEN', new_token)
+                self._update_env_file('INSTAGRAM_ACCESS_TOKEN', new_token)
+                
+                # Update token expiration in main config (but don't save access token)
+                self.config['instagram_token_expiration'] = new_expiration
+                
+                # Reset access token back to placeholder before saving
+                self.config['instagram_access_token'] = '${INSTAGRAM_ACCESS_TOKEN}'
+                
+                # Save the updated config (access token will be placeholder, expiration will be updated)
+                self.save_config()
+                
+                self.logger.info("✅ Instagram token refreshed and updated successfully")
+                
+            else:
+                self.logger.error(f"❌ Failed to obtain new token: {response_data}")
+                raise Exception("Unable to refresh Instagram access token")
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error refreshing Instagram access token: {e}")
+            raise
+    
+    def _get_facebook_token_expiration(self, access_token: str) -> str:
+        """Get token expiration by polling Facebook API."""
+        try:
+            self.logger.info("Getting new token expiration from Facebook API...")
+            
+            import requests
+            
+            url = "https://graph.facebook.com/debug_token"
+            params = {
+                "input_token": access_token,
+                "access_token": self.get('instagram_app_id') + "|" + self.get('instagram_app_secret')
+            }
+            
+            response = requests.get(url, params=params)
+            response_data = response.json()
+            
+            if "data" in response_data and "expires_at" in response_data["data"]:
+                exp = response_data["data"]["expires_at"]
+                if exp == 0:
+                    if "data_access_expires_at" in response_data["data"]:
+                        exp = response_data["data"]["data_access_expires_at"]
+                    else:
+                        raise Exception("No valid expiration date found")
+                
+                expiration_date = datetime.fromtimestamp(exp)
+                new_expiration = expiration_date.strftime('%Y-%m-%d %H:%M:%S')
+                
+                self.logger.info(f"✅ Token expiration determined: {new_expiration}")
+                return new_expiration
+                
+            else:
+                self.logger.warning("⚠️ Could not determine new token expiration, using current time + 60 days")
+                # Fallback: set expiration to 60 days from now
+                fallback_expiration = (datetime.now() + timedelta(days=60)).strftime('%Y-%m-%d %H:%M:%S')
+                return fallback_expiration
+                
+        except Exception as e:
+            self.logger.error(f"⚠️ Error getting token expiration: {e}")
+            # Fallback: set expiration to 60 days from now
+            fallback_expiration = (datetime.now() + timedelta(days=60)).strftime('%Y-%m-%d %H:%M:%S')
+            return fallback_expiration
+    
     def is_instagram_token_expired(self) -> bool:
         """Check if Instagram token is expired or expiring soon."""
         try:
@@ -363,7 +464,7 @@ class ConfigManager:
             days_left = (expiration_date - datetime.now()).days
             days_before_refresh = self.config.get('instagram_days_before_refresh', 7)
             
-            self.logger.debug(f"Instagram token expires in {days_left} days")
+            self.logger.debug(f"Instagram tok en expires in {days_left} days")
             return days_left <= days_before_refresh
             
         except Exception as e:
@@ -379,7 +480,11 @@ class ConfigManager:
             
             expiration_date = datetime.strptime(expiration_str, "%Y-%m-%d %H:%M:%S")
             days_left = (expiration_date - datetime.now()).days
-            return max(0, days_left)
+            days_before_refresh = self.config.get('instagram_days_before_refresh', 7)
+            
+            # Return days until refresh is needed (when days_left <= days_before_refresh)
+            days_until_refresh = days_left - days_before_refresh
+            return max(0, days_until_refresh)
             
         except Exception as e:
             self.logger.error(f"Error calculating days until token refresh: {e}")

@@ -1,0 +1,87 @@
+Some possible post ideas include:
+- A single long video with music and voiceover
+- 3-5 short videos within a series with some nice background music
+- a series of at least 10 images with a duration of around .5 seconds each, showing different finished prints within the same series and their ID's as text labels at the bottom of the screen
+- and any other configurations you can think of using the provided tools
+
+Basic Template: Note that music and voice duration should always be set to -2
+
+{{
+    "quality": "high",
+    "draft": false,
+    "scenes": [
+        <<insert comma separated scenes here>>
+    ],
+    "elements": [
+        {{
+            "type": "audio",
+            "src": "<<autopotter_background_music_source_url>>",
+            "seek": 50,
+            "fade-in": 0.5,
+            "volume": 0.3,
+            "duration": -2,
+            "fade-out": 0.5
+        }},
+        {{
+            "type": "voice",
+            "text": "<<autopotter_voiceover_text>>>",
+            "voice": "en-US-BlueNeural",
+            "model": "azure",
+            "volume": 1,
+            "duration": -2
+        }}
+        <<replace this with any optional text labels here>>
+    ],
+    "resolution": "instagram-story",
+    "fps": 25,
+}}
+
+
+Scene template for videos:
+{{
+    "comment": "<<video_scene_name>>",
+    "elements": [
+        {{
+            "type": "video",
+            "src": "<<video_source_url>>",
+            "position": "center-center",
+            "muted": true,
+            "resize": "cover"
+        }}
+    ]
+}}
+
+
+Scene template for Images: Note that the duration can be adjusted.
+{{
+    "comment": "<<image_scene_name>>,
+    "elements": [
+        {{
+            "type": "image",
+            "src": "<<image_source_url>>",
+            "cache": true,
+            "duration": 1
+        }}
+    ]
+}}
+
+
+Element template for text label overlays:
+Note that the position, font size, color, and position x/y values can be adjusted.
+The x/y position values are in pixels, and the zero point is centered on the screen.
+
+"background-color": "#6495ed",
+{{
+  "type": "text",
+  "style": "001",
+  "text": "<<text_to_show_on_screen>>",
+  "settings": {{
+    "font-size": "5.5vw",
+    "color": "#ba8282"
+  }},
+  "position": "custom",
+  "cache": false,
+  "x": -100,
+  "y": 300
+}}
+

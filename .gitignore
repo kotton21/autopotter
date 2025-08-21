@@ -1,23 +1,15 @@
 # Exclude sensitive files
 .env
+.env.backup
 *.json.key
 service-account*.json
 autopot-cloud-*.json
 
-# Exclude old config files with sensitive data (if they exist)
-# */config_fb*
-# */config_gpt*
+
+*.mp4
 
 # Exclude cache and temporary files
-autopotter_tools/__pycache__/*
-*.mp4
-autopotter_tools/config_fb copy.json
-autopotter_tools/config_gpt copy.json
-.DS_Store
-__pycache__/*
+*.DS_Store*
+*__pycache__/*
 *.pyc
 
-gcs_inventory_result.json
-instagram_analytics_result.json
-instagram_analytics_result.json
-.env.backup
