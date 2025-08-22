@@ -104,7 +104,7 @@ class Json2VideoAPI:
                 if 'movie' in status_info:
                     movie_info = status_info['movie']
                     status = movie_info.get('status', 'unknown')
-                    success = movie_info.get('success', False)  
+                    success = movie_info.get('success', False)
                 else:
                     status = status_info.get('status', 'unknown')
                     success = status_info.get('success', False)

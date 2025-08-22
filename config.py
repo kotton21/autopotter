@@ -64,16 +64,15 @@ class ConfigManager:
         try:
             self.logger.info(f"Loading configuration from {self.config_path}")
             
-            # First, load environment variables from .env file
-            env_file_path = ".env"  # Default .env file path
-            self.load_dotenv(env_file_path)
-            
             if not os.path.exists(self.config_path):
                 self.logger.warning(f"Config file {self.config_path} not found. Creating default configuration.")
                 self.create_default_config()
             
             with open(self.config_path, 'r') as f:
                 self.config = json.load(f)
+            
+            # First, load environment variables from .env file
+            self.load_dotenv(self.config.get('env_file_path', '.env'))
             
             # Resolve environment variables
             self.config = self.resolve_environment_variables(self.config)
@@ -128,7 +127,7 @@ class ConfigManager:
             
             # GCS Configuration
             "gcs_bucket": "autopot1-printdump",
-            "gcs_api_key_path": "${GCS_API_KEY_PATH}",
+            "gcs_api_key_path": "your_gcs_api_key_path",
             "gcs_folders": ["video_uploads", "music_uploads", "completed_works", "wip_photos", "build_photos"],
             "gcs_draft_folder": "draft_videos",
             
@@ -218,22 +217,30 @@ class ConfigManager:
             
             # Merge current config with original, preserving all fields
             merged_config = original_config.copy()
-            
+            changed_fields = []
+
             # Update only the fields that have actually changed
             for key, value in self.config.items():
-                # For sensitive fields, preserve the original placeholder if it exists
-                if key in ['instagram_app_secret', 'instagram_access_token', 'openai_api_key', 
-                          'json2video_api_key', 'gcs_api_key_path']:
-                    # Only update if the original didn't have this field
-                    if key not in original_config:
-                        merged_config[key] = value
-                elif key in ['instagram_token_expiration']:
-                    # Always update Instagram token expiration when refreshing
-                    merged_config[key] = value
+                #For sensitive fields, never save them.
+                if key in ['instagram_access_token', 'instagram_user_id', 
+                    'instagram_app_id', 'instagram_app_secret',
+                    'fb_app_id', 'fb_app_secret',
+                    'openai_api_key', 
+                    'json2video_api_key', 'gcs_api_key_path']:
+                          pass # do nothing for these values
                 else:
                     # Update non-sensitive fields
+                    if original_config.get(key) != value:
+                        changed_fields.append((key, value, original_config.get(key)))
                     merged_config[key] = value
-            
+
+            # Loudly log any changed fields
+            if changed_fields:
+                for key, new_value, old_value in changed_fields:
+                    self.logger.warning(
+                        f"CONFIG CHANGE: '{key}' changed from '{old_value}' to '{new_value}'"
+                    )
+
             # Save the merged configuration
             with open(self.config_path, 'w') as f:
                 json.dump(merged_config, f, indent=4)
@@ -491,6 +498,16 @@ class ConfigManager:
             return 0
 
 # Convenience function for getting configuration
-def get_config(config_path: str = "autopost_config.json") -> ConfigManager:
+def get_config(config_path: str = "autopost_config.enhanced.json") -> ConfigManager:
     """Get a configuration manager instance."""
     return ConfigManager(config_path)
+
+
+if __name__ == "__main__":
+    config = get_config()
+    print(json.dumps(config.config, indent=2))
+    config.set('test_key', 'test_value')
+    config.save_config()
+    config = get_config()
+    print(json.dumps(config.config, indent=2))
+

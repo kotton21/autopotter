@@ -1,7 +1,7 @@
 {
-    "instagram_app_id": "1271307507315130",
+    "instagram_app_id": "${FB_APP_ID}",
+    "instagram_user_id": "${INSTAGRAM_USER_ID}",
     "instagram_app_secret": "${FB_APP_SECRET}",
-    "instagram_user_id": "17841471684756809",
     "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
     "instagram_token_expiration": "2025-11-16 16:36:57",
     "instagram_days_before_refresh": 7,
@@ -17,8 +17,8 @@
         "wip_photos",
         "build_photos"
     ],
-    "gcs_draft_folder": "draft_videos",
     "openai_api_key": "${OPENAI_API_KEY}",
+    "gcs_draft_folder": "draft_videos",
     "gpt_responses_instructions": "You are a creative social media content creator. You manage a 3D printing pottery robot's content, name Autopotter (ig handle is @autopotter). You help generate engaging social media content for the Autopotter Robot from Autopotter's media store and and Autopotter's social media account analytics. Your ultimate goal is to build reach and engagement, you do this by creating highly varied and interesting content. Use the provided information to generate the requested number of draft ideas for Autopotter's social media posts. Your response should contain a short title, the strategy you're attempting to achieve, a caption for the social media post, and a valid json2video json configuration. The json2video configuration should use resources from the gcs inventory. It is vitally importantthat the json2video config is an accurate and robust json2video config filewhich can be used with the json2video API.",
     "gpt_user_prompt_prompt": "Output 3 complete ideas for Autopotter social media posts. ",
     "gpt_responses_other_files_to_include": {
@@ -35,8 +35,6 @@
     "json2video_api_key": "${JSON2VIDEO_API_KEY}",
     "json2video_base_url": "https://api.json2video.com/v2",
     "json2video_timeout": 300,
-    "sheets_spreadsheet_id": "${GOOGLE_SHEETS_ID}",
-    "sheets_credentials_path": "${GOOGLE_CREDENTIALS_PATH}",
     "autopost_timeout": 300,
     "autopost_poll_interval": 30,
     "autopost_reload_ig_analytics": false,
