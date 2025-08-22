@@ -6,9 +6,15 @@ This module expands the existing Instagram API to generate comprehensive account
 
 import requests
 import json
-import time
+import sys
+from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
+
+# Add the parent directory to Python path to import config
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
 from .logger import get_logger
 from config import get_config
 
@@ -190,14 +196,14 @@ class InstagramAnalyticsManager:
             return {}
         
         field_combinations = [
-            "id,username",
-            "id,username,name",
-            "id,username,biography",
-            "id,username,website",
-            "id,username,profile_picture_url",
-            "id,username,followers_count",
-            "id,username,follows_count",
-            "id,username,media_count",
+            # "id,username",
+            # "id,username,name",
+            # "id,username,biography",
+            # "id,username,website",
+            # "id,username,profile_picture_url",
+            # "id,username,followers_count",
+            # "id,username,follows_count",
+            # "id,username,media_count",
             "id,username,name,biography,website,profile_picture_url,followers_count,follows_count,media_count"
         ]
         

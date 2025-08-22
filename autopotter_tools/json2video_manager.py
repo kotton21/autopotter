@@ -104,13 +104,29 @@ class Json2VideoAPI:
                 if 'movie' in status_info:
                     movie_info = status_info['movie']
                     status = movie_info.get('status', 'unknown')
-                    success = movie_info.get('success', False)
+                    success = movie_info.get('success', False)  
                 else:
                     status = status_info.get('status', 'unknown')
                     success = status_info.get('success', False)
                 
                 if status == 'done' or success:
                     print(f"✅ Project {project_id} completed successfully!")
+                    
+                    # Print the finished video URL
+                    if 'movie' in status_info:
+                        movie_info = status_info['movie']
+                        video_url = movie_info.get('url')
+                        if video_url:
+                            print(f"🎬 Finished video URL: {video_url}")
+                        else:
+                            print("⚠️ No video URL found in response")
+                    else:
+                        video_url = status_info.get('url')
+                        if video_url:
+                            print(f"🎬 Finished video URL: {video_url}")
+                        else:
+                            print("⚠️ No video URL found in response")
+                    
                     return status_info
                 elif status == 'error':
                     raise Exception("Video creation failed")

@@ -1,7 +1,7 @@
 {
     "instagram_app_id": "1271307507315130",
     "instagram_app_secret": "${FB_APP_SECRET}",
-    "instagram_user_id": "10170571259680384",
+    "instagram_user_id": "17841471684756809",
     "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
     "instagram_token_expiration": "2025-11-16 16:36:57",
     "instagram_days_before_refresh": 7,
@@ -29,7 +29,7 @@
         "gcs_content_notes": "resources/gcs_content_notes.txt"
     },
     "gpt_use_previous_response_id": false,
-    "gpt_previous_response_id": "resp_68a7a3082e0c8190a011934e248fa08e09567f3c87a55688",
+    "gpt_previous_response_id": "resp_68a7f2ee6a948197bbb0b0e00eabee210654a241d88c8778",
     "gpt_model": "gpt-4o",
     "gpt_temperature": 0.7,
     "json2video_api_key": "${JSON2VIDEO_API_KEY}",
