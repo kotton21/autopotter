@@ -4,7 +4,16 @@ Some possible post ideas include:
 - a series of at least 10 images with a duration of around .5 seconds each, showing different finished prints within the same series and their ID's as text labels at the bottom of the screen
 - and any other configurations you can think of using the provided tools
 
-Basic Template: Note that music and voice duration should always be set to -2
+Notes: 
+- The json2video configuration should use resources from the gcs inventory for videos, images and music
+- It is vitally importantthat the json2video config is an accurate and robust json2video config file which can be used with the json2video API.
+- Music and voice duration in the template should always be set to -2
+- autopotter_voiceover_text should be brief; one sentance and no hashtags, and loosly derivative, sassy, or riffing off the social media post caption
+- text label overlays should only be a few words, and kinda random or super weird
+
+
+Basic Template: 
+some voice options include en-US-JennyNeural, en-US-BlueNeural, en-US-GuyNeural
 
 {{
     "quality": "high",
@@ -70,8 +79,9 @@ Element template for text label overlays:
 Note that the position, font size, color, and position x/y values can be adjusted.
 The x/y position values are in pixels, and the zero point is centered on the screen.
 
-"background-color": "#6495ed",
+
 {{
+  "background-color": "#6495ed",
   "type": "text",
   "style": "001",
   "text": "<<text_to_show_on_screen>>",

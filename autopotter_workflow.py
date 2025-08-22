@@ -21,19 +21,19 @@ from autopotter_tools.instagram_api import InstagramVideoUploader
 from autopotter_tools.instagram_analytics import InstagramAnalyticsManager
 
 
-def run_autopotter_workflow(config_file, outfile, prompt):
+def run_autopotter_workflow(config_file, outfile, prompt_override):
     """Run the complete autopotter workflow"""
     
     print("🚀 Starting Autopotter Workflow...")
     print(f"📁 Config: {config_file}")
     print(f"📁 Output: {outfile}")
-    print(f"📝 Prompt: {prompt}")
+    print(f"📝 Prompt: {prompt_override}")
     print()
     
     try:
         # Step 1: Run enhanced_autodraft
         print("\n📝 Step 1: Running enhanced_autodraft...")
-        main_autodraft(outfile, config_file, prompt)
+        main_autodraft(outfile, config_file, prompt_override)
         
         # Load the autodraft output
         with open(outfile, 'r') as f:
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                        default='resources/autodraft_output.enhanced.json',
                        help='Output file path (default: autodraft_output.enhanced.json)')
     parser.add_argument('--prompt', '-p',
-                       default='Output 5 different and varied complete ideas for Autopotter social media post.',
+                       default=None,
                        help='Prompt for GPT (default: Output 5 different and varied complete ideas for Autopotter social media post.)')
     args = parser.parse_args()
     
