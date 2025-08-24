@@ -96,6 +96,9 @@ class Json2VideoAPI:
         start_time = time.time()
         print(f"Waiting for project {project_id} to complete...")
         
+        # Note: We don't validate project existence upfront because newly created projects
+        # might not immediately appear in the API response. We'll check during the first status check.
+        
         while time.time() - start_time < self.timeout:
             try:
                 status_info = self.get_project_status(project_id)
@@ -129,17 +132,30 @@ class Json2VideoAPI:
                     
                     return status_info
                 elif status == 'error':
-                    raise Exception("Video creation failed")
+                    # Get more details about the error if available
+                    error_msg = "Video creation failed"
+                    if 'movie' in status_info:
+                        movie_info = status_info['movie']
+                        if 'error' in movie_info:
+                            error_msg = f"Video creation failed: {movie_info['error']}"
+                        elif 'message' in movie_info:
+                            error_msg = f"Video creation failed: {movie_info['message']}"
+                    raise Exception(error_msg)
                 elif status in ['pending', 'processing', 'running']:
                     print(f"Still {status}... waiting 10 seconds")
+                    time.sleep(10)
+                elif status == 'not_found_yet':
+                    print(f"Project {project_id} not found yet (may be newly created), waiting 10 seconds")
                     time.sleep(10)
                 else:
                     print(f"Unknown status: {status}, waiting 10 seconds")
                     time.sleep(10)
                     
             except Exception as e:
-                print(f"Error checking status: {e}")
-                time.sleep(10)
+                print(f"❌ Error checking status: {e}")
+                # If we get an error during status check, it likely means the project failed
+                # Don't continue waiting, raise the exception to stop the process
+                raise Exception(f"Video creation failed with error: {e}")
         
         raise Exception(f"Video creation timed out after {self.timeout} seconds")
     
@@ -164,7 +180,7 @@ class Json2VideoAPI:
             return result
             
         except Exception as e:
-            print(f"Error getting project status: {e}")
+            print(f"❌ Error getting project status: {e}")
             raise
     
     def download_video(self, project_id, output_path=None):

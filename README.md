@@ -18,4 +18,9 @@ What's next?
 Constrain the output better..
 
 Render command:
-python autopotter_workflow
+python autopotter_workflow --prompt <prompt_override>
+
+
+It works on render!
+using enhancedvidgen branch. 
+What's next??

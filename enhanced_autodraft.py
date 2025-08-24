@@ -105,9 +105,19 @@ def main_autodraft(outfile, config_file, prompt_override):
     
     # Display response
     print("\nGPT Parsed Output ------------------------------")
-    print(parsed_output)
+    #print(parsed_output)
+    # Print only the video title and caption(s) instead of the whole parsed_output
+    if parsed_output and hasattr(parsed_output, "videos"):
+        for idx, video in enumerate(parsed_output.videos):
+            title = getattr(video, "title", "<No Title>")
+            caption = getattr(video, "video_caption", "<No Caption>")
+            print(f"Video {idx+1}:")
+            print(f"  Title: {title}")
+            print(f"  Caption: {caption}\n")
+    else:
+        print("No videos found in parsed_output.")
     print("\nJSON2Video Config ------------------------------")
-    print(parsed_output.get_json2video_config())
+    # print(parsed_output.get_json2video_config())
     print("\n\nResponse ID -- ", response.id)
 
     # Always save response ID to config for future reference

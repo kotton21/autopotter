@@ -21,28 +21,46 @@ from autopotter_tools.instagram_api import InstagramVideoUploader
 from autopotter_tools.instagram_analytics import InstagramAnalyticsManager
 
 
-def run_autopotter_workflow(config_file, outfile, prompt_override):
+def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile, video_draft_only):
     """Run the complete autopotter workflow"""
     
     print("🚀 Starting Autopotter Workflow...")
     print(f"📁 Config: {config_file}")
     print(f"📁 Output: {outfile}")
     print(f"📝 Prompt: {prompt_override}")
+    print(f"🎬 Video Output: {video_outfile}")
+    print(f"📱 Instagram Upload: {'Disabled' if video_draft_only else 'Enabled'}")
     print()
     
     try:
-        # Step 1: Run enhanced_autodraft
+        # Load config to check for analytics reload option
+        from config import ConfigManager
+        config = ConfigManager(config_file)
+        
+
+        ####### STEP 0.5: Reload Instagram analytics if configured #######
+        if config.get('autopost_reload_ig_analytics', False):
+            print("\n📊 Step 1.5: Reloading Instagram analytics...")
+            try:
+                analytics_manager = InstagramAnalyticsManager(config_file)
+                analytics_output = "autopotter_tools/instagram_analytics_result.json"
+                analytics_manager.export_to_json(analytics_output)
+                print(f"✅ Instagram analytics reloaded and saved to: {analytics_output}")
+            except Exception as e:
+                print(f"⚠️  Warning: Failed to reload Instagram analytics: {e}")
+                print("Continuing with existing analytics data...")
+        else:
+            print("\n⏭️  Skipping Instagram analytics reload (autopost_reload_ig_analytics = false)")
+        
+
+        ####### STEP 1: Run enhanced_autodraft #######
         print("\n📝 Step 1: Running enhanced_autodraft...")
         main_autodraft(outfile, config_file, prompt_override)
         
         # Load the autodraft output
         with open(outfile, 'r') as f:
             autodraft_data = json.load(f)
-        
-        # Load config to check for analytics reload option
-        from config import ConfigManager
-        config = ConfigManager(config_file)
-        
+  
         # Extract video configs and count available options
         parsed_output = autodraft_data.get('parsed_output')
         parsed_json2video_configs = autodraft_data.get('parsed_json2video_configs')
@@ -63,33 +81,18 @@ def run_autopotter_workflow(config_file, outfile, prompt_override):
         import random
         selected_index = random.randint(0, len(available_videos) - 1)
         selected_video = available_videos[selected_index]
-        selected_config = available_configs[selected_index]
+        selected_json2vid_config = available_configs[selected_index]
+        selected_caption = selected_video['video_caption']
         
         print(f"🎯 Randomly selected video #{selected_index + 1} of {len(available_videos)}")
         print(f"📝 Selected caption: {selected_video['video_caption'][:100]}...")
         
         # Use the selected video config and caption
-        video_config = selected_config
-        caption = selected_video['video_caption']
         
-        print(f"✅ Autodraft completed. Caption: {caption[:100]}...")
-        print(f"📹 Video config extracted with {len(video_config.get('scenes', []))} scenes")
-        print(f"🔍 Debug - Video config keys: {list(video_config.keys())}")
-        print(f"🔍 Debug - First scene has {len(video_config.get('scenes', [{}])[0].get('elements', []))} elements")
-        
-        # Step 1.5: Reload Instagram analytics if configured
-        if config.get('autopost_reload_ig_analytics', False):
-            print("\n📊 Step 1.5: Reloading Instagram analytics...")
-            try:
-                analytics_manager = InstagramAnalyticsManager(config_file)
-                analytics_output = "autopotter_tools/instagram_analytics_result.json"
-                analytics_manager.export_to_json(analytics_output)
-                print(f"✅ Instagram analytics reloaded and saved to: {analytics_output}")
-            except Exception as e:
-                print(f"⚠️  Warning: Failed to reload Instagram analytics: {e}")
-                print("Continuing with existing analytics data...")
-        else:
-            print("\n⏭️  Skipping Instagram analytics reload (autopost_reload_ig_analytics = false)")
+        print(f"✅ Autodraft completed. Caption: {selected_caption[:100]}...")
+        print(f"📹 Video config extracted with {len(selected_json2vid_config.get('scenes', []))} scenes")
+        print(f"🔍 Debug - Video config keys: {list(selected_json2vid_config.keys())}")
+        print(f"🔍 Debug - First scene has {len(selected_json2vid_config.get('scenes', [{}])[0].get('elements', []))} elements")
         
         # Step 2: Upload to json2video
         print("\n🎬 Step 2: Uploading to json2video...")
@@ -101,7 +104,7 @@ def run_autopotter_workflow(config_file, outfile, prompt_override):
         
         # Create video and wait for completion
         print("Creating video with json2video...")
-        creation_result = json2video_api.create_video(video_config)
+        creation_result = json2video_api.create_video(selected_json2vid_config)
         project_id = creation_result['id']
         print(f"✅ Video creation initiated. Project ID: {project_id}")
         
@@ -110,24 +113,30 @@ def run_autopotter_workflow(config_file, outfile, prompt_override):
         json2video_api.wait_for_completion(project_id)
         print("✅ Video completed successfully!")
         
-        # Download the video locally for Instagram upload
-        print("Downloading video for Instagram upload...")
-        local_video_path = "temp_video_for_instagram.mp4"
-        video_path = json2video_api.download_video(project_id, local_video_path)
+        # Download the video to the specified output file
+        print(f"Downloading video to: {video_outfile}")
+        video_path = json2video_api.download_video(project_id, video_outfile)
         print(f"✅ Video downloaded to: {video_path}")
+        
+        # If video-draft-only is specified, stop here
+        if video_draft_only:
+            print("\n🎬 Video draft completed successfully!")
+            print(f"📁 Video saved to: {video_outfile}")
+            print("⏭️  Skipping Instagram upload (video-draft-only mode)")
+            return True
         
         # Step 3: Upload to Instagram
         print("\n📱 Step 3: Uploading to Instagram...")
         instagram_uploader = InstagramVideoUploader(config_file)
         
-        print(f"Uploading video with caption: {caption[:100]}...")
-        instagram_uploader.upload_and_publish(video_path, caption)
+        print(f"Uploading video with caption: {selected_caption[:100]}...")
+        instagram_uploader.upload_and_publish(video_path, selected_caption)
         print("✅ Video uploaded to Instagram successfully!")
         
-        # Cleanup temporary file
-        if os.path.exists(local_video_path):
-            os.remove(local_video_path)
-            print(f"🧹 Cleaned up temporary file: {local_video_path}")
+        # Cleanup temporary file after Instagram upload
+        if os.path.exists(video_path):
+            os.remove(video_path)
+            print(f"🧹 Cleaned up temporary file: {video_path}")
         
         print("\n🎉 Autopotter workflow completed successfully!")
         return True
@@ -149,7 +158,14 @@ if __name__ == "__main__":
     parser.add_argument('--prompt', '-p',
                        default=None,
                        help='Prompt for GPT (default: Output 5 different and varied complete ideas for Autopotter social media post.)')
+    parser.add_argument('--video-outfile', '--vo',
+                       default='autopotter_video_draft.mp4',
+                       help='Video output file path (default: autopotter_video_draft.mp4)')
+    parser.add_argument('--video-draft-only', '-v',
+                       action='store_true', default=False,
+                       help='Include to create a video and download, do not upload to Instagram (default: False)')
+    
     args = parser.parse_args()
     
-    success = run_autopotter_workflow(args.config, args.draft_outfile, args.prompt)
+    success = run_autopotter_workflow(args.config, args.draft_outfile, args.prompt, args.video_outfile, args.video_draft_only)
     sys.exit(0 if success else 1)

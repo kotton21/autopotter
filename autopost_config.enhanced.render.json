@@ -25,8 +25,8 @@
         "gcs_inventory": "resources/gcs_inventory_compressed.json",
         "ig_analytics": "resources/instagram_analytics_result.json",
         "autopotter_personality": "resources/autopotter_personality.v2.md",
-        "json2video_templates": "resources/json2video_templates.txt",
-        "gcs_content_notes": "resources/gcs_content_notes.txt"
+        "json2video_templates": "resources/json2video_templates.md",
+        "gcs_content_notes": "resources/gcs_content_notes.md"
     },
     "gpt_use_previous_response_id": false,
     "gpt_previous_response_id": "resp_68a8bb67066481978ff8ed8603bd73b50757fbb4e304ba84",
