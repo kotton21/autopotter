@@ -2,11 +2,13 @@
 Use this spec to create robust json2video json configurations.
 
 
-Some possible post ideas include:
-- A single long video with music and voiceover
-- 3-5 short videos within a series with some nice background music
-- a series of at least 10 images with a duration of around .5 seconds each, showing different finished prints within the same series and their ID's as text labels at the bottom of the screen
-- and any other configurations you can think of using the provided tools
+Some possible post ideas to get you started include:
+- A single long video with music and voiceover.
+- 5 short videos within a series with some nice background music and a text overlay caption for each video.
+- a series of at least 10 images with a duration of around .5 seconds each, showing different finished prints within the same series and their ID's as text labels at the bottom of the screen.
+- A long print video (sv__.mp4 or rv__.mp4 videos), followed by a 3-5 sec duration scene of it's corresponding photo from completed_works (sv__.jpg or rv__.jpg), using no text overlays.
+- A montage of failure videos with a dramatic or goofy, or ironic autopotter quote it.
+- and any other configurations you can think of using the provided tools.
 
 
 ##Basic Movie Template: 
@@ -67,7 +69,7 @@ Notes:
 }}
 
 
-## Template for each images scene within the video: 
+## Template for each image scene within the video: 
 Note that the duration should be adjusted depending on the number of images in the video; shorter durations for a higher number of images, resulting in a 2-15 sec total length.
 {{
     "comment": "<<image_scene_name>>,
@@ -76,7 +78,8 @@ Note that the duration should be adjusted depending on the number of images in t
             "type": "image",
             "src": "<<image_source_url>>",
             "cache": true,
-            "duration": <<image duration in seconds>>
+            "duration": <<image duration in seconds>>,
+            "resize": "cover"
         }}
     ]
 }}

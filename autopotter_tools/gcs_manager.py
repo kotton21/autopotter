@@ -5,13 +5,18 @@ Combines inventory management and upload operations in a single interface.
 """
 
 import os
+import sys
 import json
 import random
 import argparse
 from datetime import datetime, timezone
 from typing import Dict, List, Any
 from google.cloud import storage
-from .logger import get_logger
+
+# Add the parent directory to Python path to import local modules
+sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from autopotter_tools.logger import get_logger
 from config import get_config
 
 class GCSManager:
@@ -36,10 +41,7 @@ class GCSManager:
         self.bucket = self.client.bucket(self.bucket_name)
         
         # Configure folders to scan
-        self.folders_to_scan = self.gcs_config.get('gcs_folders', [
-            'video_uploads', 'music_uploads', 'completed_works', 
-            'wip_photos', 'build_photos'
-        ])
+        self.folders_to_scan = self.gcs_config.get('folders', None)
         
         self.logger.info(f"GCS Manager initialized for bucket: {self.bucket_name}")
     
@@ -121,15 +123,15 @@ class GCSManager:
     
     def generate_inventory(self, output_path: str = None) -> Dict[str, Any]:
         """
-        Generate file inventory organized by file type with essential metadata.
+        Generate file inventory organized by folder with simplified file listings.
         
         Args:
             output_path: Optional path to save inventory JSON file
             
         Returns:
-            Dictionary containing organized inventory data by file type
+            Dictionary containing organized inventory data by folder
         """
-        self.logger.info("Generating organized GCS file inventory by file type")
+        self.logger.info("Generating simplified GCS file inventory organized by folder")
         
         try:
             inventory_data = {
@@ -138,21 +140,10 @@ class GCSManager:
                     'source': 'gcs_manager',
                     'collection_version': '2.1'
                 },
-                'files_by_type': {
-                    'videos': [],
-                    'images': [],
-                    'music': [],
-                    'other': []
-                },
+                'files_by_folder': {},
                 'summary': {
                     'total_files': 0,
-                    'total_size_mb': 0,
-                    'by_type': {
-                        'videos': {'count': 0, 'size_mb': 0},
-                        'images': {'count': 0, 'size_mb': 0},
-                        'music': {'count': 0, 'size_mb': 0},
-                        'other': {'count': 0, 'size_mb': 0}
-                    }
+                    'total_size_mb': 0
                 }
             }
             
@@ -161,26 +152,29 @@ class GCSManager:
                 try:
                     files = self.scan_folder(folder)
                     
-                    # Categorize files by type
-                    for file_info in files:
-                        file_type = self._categorize_file(file_info['name'])
-                        inventory_data['files_by_type'][file_type].append(file_info)
+                    if files:
+                        # Create folder URL
+                        folder_url = f"https://storage.googleapis.com/{self.bucket_name}/{folder}/"
                         
-                        # Update summary counts
-                        inventory_data['summary']['total_files'] += 1
-                        inventory_data['summary']['total_size_mb'] += file_info.get('size_mb', 0)
-                        inventory_data['summary']['by_type'][file_type]['count'] += 1
-                        inventory_data['summary']['by_type'][file_type]['size_mb'] += file_info.get('size_mb', 0)
+                        # Extract just the filenames (without folder prefix)
+                        file_names = []
+                        for file_info in files:
+                            # Extract filename from full path (e.g., "video_uploads/file.mp4" -> "file.mp4")
+                            filename = os.path.basename(file_info['name'])
+                            file_names.append(filename)
+                            
+                            # Update summary counts
+                            inventory_data['summary']['total_files'] += 1
+                            inventory_data['summary']['total_size_mb'] += file_info.get('size_mb', 0)
+                        
+                        # Add folder to inventory
+                        inventory_data['files_by_folder'][folder_url] = file_names
                     
                 except Exception as e:
                     self.logger.error(f"Error scanning folder {folder}: {e}")
             
-            # Round summary sizes
+            # Round total size
             inventory_data['summary']['total_size_mb'] = round(inventory_data['summary']['total_size_mb'], 2)
-            for file_type in inventory_data['summary']['by_type']:
-                inventory_data['summary']['by_type'][file_type]['size_mb'] = round(
-                    inventory_data['summary']['by_type'][file_type]['size_mb'], 2
-                )
             
             # Save to file if output path provided
             if output_path:
@@ -471,24 +465,22 @@ def main():
             print(f"💾 Total size: {inventory_data['summary']['total_size_mb']:.2f} MB")
             print(f"📁 Output saved to: {args.output}")
             
-            # Display breakdown by file type
-            print("\n📋 File breakdown by type:")
-            for file_type, stats in inventory_data['summary']['by_type'].items():
-                if stats['count'] > 0:
-                    icon = {'videos': '🎥', 'images': '🖼️', 'music': '🎵', 'other': '📄'}[file_type]
-                    print(f"  {icon} {file_type.title()}: {stats['count']} files ({stats['size_mb']:.2f} MB)")
+            # Display breakdown by folder
+            print("\n📁 File breakdown by folder:")
+            for folder_url, files in inventory_data['files_by_folder'].items():
+                folder_name = folder_url.split('/')[-2] if folder_url.endswith('/') else folder_url.split('/')[-1]
+                print(f"  📁 {folder_name}: {len(files)} files")
             
-            # Show sample files from each category
-            print("\n📁 Sample files by category:")
-            for file_type, files in inventory_data['files_by_type'].items():
-                if files:
-                    icon = {'videos': '🎥', 'images': '🖼️', 'music': '🎵', 'other': '📄'}[file_type]
-                    print(f"  {icon} {file_type.title()} ({len(files)} files):")
-                    for file_info in files[:3]:  # Show first 3 files
-                        print(f"    - {file_info['name']} ({file_info['size_mb']:.2f} MB)")
-                    if len(files) > 3:
-                        print(f"    ... and {len(files) - 3} more files")
-                    print()
+            # Show sample files from each folder
+            print("\n📁 Sample files by folder:")
+            for folder_url, files in inventory_data['files_by_folder'].items():
+                folder_name = folder_url.split('/')[-2] if folder_url.endswith('/') else folder_url.split('/')[-1]
+                print(f"  📁 {folder_name} ({len(files)} files):")
+                for filename in files[:3]:  # Show first 3 files
+                    print(f"    - {filename}")
+                if len(files) > 3:
+                    print(f"    ... and {len(files) - 3} more files")
+                print()
             
         elif args.operation == "upload_file":
             if not args.source_file or not args.destination_blob:
