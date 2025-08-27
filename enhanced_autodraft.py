@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import BaseModel
 from typing import List
 from config import ConfigManager
+from autopotter_tools.parse_json2video_configs import parse_json2video_config
 
 
 class DraftVideo(BaseModel):
@@ -19,10 +20,13 @@ class DraftVideo(BaseModel):
     json2video_config_str: str
     
     def get_json2video_config(self):
-        try:    
-            return json.loads(self.json2video_config_str)
-        except Exception as e:
-            print(f"❌ Error parsing json2video config: {e}")
+        success, config_json, error_message = parse_json2video_config(self.json2video_config_str, self.title)
+        if success:
+            if error_message:
+                print(f"⚠️ Fixed json2video config for '{self.title}': {error_message}")
+            return config_json
+        else:
+            print(f"❌ Failed to parse json2video config for '{self.title}': {error_message}")
             return {}
 
 class DraftVideoList(BaseModel):
