@@ -13,10 +13,13 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any
 from google.cloud import storage
 
-# Add the parent directory to Python path to import local modules
-sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Import from the package
+# from autopotter_tools.logger import get_logger
+try:
+    from logger import get_logger
+except ImportError:
+    from autopotter_tools.logger import get_logger
 
-from autopotter_tools.logger import get_logger
 from config import get_config
 
 class GCSManager:

@@ -6,16 +6,20 @@ This module expands the existing Instagram API to generate comprehensive account
 
 import requests
 import json
-import sys
+import sys, os
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 # Add the parent directory to Python path to import config
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# sys.path.insert(0, str(Path(__file__).parent.parent))
+# sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-
-from .logger import get_logger
+try:
+    from logger import get_logger
+except ImportError:
+    from autopotter_tools.logger import get_logger
+    
 from config import get_config
 
 class InstagramAnalyticsManager:
@@ -46,14 +50,18 @@ class InstagramAnalyticsManager:
         self.user_id = self.instagram_config['user_id']
         
         # Configuration parameters for data retrieval limits
-        self.max_media_items = self.config.get('max_media_items', 25)
-        self.max_comments_per_media = self.config.get('max_comments_per_media', 50)
-        self.max_replies_per_comment = self.config.get('max_replies_per_comment', 25)
+        self.max_media_items = self.config.get('max_media_items', 9)
+        self.max_comments_per_media = self.config.get('max_comments_per_media', 9)
+        self.max_replies_per_comment = self.config.get('max_replies_per_comment', 9)
         
         # Find Instagram Business Account through Facebook pages
-        self.instagram_account_id = None
-        self.page_access_token = None
-        self._find_instagram_account()
+        self.instagram_account_id = self.user_id
+        self.page_access_token = self.access_token
+        # self._find_instagram_account()
+
+        if self.instagram_account_id is None or self.page_access_token is None:
+            self.check_token_permissions()
+            raise ValueError("During __INIT__, No Instagram Business Account found")
         
         self.logger.info(f"Instagram Analytics Manager initialized with limits: media={self.max_media_items}, comments={self.max_comments_per_media}, replies={self.max_replies_per_comment}")
     
@@ -111,11 +119,12 @@ class InstagramAnalyticsManager:
     def check_token_permissions(self) -> Dict[str, Any]:
         """
         Check the permissions and scopes available on the current access token.
+        Provides verbose logging of all available permissions, expiration dates, and metadata.
         
         Returns:
-            Dictionary containing token permission information
+            Dictionary containing comprehensive token permission information
         """
-        self.logger.info("Checking token permissions and scopes")
+        self.logger.info("🔍 Checking token permissions and scopes...")
         
         try:
             url = "https://graph.facebook.com/debug_token"
@@ -126,7 +135,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.error(f"Failed to check token permissions: {response.status_code} - {response.text}")
+                self.logger.error(f"❌ Failed to check token permissions: {response.status_code} - {response.text}")
                 return {
                     'error': f'API error: {response.status_code}',
                     'available_scopes': [],
@@ -135,7 +144,7 @@ class InstagramAnalyticsManager:
             
             token_data = response.json()
             if 'data' not in token_data:
-                self.logger.error("No token data in response")
+                self.logger.error("❌ No token data in response")
                 return {
                     'error': 'No token data in response',
                     'available_scopes': [],
@@ -161,24 +170,137 @@ class InstagramAnalyticsManager:
             # Check if we have Instagram Business Account access
             has_instagram_access = 'instagram_basic' in available_scopes
             
+            # Extract and format expiration information
+            expires_at = data.get('expires_at')
+            data_access_expires_at = data.get('data_access_expires_at')
+            
+            # Format expiration dates for human readability
+            expires_date = None
+            data_access_expires_date = None
+            if expires_at:
+                expires_date = datetime.fromtimestamp(expires_at).strftime('%Y-%m-%d %H:%M:%S UTC')
+            if data_access_expires_at:
+                data_access_expires_date = datetime.fromtimestamp(data_access_expires_at).strftime('%Y-%m-%d %H:%M:%S UTC')
+            
+            # Calculate time until expiration
+            current_time = datetime.now()
+            expires_in_days = None
+            data_access_expires_in_days = None
+            
+            if expires_at:
+                expires_datetime = datetime.fromtimestamp(expires_at)
+                expires_in_days = (expires_datetime - current_time).days
+            if data_access_expires_at:
+                data_access_expires_datetime = datetime.fromtimestamp(data_access_expires_at)
+                data_access_expires_in_days = (data_access_expires_datetime - current_time).days
+            
             permission_info = {
                 'app_id': data.get('app_id'),
                 'user_id': data.get('user_id'),
                 'available_scopes': available_scopes,
                 'missing_scopes': missing_scopes,
                 'has_instagram_access': has_instagram_access,
-                'expires_at': data.get('expires_at'),
-                'data_access_expires_at': data.get('data_access_expires_at'),
+                'expires_at': expires_at,
+                'expires_date': expires_date,
+                'expires_in_days': expires_in_days,
+                'data_access_expires_at': data_access_expires_at,
+                'data_access_expires_date': data_access_expires_date,
+                'data_access_expires_in_days': data_access_expires_in_days,
                 'is_valid': len(missing_scopes) == 0,
                 'scope_count': len(available_scopes),
-                'missing_count': len(missing_scopes)
+                'missing_count': len(missing_scopes),
+                'token_type': data.get('type'),
+                'application': data.get('application'),
+                'granular_scopes': data.get('granular_scopes', []),
+                'is_valid_token': data.get('is_valid', False),
+                'issued_at': data.get('issued_at'),
+                'issued_date': datetime.fromtimestamp(data.get('issued_at', 0)).strftime('%Y-%m-%d %H:%M:%S UTC') if data.get('issued_at') else None
             }
             
-            self.logger.info(f"Token permissions checked: {len(available_scopes)} scopes available, {len(missing_scopes)} missing")
+            # Verbose logging of all permissions and metadata
+            self.logger.info("🔑 Token Permission Analysis Complete")
+            self.logger.info(f"📱 App ID: {data.get('app_id', 'Unknown')}")
+            self.logger.info(f"👤 User ID: {data.get('user_id', 'Unknown')}")
+            self.logger.info(f"📋 Token Type: {data.get('type', 'Unknown')}")
+            self.logger.info(f"🏢 Application: {data.get('application', 'Unknown')}")
+            
+            # Log scope information
+            self.logger.info(f"✅ Available Scopes ({len(available_scopes)}): {', '.join(available_scopes)}")
+            if missing_scopes:
+                self.logger.warning(f"❌ Missing Required Scopes ({len(missing_scopes)}): {', '.join(missing_scopes)}")
+            else:
+                self.logger.info("🎉 All required scopes are available!")
+            
+            # Log Instagram access status
+            if has_instagram_access:
+                self.logger.info("📸 Instagram access: ✅ Available")
+            else:
+                self.logger.warning("📸 Instagram access: ❌ Not available (missing instagram_basic scope)")
+            
+            # Log expiration information
+            if expires_at:
+                self.logger.info(f"⏰ Token expires: {expires_date}")
+                if expires_in_days is not None:
+                    if expires_in_days > 30:
+                        self.logger.info(f"⏰ Token expires in: {expires_in_days} days")
+                    elif expires_in_days > 7:
+                        self.logger.warning(f"⚠️ Token expires in: {expires_in_days} days")
+                    elif expires_in_days > 0:
+                        self.logger.error(f"🚨 Token expires in: {expires_in_days} days!")
+                    else:
+                        self.logger.error(f"🚨 Token expired {abs(expires_in_days)} days ago!")
+            else:
+                self.logger.info("⏰ Token expiration: Never (long-lived token)")
+            
+            if data_access_expires_at:
+                self.logger.info(f"🔒 Data access expires: {data_access_expires_date}")
+                if data_access_expires_in_days is not None:
+                    if data_access_expires_in_days > 30:
+                        self.logger.info(f"🔒 Data access expires in: {data_access_expires_in_days} days")
+                    elif data_access_expires_in_days > 7:
+                        self.logger.warning(f"⚠️ Data access expires in: {data_access_expires_in_days} days")
+                    elif data_access_expires_in_days > 0:
+                        self.logger.error(f"🚨 Data access expires in: {data_access_expires_in_days} days!")
+                    else:
+                        self.logger.error(f"🚨 Data access expired {abs(data_access_expires_in_days)} days ago!")
+            
+            # Log granular scopes if available
+            if data.get('granular_scopes'):
+                granular_scopes = data.get('granular_scopes', [])
+                if isinstance(granular_scopes, list) and granular_scopes:
+                    # Handle granular scopes which can be complex objects
+                    scope_strings = []
+                    for scope in granular_scopes:
+                        if isinstance(scope, str):
+                            scope_strings.append(scope)
+                        elif isinstance(scope, dict):
+                            # Extract scope name from dict if available
+                            scope_name = scope.get('scope', str(scope))
+                            scope_strings.append(str(scope_name))
+                        else:
+                            scope_strings.append(str(scope))
+                    self.logger.info(f"🔍 Granular Scopes: {', '.join(scope_strings)}")
+                else:
+                    self.logger.info(f"🔍 Granular Scopes: {granular_scopes}")
+            
+            # Log token validity
+            if data.get('is_valid', False):
+                self.logger.info("✅ Token is valid")
+            else:
+                self.logger.error("❌ Token is invalid!")
+            
+            # Log issuance date
+            if data.get('issued_at'):
+                issued_date = datetime.fromtimestamp(data.get('issued_at')).strftime('%Y-%m-%d %H:%M:%S UTC')
+                self.logger.info(f"📅 Token issued: {issued_date}")
+            
+            # Summary
+            self.logger.info(f"📊 Summary: {len(available_scopes)} scopes available, {len(missing_scopes)} missing, Instagram access: {'✅' if has_instagram_access else '❌'}")
+            
             return permission_info
             
         except Exception as e:
-            self.logger.error(f"Failed to check token permissions: {e}")
+            self.logger.error(f"❌ Failed to check token permissions: {e}")
             return {
                 'error': str(e),
                 'available_scopes': [],
@@ -942,7 +1064,7 @@ class InstagramAnalyticsManager:
                 'account_info': self.get_account_info(),
                 'recent_media': self.get_recent_media(),
                 # 'recent_activity': self.get_recent_activity(limit=20),
-                'hashtag_performance': self.get_hashtag_performance(),
+                # 'hashtag_performance': self.get_hashtag_performance(),
                 'summary_metrics': {}
             }
             

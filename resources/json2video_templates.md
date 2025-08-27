@@ -53,7 +53,7 @@ Notes:
 }}
 
 
-## Template for each video scene within the json2video config:
+## Template for each video scene within the json2video config (use for .mp4 or .mov files):
 {{
     "comment": "<<video_scene_name>>",
     "elements": [
@@ -69,7 +69,7 @@ Notes:
 }}
 
 
-## Template for each image scene within the video: 
+## Template for each image scene within the video (use for .jpg or other image files): 
 Note that the duration should be adjusted depending on the number of images in the video; shorter durations for a higher number of images, resulting in a 2-15 sec total length.
 {{
     "comment": "<<image_scene_name>>,

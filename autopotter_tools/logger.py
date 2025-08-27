@@ -8,6 +8,19 @@ from contextlib import contextmanager
 from typing import Optional, Union
 import threading
 
+# Handle imports from both autopotter_tools and parent directory
+def _setup_import_paths():
+    """Setup import paths to handle both package and direct script usage"""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    
+    # Add parent directory to path if not already there
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+
+# Call this when the module is imported
+_setup_import_paths()
+
 class CentralLogger:
     """
     Central logging singleton for the enhanced video generation system.

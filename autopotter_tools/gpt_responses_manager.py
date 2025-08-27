@@ -6,13 +6,13 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 
 # Add parent directory to path for imports when running as script
-if __name__ == "__main__":
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# if __name__ == "__main__":
+#     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from .logger import get_logger
 except ImportError:
-    from logger import get_logger
+    from autopotter_tools.logger import get_logger
 
 class GPTResponsesManager:
     """

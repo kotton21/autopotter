@@ -12,8 +12,7 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add the current directory to Python path to import local modules
-sys.path.insert(0, str(Path(__file__).parent))
+from autopotter_tools.logger import get_logger
 
 from enhanced_autodraft import main_autodraft
 from autopotter_tools.json2video_manager import Json2VideoAPI
@@ -43,7 +42,7 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
             print("\n📊 Step 1.5: Reloading Instagram analytics...")
             try:
                 analytics_manager = InstagramAnalyticsManager(config_file)
-                analytics_output = "autopotter_tools/instagram_analytics_result.json"
+                analytics_output = config.get('gpt_responses_other_files_to_include', None)['ig_analytics']
                 analytics_manager.export_to_json(analytics_output)
                 print(f"✅ Instagram analytics reloaded and saved to: {analytics_output}")
             except Exception as e:

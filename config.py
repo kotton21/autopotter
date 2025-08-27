@@ -117,8 +117,8 @@ class ConfigManager:
             "instagram_app_secret": "${FB_APP_SECRET}",
             "instagram_user_id": "${INSTAGRAM_USER_ID}",
             "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
-            "instagram_token_expiration": "2025-08-23 21:00:33",
-            "instagram_days_before_refresh": 7,
+            "instagram_token_expiration": None,
+            "instagram_days_before_token_should_autorefresh": 7,
             
             # Instagram Analytics Configuration
             "max_media_items": 7,
@@ -312,7 +312,6 @@ class ConfigManager:
             'user_id': self.get('instagram_user_id'),
             'access_token': os.getenv('INSTAGRAM_ACCESS_TOKEN') or self.get('instagram_access_token'),
             'token_expiration': self.get('instagram_token_expiration'),
-            'days_before_refresh': self.get('instagram_days_before_refresh', 7)
         }
     
     def get_gcs_config(self) -> Dict[str, Any]:
@@ -421,7 +420,7 @@ class ConfigManager:
     def _get_facebook_token_expiration(self, access_token: str) -> str:
         """Get token expiration by polling Facebook API."""
         try:
-            self.logger.info("Getting new token expiration from Facebook API...")
+            self.logger.info("Getting token expiration date from Facebook API...")
             
             import requests
             
@@ -461,21 +460,24 @@ class ConfigManager:
             return fallback_expiration
     
     def is_instagram_token_expired(self) -> bool:
-        """Check if Instagram token is expired or expiring soon."""
+        """Check if Instagram token is expired or expiring soon using Facebook API."""
         try:
-            expiration_str = self.config.get('instagram_token_expiration')
-            if not expiration_str:
+            access_token = self.get('instagram_access_token')
+            if not access_token or access_token.startswith('${'):
+                self.logger.warning("No valid Instagram access token available")
                 return True
             
-            expiration_date = datetime.strptime(expiration_str, "%Y-%m-%d %H:%M:%S")
+            # Get fresh expiration data from Facebook API
+            fresh_expiration = self._get_facebook_token_expiration(access_token)
+            expiration_date = datetime.strptime(fresh_expiration, "%Y-%m-%d %H:%M:%S")
             days_left = (expiration_date - datetime.now()).days
-            days_before_refresh = self.config.get('instagram_days_before_refresh', 7)
+            days_before_refresh = self.config.get('instagram_days_before_token_should_autorefresh', 7)
             
-            self.logger.debug(f"Instagram tok en expires in {days_left} days")
+            self.logger.debug(f"Instagram token expires in {days_left} days (from Facebook API)")
             return days_left <= days_before_refresh
             
         except Exception as e:
-            self.logger.error(f"Error checking Instagram token expiration: {e}")
+            self.logger.error(f"Error checking Instagram token expiration from Facebook API: {e}")
             return True  # Assume expired if there's an error
     
     def get_days_until_token_refresh(self) -> int:
@@ -487,7 +489,7 @@ class ConfigManager:
             
             expiration_date = datetime.strptime(expiration_str, "%Y-%m-%d %H:%M:%S")
             days_left = (expiration_date - datetime.now()).days
-            days_before_refresh = self.config.get('instagram_days_before_refresh', 7)
+            days_before_refresh = self.config.get('instagram_days_before_token_should_autorefresh', 7)
             
             # Return days until refresh is needed (when days_left <= days_before_refresh)
             days_until_refresh = days_left - days_before_refresh
