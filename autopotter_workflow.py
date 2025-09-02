@@ -109,13 +109,28 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
         
         # Wait for completion
         print("Waiting for video to complete...")
-        json2video_api.wait_for_completion(project_id)
+        completion_status = json2video_api.wait_for_completion(project_id)
         print("✅ Video completed successfully!")
         
+        # Extract video metadata from completion status
+        # if 'movie' in completion_status:
+        movie_info = completion_status['movie']
+        video_duration = movie_info.get('duration')
+        print(f"⏱️  Duration: {movie_info.get('duration')} seconds")
+        print(f"📐 Dimensions: {movie_info.get('width')}x{movie_info.get('height')}")
+        print(f"💾 File size: {movie_info.get('size')}")
+        print(f"🔗 Video URL: {movie_info.get('url')}")
+
+        if video_duration < 2:
+            raise Exception("❌ Video duration is less than 2 seconds")
+        
+        
         # Download the video to the specified output file
-        print(f"Downloading video to: {video_outfile}")
+        print(f"\nDownloading video to: {video_outfile}")
         video_path = json2video_api.download_video(project_id, video_outfile)
         print(f"✅ Video downloaded to: {video_path}")
+
+        
         
         # If video-draft-only is specified, stop here
         if video_draft_only:
@@ -127,9 +142,9 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
         # Step 3: Upload to Instagram
         print("\n📱 Step 3: Uploading to Instagram...")
         instagram_uploader = InstagramVideoUploader(config_file)
-        
+        thumbnail_offset = (video_duration-1)*1000
         print(f"Uploading video with caption: {selected_caption[:100]}...")
-        instagram_uploader.upload_and_publish(video_path, selected_caption)
+        instagram_uploader.upload_and_publish(video_path, selected_caption, thumbnail_offset)
         print("✅ Video uploaded to Instagram successfully!")
         
         # Cleanup temporary file after Instagram upload

@@ -33,7 +33,7 @@ class InstagramVideoUploader:
         #     self.log_message("Instagram token is expired or expiring soon. Please refresh it.")
         #     self.log_message("You can use the config.py methods to refresh your token.")
 
-    def create_media_container(self, caption="Test Caption", audio_id=None):
+    def create_media_container(self, caption="Test Caption", audio_id=None, thumbnail_offset=None):
         url = f"https://graph.facebook.com/v22.0/{self.user_id}/media"
         payload = {
             "media_type": "REELS",
@@ -41,6 +41,9 @@ class InstagramVideoUploader:
             "caption": caption,
             "access_token": self.access_token
         }
+        if thumbnail_offset:
+            payload["thumb_offset"] = thumbnail_offset
+            self.log_message(f"Adding Thumbnail Offset: {thumbnail_offset}")
         if audio_id:
             payload["audio_id"] = audio_id  # Add the audio_id if provided
             self.log_message(f"Adding Audio. ID: {audio_id}")
@@ -194,9 +197,9 @@ class InstagramVideoUploader:
         self.log_message("Timeout after 20 polls")
         return None
 
-    def upload_and_publish(self, video_path, caption):
+    def upload_and_publish(self, video_path, caption, thumbnail_offset=None):
         self.log_message("Creating media container...")
-        creation_id, _ = self.create_media_container(caption)
+        creation_id, _ = self.create_media_container(caption, thumbnail_offset=thumbnail_offset)
         if not creation_id:
             self.log_message("Media container is None. Exiting...")
             self.log_message("Token may be expired: https://developers.facebook.com/tools/explorer")

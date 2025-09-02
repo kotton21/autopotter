@@ -21,6 +21,7 @@ Notes:
 - autopotter_voiceover_text should be brief; one sentance and no hashtags, and loosly derivative, sassy, or riffing off the social media post caption
 - text label overlays should only be a few words, and can be the object's name/id, or some random or super weird text
 - Do not modify the required "quality", "draft", "resolution", and "fps". These are required in the json config schema to function correctly.
+- Double check that any gcs links included in the draft are correct and rewal links in the gcs inventory
 
 
 {{
