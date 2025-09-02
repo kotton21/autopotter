@@ -126,7 +126,7 @@ def main_autodraft(outfile, config_file, prompt_override):
 
     # Always save response ID to config for future reference
     config.set('gpt_previous_response_id', response.id)
-    config.save_config()
+    # config.save_config()
 
     parsed_json2video_configs = parsed_output.get_json2video_config() if parsed_output else None
 

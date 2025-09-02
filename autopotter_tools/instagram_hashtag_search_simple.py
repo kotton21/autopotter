@@ -133,7 +133,7 @@ class InstagramHashtagSearcher:
             self.config_manager.set('ig_hashtag_ids', hashtag_ids)
             
             # Save config to file
-            self.config_manager.save_config()
+            # self.config_manager.save_config()
             
             print(f"💾 Saved hashtag ID for #{hashtag}: {hashtag_id}")
             

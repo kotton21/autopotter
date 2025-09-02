@@ -37,17 +37,18 @@ class InstagramAnalyticsManager:
     def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config = get_config(config_path)
         self.logger = get_logger('instagram_analytics')
-        self.instagram_config = self.config.get_instagram_config()
-        
-        # Validate required configuration
-        if not self.instagram_config.get('access_token'):
-            raise ValueError("Instagram access token not configured")
-        if not self.instagram_config.get('user_id'):
-            raise ValueError("Instagram user ID not configured")
+        # self.instagram_config = self.config.get_instagram_config()
         
         self.base_url = "https://graph.facebook.com/v22.0"
-        self.access_token = self.instagram_config['access_token']
-        self.user_id = self.instagram_config['user_id']
+        self.access_token = self.config.get('instagram_access_token', None)
+        self.user_id = self.config.get('instagram_user_id', None)
+
+        # Validate required configuration
+        if not self.access_token:
+            raise ValueError("Instagram access token not configured")
+        if not self.user_id:
+            raise ValueError("Instagram user ID not configured")
+        
         
         # Configuration parameters for data retrieval limits
         self.max_media_items = self.config.get('max_media_items', 9)

@@ -23,12 +23,11 @@ class Json2VideoAPI:
     
     def __init__(self, config_path="autopost_config.enhanced.json"):
         self.config_manager = ConfigManager(config_path)
-        self.config = self.config_manager.get_json2video_config()
         
         # Initialize API settings from config
-        self.api_key = self.config["api_key"]
-        self.base_url = self.config["base_url"]
-        self.timeout = self.config["timeout"]
+        self.api_key = self.config_manager.config["json2video_api_key"]
+        self.base_url = self.config_manager.config["json2video_base_url"]
+        self.timeout = self.config_manager.config["json2video_timeout"]
         
         self.headers = {
             "Content-Type": "application/json",

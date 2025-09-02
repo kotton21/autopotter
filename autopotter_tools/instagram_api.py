@@ -17,20 +17,29 @@ class InstagramVideoUploader:
     def __init__(self, config_path="autopost_config.enhanced.json", log_file=None):
         self.log_file = log_file
         self.config_manager = ConfigManager(config_path)
-        self.config = self.config_manager.get_instagram_config()
+        # self.config = self.config_manager.get_instagram_config()
+
+        self.access_token = self.config_manager.get('instagram_access_token', None)
+        self.user_id = self.config_manager.get('instagram_user_id', None)
+
+        # Validate required configuration
+        if not self.access_token:
+            raise ValueError("Instagram access token not configured")
+        if not self.user_id:
+            raise ValueError("Instagram user ID not configured")
         
         # Check if token needs refresh
-        if self.config_manager.is_instagram_token_expired():
-            self.log_message("Instagram token is expired or expiring soon. Please refresh it.")
-            self.log_message("You can use the config.py methods to refresh your token.")
+        # if self.config_manager.is_instagram_token_expired():
+        #     self.log_message("Instagram token is expired or expiring soon. Please refresh it.")
+        #     self.log_message("You can use the config.py methods to refresh your token.")
 
     def create_media_container(self, caption="Test Caption", audio_id=None):
-        url = f"https://graph.facebook.com/v22.0/{self.config['user_id']}/media"
+        url = f"https://graph.facebook.com/v22.0/{self.user_id}/media"
         payload = {
             "media_type": "REELS",
             "upload_type": "resumable",
             "caption": caption,
-            "access_token": self.config["access_token"]
+            "access_token": self.access_token
         }
         if audio_id:
             payload["audio_id"] = audio_id  # Add the audio_id if provided
@@ -50,7 +59,7 @@ class InstagramVideoUploader:
         file_size = os.path.getsize(video_path)
         url = f"https://rupload.facebook.com/ig-api-upload/v22.0/{creation_id}"
         headers = {
-            "Authorization": f"OAuth {self.config['access_token']}",
+            "Authorization": f"OAuth {self.access_token}",
             "offset": "0",
             "file_size": str(file_size)
         }
@@ -61,10 +70,10 @@ class InstagramVideoUploader:
         return response.json()
 
     def publish_video(self, creation_id):
-        url = f"https://graph.facebook.com/v22.0/{self.config['user_id']}/media_publish"
+        url = f"https://graph.facebook.com/v22.0/{self.user_id}/media_publish"
         payload = {
             "creation_id": creation_id,
-            "access_token": self.config["access_token"]
+            "access_token": self.access_token
         }
         response = requests.post(url, data=payload)
         return response.json()
@@ -86,12 +95,12 @@ class InstagramVideoUploader:
             self.log_message(f"📝 Caption: {video_caption}")
             
             # Step 1: Create reel container using video_url
-            container_url = f"https://graph.facebook.com/v22.0/{self.config['user_id']}/media"
+            container_url = f"https://graph.facebook.com/v22.0/{self.user_id}/media"
             container_payload = {
                 "media_type": "REELS",
                 "video_url": video_url,
                 "caption": video_caption,
-                "access_token": self.config["access_token"],
+                "access_token": self.access_token,
                 # "thumb_offset": 5000
             }
             
@@ -129,10 +138,10 @@ class InstagramVideoUploader:
                 return None
             
             # Step 2: Publish the container
-            publish_url = f"https://graph.facebook.com/v22.0/{self.config['user_id']}/media_publish"
+            publish_url = f"https://graph.facebook.com/v22.0/{self.user_id}/media_publish"
             publish_payload = {
                 "creation_id": container_id,
-                "access_token": self.config["access_token"]
+                "access_token": self.access_token
             }
             
             self.log_message("Publishing reel...")
@@ -170,7 +179,7 @@ class InstagramVideoUploader:
             try:
                 response = requests.get(
                     f"https://graph.facebook.com/v22.0/{container_id}",
-                    params={"fields": "status_code,status", "access_token": self.config["access_token"]}
+                    params={"fields": "status_code,status", "access_token": self.access_token}
                 )
                 status_code = response.json().get("status_code")
                 status = response.json().get("status")
@@ -242,8 +251,8 @@ def main():
         print("✅ Configuration loaded from centralized config")
         
         # Show token status
-        days_until_refresh = uploader.config_manager.get_days_until_token_refresh()
-        print(f"📅 Instagram token expires in {days_until_refresh} days")
+        # days_until_refresh = uploader.config_manager.get_days_until_token_refresh()
+        # print(f"📅 Instagram token expires in {days_until_refresh} days")
         
         # Test publish from URL if video URL is provided
         if args.video_url:

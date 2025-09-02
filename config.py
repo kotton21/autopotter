@@ -13,9 +13,86 @@ class ConfigManager:
     
     def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config_path = config_path
+        self.temp_config_path = config_path.replace('.json', '.temp.json')
         self.logger = get_logger('config')
         self.config = {}
         self.load_config()
+    
+    def load_config(self) -> Dict[str, Any]:
+        """Load configuration from file with environment variable resolution."""
+        try:
+            self.logger.info(f"Loading configuration from {self.config_path}")
+            
+            if not os.path.exists(self.config_path):
+                self.logger.warning(f"Config file {self.config_path} not found. Creating default configuration.")
+                self.create_default_config()
+            
+            with open(self.config_path, 'r') as f:
+                self.config = json.load(f)
+            
+            # Load temporary config parameters if temp file exists
+            if os.path.exists(self.temp_config_path):
+                try:
+                    with open(self.temp_config_path, 'r') as f:
+                        temp_config = json.load(f)
+                    
+                    # Merge temp config into main config (temp values override main values)
+                    self.config.update(temp_config)
+                    self.logger.info(f"Loaded {len(temp_config)} temporary configuration parameters from {self.temp_config_path}")
+                    
+                except Exception as e:
+                    self.logger.warning(f"Could not load temporary config from {self.temp_config_path}: {e}")
+            
+            # First, load environment variables from .env file
+            self.load_dotenv(self.config.get('env_file_path', '.env'))
+            
+            # Resolve environment variables
+            self.config = self.resolve_environment_variables(self.config)
+            
+            self.logger.info("Configuration loaded successfully")
+            return self.config
+            
+        except Exception as e:
+            self.logger.error(f"Failed to load configuration: {e}")
+            raise
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get a configuration value with optional default."""
+        
+        if key == 'instagram_access_token':
+            if self.is_instagram_token_expired():
+                self.logger.info("Instagram token is expired or expiring soon. Attempting automatic refresh...")
+                self.refresh_instagram_token()
+        
+        return self.config.get(key, default)
+    
+    def set(self, key: str, value: Any):
+        """Set a configuration value and save to temporary config file."""
+        try:
+            # Update in-memory configuration
+            self.config[key] = value
+            
+            # Load existing temp config if it exists
+            temp_config = {}
+            if os.path.exists(self.temp_config_path):
+                try:
+                    with open(self.temp_config_path, 'r') as f:
+                        temp_config = json.load(f)
+                except Exception as e:
+                    self.logger.warning(f"Could not read existing temp config file: {e}")
+            
+            # Update temp config with new value
+            temp_config[key] = value
+            
+            # Save to temporary config file
+            with open(self.temp_config_path, 'w') as f:
+                json.dump(temp_config, f, indent=4)
+            
+            self.logger.info(f"Configuration value '{key}' set and saved to temporary config: {self.temp_config_path}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to set configuration value '{key}': {e}")
+            raise
     
     def load_dotenv(self, env_file_path: str = ".env") -> bool:
         """
@@ -59,34 +136,6 @@ class ConfigManager:
             self.logger.error(f"Failed to load environment variables from {env_file_path}: {e}")
             return False
     
-    def load_config(self) -> Dict[str, Any]:
-        """Load configuration from file with environment variable resolution."""
-        try:
-            self.logger.info(f"Loading configuration from {self.config_path}")
-            
-            if not os.path.exists(self.config_path):
-                self.logger.warning(f"Config file {self.config_path} not found. Creating default configuration.")
-                self.create_default_config()
-            
-            with open(self.config_path, 'r') as f:
-                self.config = json.load(f)
-            
-            # First, load environment variables from .env file
-            self.load_dotenv(self.config.get('env_file_path', '.env'))
-            
-            # Resolve environment variables
-            self.config = self.resolve_environment_variables(self.config)
-            
-            # Validate configuration
-            self.validate_config()
-            
-            self.logger.info("Configuration loaded successfully")
-            return self.config
-            
-        except Exception as e:
-            self.logger.error(f"Failed to load configuration: {e}")
-            raise
-    
     def resolve_environment_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Replace ${ENV_VAR} placeholders with actual environment variable values."""
         resolved_config = {}
@@ -117,7 +166,6 @@ class ConfigManager:
             "instagram_app_secret": "${FB_APP_SECRET}",
             "instagram_user_id": "${INSTAGRAM_USER_ID}",
             "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
-            "instagram_token_expiration": None,
             "instagram_days_before_token_should_autorefresh": 7,
             
             # Instagram Analytics Configuration
@@ -173,83 +221,7 @@ class ConfigManager:
         self.logger.info(f"Default configuration created at {self.config_path}")
         self.config = default_config
     
-    def validate_config(self):
-        """Basic validation of required configuration sections."""
-        required_sections = [
-            'instagram_app_id', 'instagram_app_secret', 'instagram_user_id', 'instagram_access_token',
-            'gcs_bucket', 'gcs_api_key_path',
-            'openai_api_key',
-            'json2video_api_key'
-        ]
-        
-        missing_fields = []
-        for field in required_sections:
-            if not self.config.get(field) or self.config[field] == f"${{{field}}}":
-                missing_fields.append(field)
-        
-        if missing_fields:
-            self.logger.warning(f"Missing or unresolved configuration fields: {missing_fields}")
-            self.logger.warning("Some features may not work properly without these values")
-        else:
-            self.logger.info("Basic configuration validation passed")
     
-    def get(self, key: str, default: Any = None) -> Any:
-        """Get a configuration value."""
-        return self.config.get(key, default)
-    
-    def set(self, key: str, value: Any):
-        """Set a configuration value."""
-        self.config[key] = value
-    
-
-    
-    def save_config(self):
-        """Save the current configuration to file."""
-        try:
-            # Load the original file to preserve all fields
-            original_config = {}
-            if os.path.exists(self.config_path):
-                try:
-                    with open(self.config_path, 'r') as f:
-                        original_config = json.load(f)
-                except Exception as e:
-                    self.logger.warning(f"Could not read original config file: {e}")
-            
-            # Merge current config with original, preserving all fields
-            merged_config = original_config.copy()
-            changed_fields = []
-
-            # Update only the fields that have actually changed
-            for key, value in self.config.items():
-                #For sensitive fields, never save them.
-                if key in ['instagram_access_token', 'instagram_user_id', 
-                    'instagram_app_id', 'instagram_app_secret',
-                    'fb_app_id', 'fb_app_secret',
-                    'openai_api_key', 
-                    'json2video_api_key', 'gcs_api_key_path']:
-                          pass # do nothing for these values
-                else:
-                    # Update non-sensitive fields
-                    if original_config.get(key) != value:
-                        changed_fields.append((key, value, original_config.get(key)))
-                    merged_config[key] = value
-
-            # Loudly log any changed fields
-            if changed_fields:
-                for key, new_value, old_value in changed_fields:
-                    self.logger.warning(
-                        f"CONFIG CHANGE: '{key}' changed from '{old_value}' to '{new_value}'"
-                    )
-
-            # Save the merged configuration
-            with open(self.config_path, 'w') as f:
-                json.dump(merged_config, f, indent=4)
-            
-            self.logger.info(f"Configuration saved to {self.config_path} (preserved existing fields)")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to save configuration: {e}")
-            raise
     
     def _update_env_file(self, key: str, value: str) -> bool:
         """Update a key-value pair in the .env file."""
@@ -299,67 +271,11 @@ class ConfigManager:
             self.logger.error(f"Failed to update environment variable {key}: {e}")
             return False
     
-    def get_instagram_config(self) -> Dict[str, Any]:
-        """Get Instagram-specific configuration with automatic token refresh."""
-        # Check if token needs refresh and refresh it automatically
-        if self.is_instagram_token_expired():
-            self.logger.info("Instagram token is expired or expiring soon. Attempting automatic refresh...")
-            self.refresh_instagram_token()
-        
-        return {
-            'app_id': self.get('instagram_app_id'),
-            'app_secret': self.get('instagram_app_secret'),
-            'user_id': self.get('instagram_user_id'),
-            'access_token': os.getenv('INSTAGRAM_ACCESS_TOKEN') or self.get('instagram_access_token'),
-            'token_expiration': self.get('instagram_token_expiration'),
-        }
-    
-    def get_gcs_config(self) -> Dict[str, Any]:
-        """Get GCS-specific configuration."""
-        return {
-            'bucket': self.get('gcs_bucket'),
-            'api_key_path': self.get('gcs_api_key_path'),
-            'folders': self.get('gcs_folders', []),
-            'draft_folder': self.get('gcs_draft_folder', 'draft_videos')
-        }
-    
-    def get_openai_config(self) -> Dict[str, Any]:
-        """Get OpenAI-specific configuration."""
-        return {
-            'api_key': self.get('openai_api_key'),
-            'assistant_id': self.get('gpt_assistant_id'),  # Kept for backward compatibility
-            'thread_id': self.get('gpt_thread_id'),  # Kept for backward compatibility
-            'creation_prompt': self.get('gpt_creation_prompt'),
-            'always_create_new_thread': self.get('always_create_new_thread', True),
-            'model': self.get('gpt_model', 'gpt-4o'),
-            'max_tokens': self.get('gpt_max_tokens', 4000),
-            'temperature': self.get('gpt_temperature', 0.7),
-            'max_history_length': self.get('gpt_max_history_length', 10)
-        }
-    
-    def get_json2video_config(self) -> Dict[str, Any]:
-        """Get JSON2Video-specific configuration."""
-        return {
-            'api_key': self.get('json2video_api_key'),
-            'base_url': self.get('json2video_base_url', 'https://api.json2video.com/v2'),
-            'timeout': self.get('json2video_timeout', 300)
-        }
-    
-    def get_logging_config(self) -> Dict[str, Any]:
-        """Get logging-specific configuration."""
-        return {
-            'log_level': self.get('log_level', 'INFO'),
-            'log_file': self.get('log_file'),
-            'log_max_size': self.get('log_max_size', '10MB'),
-            'log_backup_count': self.get('log_backup_count', 5),
-            'log_console_output': self.get('log_console_output', True)
-        }
     
     def update_instagram_tokens(self, access_token: str, expiration: str):
         """Update Instagram access token and expiration with full persistence."""
         # Update in-memory configuration
         self.config['instagram_access_token'] = access_token
-        self.config['instagram_token_expiration'] = expiration
         
         # Update environment variable for current process
         self._update_environment_variable('INSTAGRAM_ACCESS_TOKEN', access_token)
@@ -399,13 +315,13 @@ class ConfigManager:
                 self._update_env_file('INSTAGRAM_ACCESS_TOKEN', new_token)
                 
                 # Update token expiration in main config (but don't save access token)
-                self.config['instagram_token_expiration'] = new_expiration
+                self.set('instagram_token_expiration', new_expiration)
                 
                 # Reset access token back to placeholder before saving
-                self.config['instagram_access_token'] = '${INSTAGRAM_ACCESS_TOKEN}'
+                # self.config['instagram_access_token'] = '${INSTAGRAM_ACCESS_TOKEN}'
                 
-                # Save the updated config (access token will be placeholder, expiration will be updated)
-                self.save_config()
+                # # Save the updated config (access token will be placeholder, expiration will be updated)
+                # self.save_config()
                 
                 self.logger.info("✅ Instagram token refreshed and updated successfully")
                 
@@ -462,7 +378,7 @@ class ConfigManager:
     def is_instagram_token_expired(self) -> bool:
         """Check if Instagram token is expired or expiring soon using Facebook API."""
         try:
-            access_token = self.get('instagram_access_token')
+            access_token = self.config['instagram_access_token']
             if not access_token or access_token.startswith('${'):
                 self.logger.warning("No valid Instagram access token available")
                 return True
@@ -480,24 +396,6 @@ class ConfigManager:
             self.logger.error(f"Error checking Instagram token expiration from Facebook API: {e}")
             return True  # Assume expired if there's an error
     
-    def get_days_until_token_refresh(self) -> int:
-        """Get the number of days until the Instagram token needs refresh."""
-        try:
-            expiration_str = self.config.get('instagram_token_expiration')
-            if not expiration_str:
-                return 0
-            
-            expiration_date = datetime.strptime(expiration_str, "%Y-%m-%d %H:%M:%S")
-            days_left = (expiration_date - datetime.now()).days
-            days_before_refresh = self.config.get('instagram_days_before_token_should_autorefresh', 7)
-            
-            # Return days until refresh is needed (when days_left <= days_before_refresh)
-            days_until_refresh = days_left - days_before_refresh
-            return max(0, days_until_refresh)
-            
-        except Exception as e:
-            self.logger.error(f"Error calculating days until token refresh: {e}")
-            return 0
 
 # Convenience function for getting configuration
 def get_config(config_path: str = "autopost_config.enhanced.json") -> ConfigManager:
@@ -506,10 +404,6 @@ def get_config(config_path: str = "autopost_config.enhanced.json") -> ConfigMana
 
 
 if __name__ == "__main__":
-    config = get_config()
-    print(json.dumps(config.config, indent=2))
-    config.set('test_key', 'test_value')
-    config.save_config()
     config = get_config()
     print(json.dumps(config.config, indent=2))
 
