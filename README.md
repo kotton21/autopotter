@@ -44,8 +44,7 @@ old 34kb,
 big is 130kb, 
 new
 
-Fix inventory output and possibly filter to a random series..
 Pick 2nd random config if first one fails to render, or is less than 2 sec long. 
-edit video ideas section??
-Order camping stuff..
-Text DR..!
+
+Build a schema for autopotter personality software so that I can deploy a 2nd one!!
+

@@ -11,5 +11,20 @@ autopot-cloud-*.json
 # Exclude cache and temporary files
 *.DS_Store*
 *__pycache__/*
+__pycache__/*
+*.pyc*
 *.pyc
+
+
+
+autopotter_tools/anothertest2.mov
+resources/autodraft_output.enhanced.json
+full_instructions.txt
+resources/autodraft_output.enhanced.json
+resources/instagram_analytics_result.json
+resources/autodraft_output.enhanced.json
+
+autopost_config.enhanced.temp.json
+
+test_json2video_configs.py
 
