@@ -12,7 +12,7 @@ from config import ConfigManager
 from datetime import datetime
 from autopotter_tools.parse_json2video_configs import parse_json2video_config
 from autopotter_tools.gpt_api import GPTAPI
-from autopotter_tools.logger import get_logger, initialize_logging
+from autopotter_tools.logger import get_logger
 
 
 class DraftVideo(BaseModel):

@@ -24,7 +24,9 @@ resources/autodraft_output.enhanced.json
 resources/instagram_analytics_result.json
 resources/autodraft_output.enhanced.json
 
+# clear this and add it in order to force a new thread?
 autopost_config.enhanced.temp.json
 
 test_json2video_configs.py
 
+autodraft_output.enhanced.json

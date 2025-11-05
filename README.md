@@ -411,3 +411,17 @@ curl -X GET "https://graph.facebook.com/v22.0/1271307507315130/subscriptions" \
 ## New branch persistent threads:
 
 The primary purpose of this update is to refactor the gpt_manager (or responsses Manager) to allow persistent threads so that we can have an ogoing conversation. This means uploading using the thread id, and adding a queue to respect the token limit. 
+
+Ok Done. 
+
+Now: rapid itteration on the video output quality!!
+- should be able to start a new thread with all data: ig, etc. 
+- then run autopotter_workflow --video-draft-only to get videos
+- modify instructions, as needed!
+
+Big Problem: 
+The AI doesn't actually know the content of the media it's using
+Write a quick script to downsample the images, and grab frames from the videos?
+What will providing this do for chatgpt?
+
+Autopost_workflow should re-run if there is a json or video creation error!
