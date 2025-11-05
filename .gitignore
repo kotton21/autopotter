@@ -15,7 +15,7 @@ __pycache__/*
 *.pyc*
 *.pyc
 
-
+autopotter_tools/old/*
 
 autopotter_tools/anothertest2.mov
 resources/autodraft_output.enhanced.json
