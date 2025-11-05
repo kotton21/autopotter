@@ -3,7 +3,6 @@
     "instagram_user_id": "${INSTAGRAM_USER_ID}",
     "instagram_app_secret": "${FB_APP_SECRET}",
     "instagram_access_token": "${INSTAGRAM_ACCESS_TOKEN}",
-    "instagram_token_expiration": "2025-11-16 16:36:57",
     "instagram_days_before_token_should_autorefresh": 7,
     "max_media_items": 7,
     "max_comments_per_media": 10,
