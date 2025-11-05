@@ -144,8 +144,6 @@ class ConfigManager:
             if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
                 env_var = value[2:-1]  # Remove ${ and }
                 
-                env_var = value[2:-1]  # Remove ${ and }
-                
                 env_value = os.getenv(env_var)
                 if env_value:
                     resolved_config[key] = env_value

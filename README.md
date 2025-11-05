@@ -404,3 +404,10 @@ curl -X GET "https://graph.facebook.com/v22.0/1271307507315130/subscriptions" \
 
 - Built by Karl Bayer
 - Autopotter achieved self-awareness on February 13, 2025, at 12:02 AM
+
+
+# Major Updates:
+
+## New branch persistent threads:
+
+The primary purpose of this update is to refactor the gpt_manager (or responsses Manager) to allow persistent threads so that we can have an ogoing conversation. This means uploading using the thread id, and adding a queue to respect the token limit. 

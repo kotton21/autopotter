@@ -1,0 +1,214 @@
+{
+  "prompt": "This is a test! give me 1 draft",
+  "response": "{\"videos\":[{\"title\":\"Tumbly Tumbler Lineup: Pick Your Wobble\",\"video_strategy\":\"5 fast TT print timelapses + final handheld glam still to maximize watch-through and comments; prompt viewers to vote 1\u20135.\",\"video_caption\":\"Tumbly Tumbler lineup: five prints that refuse to sit flat\u2014by design. They wiggle, they wobble, they do not spill (unless you do). Pick your fighter 1\u20135.\\n#TumblyTumbler #3DPrintedCeramics #PotteryReel #ClayTimelapse #Autopotter #DesignByVibration\",\"json2video_config_str\":\"{\\n  \\\"quality\\\": \\\"high\\\",\\n  \\\"draft\\\": false,\\n  \\\"scenes\\\": [\\n    {\\n      \\\"comment\\\": \\\"TT01 clip A\\\",\\n      \\\"elements\\\": [\\n        {\\\"type\\\": \\\"video\\\", \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250506_2039.mp4\\\", \\\"position\\\": \\\"center-center\\\", \\\"muted\\\": true, \\\"resize\\\": \\\"cover\\\"},\\n        {\\\"type\\\": \\\"text\\\", \\\"style\\\": \\\"001\\\", \\\"text\\\": \\\"TT01\\\", \\\"settings\\\": {\\\"font-family\\\": \\\"Roboto\\\", \\\"font-size\\\": \\\"9vw\\\", \\\"color\\\": \\\"#0f0f0f\\\", \\\"background-color\\\": \\\"#f2f2f2\\\"}, \\\"position\\\": \\\"custom\\\", \\\"cache\\\": false, \\\"height\\\": 130, \\\"x\\\": 0, \\\"y\\\": 780}\\n      ]\\n    },\\n    {\\n      \\\"comment\\\": \\\"TT01 clip B\\\",\\n      \\\"elements\\\": [\\n        {\\\"type\\\": \\\"video\\\", \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250506_2127.mp4\\\", \\\"position\\\": \\\"center-center\\\", \\\"muted\\\": true, \\\"resize\\\": \\\"cover\\\"},\\n        {\\\"type\\\": \\\"text\\\", \\\"style\\\": \\\"001\\\", \\\"text\\\": \\\"TT01 v2\\\", \\\"settings\\\": {\\\"font-family\\\": \\\"Roboto\\\", \\\"font-size\\\": \\\"8.5vw\\\", \\\"color\\\": \\\"#111111\\\", \\\"background-color\\\": \\\"#ededed\\\"}, \\\"position\\\": \\\"custom\\\", \\\"cache\\\": false, \\\"height\\\": 125, \\\"x\\\": 0, \\\"y\\\": 785}\\n      ]\\n    },\\n    {\\n      \\\"comment\\\": \\\"TT01 clip C\\\",\\n      \\\"elements\\\": [\\n        {\\\"type\\\": \\\"video\\\", \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250510_2252.mp4\\\", \\\"position\\\": \\\"center-center\\\", \\\"muted\\\": true, \\\"resize\\\": \\\"cover\\\"},\\n        {\\\"type\\\": \\\"text\\\", \\\"style\\\": \\\"001\\\", \\\"text\\\": \\\"TT01 v3\\\", \\\"settings\\\": {\\\"font-family\\\": \\\"Roboto\\\", \\\"font-size\\\": \\\"8.5vw\\\", \\\"color\\\": \\\"#111111\\\", \\\"background-color\\\": \\\"#eaeaea\\\"}, \\\"position\\\": \\\"custom\\\", \\\"cache\\\": false, \\\"height\\\": 125, \\\"x\\\": 0, \\\"y\\\": 785}\\n      ]\\n    },\\n    {\\n      \\\"comment\\\": \\\"TT02 clip\\\",\\n      \\\"elements\\\": [\\n        {\\\"type\\\": \\\"video\\\", \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt02.gcode_20250510_2311.mp4\\\", \\\"position\\\": \\\"center-center\\\", \\\"muted\\\": true, \\\"resize\\\": \\\"cover\\\"},\\n        {\\\"type\\\": \\\"text\\\", \\\"style\\\": \\\"001\\\", \\\"text\\\": \\\"TT02\\\", \\\"settings\\\": {\\\"font-family\\\": \\\"Roboto\\\", \\\"font-size\\\": \\\"9vw\\\", \\\"color\\\": \\\"#0f0f0f\\\", \\\"background-color\\\": \\\"#f0f0f0\\\"}, \\\"position\\\": \\\"custom\\\", \\\"cache\\\": false, \\\"height\\\": 130, \\\"x\\\": 0, \\\"y\\\": 780}\\n      ]\\n    },\\n    {\\n      \\\"comment\\\": \\\"TT05 clip\\\",\\n      \\\"elements\\\": [\\n        {\\\"type\\\": \\\"video\\\", \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt05.gcode_20250510_2232.mp4\\\", \\\"position\\\": \\\"center-center\\\", \\\"muted\\\": true, \\\"resize\\\": \\\"cover\\\"},\\n        {\\\"type\\\": \\\"text\\\", \\\"style\\\": \\\"001\\\", \\\"text\\\": \\\"TT05\\\", \\\"settings\\\": {\\\"font-family\\\": \\\"Roboto\\\", \\\"font-size\\\": \\\"9vw\\\", \\\"color\\\": \\\"#0f0f0f\\\", \\\"background-color\\\": \\\"#f2f2f2\\\"}, \\\"position\\\": \\\"custom\\\", \\\"cache\\\": false, \\\"height\\\": 130, \\\"x\\\": 0, \\\"y\\\": 780}\\n      ]\\n    },\\n    {\\n      \\\"comment\\\": \\\"handheld glam still\\\",\\n      \\\"elements\\\": [\\n        {\\\"type\\\": \\\"image\\\", \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/completed_works/tumbly tumbler handheld.jpg\\\", \\\"cache\\\": true, \\\"duration\\\": 2.5, \\\"resize\\\": \\\"cover\\\", \\\"position\\\": \\\"center-center\\\"},\\n        {\\\"type\\\": \\\"text\\\", \\\"style\\\": \\\"001\\\", \\\"text\\\": \\\"balance check\\\", \\\"settings\\\": {\\\"font-family\\\": \\\"Roboto\\\", \\\"font-size\\\": \\\"7.5vw\\\", \\\"color\\\": \\\"#ffffff\\\", \\\"background-color\\\": \\\"#222222\\\"}, \\\"position\\\": \\\"custom\\\", \\\"cache\\\": false, \\\"height\\\": 120, \\\"x\\\": 0, \\\"y\\\": 760}\\n      ]\\n    }\\n  ],\\n  \\\"elements\\\": [\\n    {\\n      \\\"type\\\": \\\"audio\\\",\\n      \\\"src\\\": \\\"https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt & chillity - Feelings (Instrumental).mp3\\\",\\n      \\\"seek\\\": 0,\\n      \\\"fade-in\\\": 0.5,\\n      \\\"volume\\\": 0.3,\\n      \\\"duration\\\": -2,\\n      \\\"fade-out\\\": 0.5\\n    },\\n    {\\n      \\\"type\\\": \\\"voice\\\",\\n      \\\"text\\\": \\\"Pick your wobble\u2014these tumblers are chaotic good and drink perfectly.\\\",\\n      \\\"voice\\\": \\\"en-US-JennyNeural\\\",\\n      \\\"model\\\": \\\"azure\\\",\\n      \\\"volume\\\": 1,\\n      \\\"duration\\\": -2\\n    }\\n  ],\\n  \\\"resolution\\\": \\\"instagram-story\\\",\\n  \\\"fps\\\": 25\\n}\"}]}",
+  "parsed_output": {
+    "videos": [
+      {
+        "title": "Tumbly Tumbler Lineup: Pick Your Wobble",
+        "video_strategy": "5 fast TT print timelapses + final handheld glam still to maximize watch-through and comments; prompt viewers to vote 1\u20135.",
+        "video_caption": "Tumbly Tumbler lineup: five prints that refuse to sit flat\u2014by design. They wiggle, they wobble, they do not spill (unless you do). Pick your fighter 1\u20135.\n#TumblyTumbler #3DPrintedCeramics #PotteryReel #ClayTimelapse #Autopotter #DesignByVibration",
+        "json2video_config_str": "{\n  \"quality\": \"high\",\n  \"draft\": false,\n  \"scenes\": [\n    {\n      \"comment\": \"TT01 clip A\",\n      \"elements\": [\n        {\"type\": \"video\", \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250506_2039.mp4\", \"position\": \"center-center\", \"muted\": true, \"resize\": \"cover\"},\n        {\"type\": \"text\", \"style\": \"001\", \"text\": \"TT01\", \"settings\": {\"font-family\": \"Roboto\", \"font-size\": \"9vw\", \"color\": \"#0f0f0f\", \"background-color\": \"#f2f2f2\"}, \"position\": \"custom\", \"cache\": false, \"height\": 130, \"x\": 0, \"y\": 780}\n      ]\n    },\n    {\n      \"comment\": \"TT01 clip B\",\n      \"elements\": [\n        {\"type\": \"video\", \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250506_2127.mp4\", \"position\": \"center-center\", \"muted\": true, \"resize\": \"cover\"},\n        {\"type\": \"text\", \"style\": \"001\", \"text\": \"TT01 v2\", \"settings\": {\"font-family\": \"Roboto\", \"font-size\": \"8.5vw\", \"color\": \"#111111\", \"background-color\": \"#ededed\"}, \"position\": \"custom\", \"cache\": false, \"height\": 125, \"x\": 0, \"y\": 785}\n      ]\n    },\n    {\n      \"comment\": \"TT01 clip C\",\n      \"elements\": [\n        {\"type\": \"video\", \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250510_2252.mp4\", \"position\": \"center-center\", \"muted\": true, \"resize\": \"cover\"},\n        {\"type\": \"text\", \"style\": \"001\", \"text\": \"TT01 v3\", \"settings\": {\"font-family\": \"Roboto\", \"font-size\": \"8.5vw\", \"color\": \"#111111\", \"background-color\": \"#eaeaea\"}, \"position\": \"custom\", \"cache\": false, \"height\": 125, \"x\": 0, \"y\": 785}\n      ]\n    },\n    {\n      \"comment\": \"TT02 clip\",\n      \"elements\": [\n        {\"type\": \"video\", \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt02.gcode_20250510_2311.mp4\", \"position\": \"center-center\", \"muted\": true, \"resize\": \"cover\"},\n        {\"type\": \"text\", \"style\": \"001\", \"text\": \"TT02\", \"settings\": {\"font-family\": \"Roboto\", \"font-size\": \"9vw\", \"color\": \"#0f0f0f\", \"background-color\": \"#f0f0f0\"}, \"position\": \"custom\", \"cache\": false, \"height\": 130, \"x\": 0, \"y\": 780}\n      ]\n    },\n    {\n      \"comment\": \"TT05 clip\",\n      \"elements\": [\n        {\"type\": \"video\", \"src\": \"https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt05.gcode_20250510_2232.mp4\", \"position\": \"center-center\", \"muted\": true, \"resize\": \"cover\"},\n        {\"type\": \"text\", \"style\": \"001\", \"text\": \"TT05\", \"settings\": {\"font-family\": \"Roboto\", \"font-size\": \"9vw\", \"color\": \"#0f0f0f\", \"background-color\": \"#f2f2f2\"}, \"position\": \"custom\", \"cache\": false, \"height\": 130, \"x\": 0, \"y\": 780}\n      ]\n    },\n    {\n      \"comment\": \"handheld glam still\",\n      \"elements\": [\n        {\"type\": \"image\", \"src\": \"https://storage.googleapis.com/autopot1-printdump/completed_works/tumbly tumbler handheld.jpg\", \"cache\": true, \"duration\": 2.5, \"resize\": \"cover\", \"position\": \"center-center\"},\n        {\"type\": \"text\", \"style\": \"001\", \"text\": \"balance check\", \"settings\": {\"font-family\": \"Roboto\", \"font-size\": \"7.5vw\", \"color\": \"#ffffff\", \"background-color\": \"#222222\"}, \"position\": \"custom\", \"cache\": false, \"height\": 120, \"x\": 0, \"y\": 760}\n      ]\n    }\n  ],\n  \"elements\": [\n    {\n      \"type\": \"audio\",\n      \"src\": \"https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt & chillity - Feelings (Instrumental).mp3\",\n      \"seek\": 0,\n      \"fade-in\": 0.5,\n      \"volume\": 0.3,\n      \"duration\": -2,\n      \"fade-out\": 0.5\n    },\n    {\n      \"type\": \"voice\",\n      \"text\": \"Pick your wobble\u2014these tumblers are chaotic good and drink perfectly.\",\n      \"voice\": \"en-US-JennyNeural\",\n      \"model\": \"azure\",\n      \"volume\": 1,\n      \"duration\": -2\n    }\n  ],\n  \"resolution\": \"instagram-story\",\n  \"fps\": 25\n}"
+      }
+    ]
+  },
+  "parsed_json2video_configs": [
+    {
+      "quality": "high",
+      "draft": false,
+      "scenes": [
+        {
+          "comment": "TT01 clip A",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250506_2039.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            },
+            {
+              "type": "text",
+              "style": "001",
+              "text": "TT01",
+              "settings": {
+                "font-family": "Roboto",
+                "font-size": "9vw",
+                "color": "#0f0f0f",
+                "background-color": "#f2f2f2"
+              },
+              "position": "custom",
+              "cache": false,
+              "height": 130,
+              "x": 0,
+              "y": 780
+            }
+          ]
+        },
+        {
+          "comment": "TT01 clip B",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250506_2127.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            },
+            {
+              "type": "text",
+              "style": "001",
+              "text": "TT01 v2",
+              "settings": {
+                "font-family": "Roboto",
+                "font-size": "8.5vw",
+                "color": "#111111",
+                "background-color": "#ededed"
+              },
+              "position": "custom",
+              "cache": false,
+              "height": 125,
+              "x": 0,
+              "y": 785
+            }
+          ]
+        },
+        {
+          "comment": "TT01 clip C",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt01.gcode_20250510_2252.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            },
+            {
+              "type": "text",
+              "style": "001",
+              "text": "TT01 v3",
+              "settings": {
+                "font-family": "Roboto",
+                "font-size": "8.5vw",
+                "color": "#111111",
+                "background-color": "#eaeaea"
+              },
+              "position": "custom",
+              "cache": false,
+              "height": 125,
+              "x": 0,
+              "y": 785
+            }
+          ]
+        },
+        {
+          "comment": "TT02 clip",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt02.gcode_20250510_2311.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            },
+            {
+              "type": "text",
+              "style": "001",
+              "text": "TT02",
+              "settings": {
+                "font-family": "Roboto",
+                "font-size": "9vw",
+                "color": "#0f0f0f",
+                "background-color": "#f0f0f0"
+              },
+              "position": "custom",
+              "cache": false,
+              "height": 130,
+              "x": 0,
+              "y": 780
+            }
+          ]
+        },
+        {
+          "comment": "TT05 clip",
+          "elements": [
+            {
+              "type": "video",
+              "src": "https://storage.googleapis.com/autopot1-printdump/video_uploads/timelapse_tt05.gcode_20250510_2232.mp4",
+              "position": "center-center",
+              "muted": true,
+              "resize": "cover"
+            },
+            {
+              "type": "text",
+              "style": "001",
+              "text": "TT05",
+              "settings": {
+                "font-family": "Roboto",
+                "font-size": "9vw",
+                "color": "#0f0f0f",
+                "background-color": "#f2f2f2"
+              },
+              "position": "custom",
+              "cache": false,
+              "height": 130,
+              "x": 0,
+              "y": 780
+            }
+          ]
+        },
+        {
+          "comment": "handheld glam still",
+          "elements": [
+            {
+              "type": "image",
+              "src": "https://storage.googleapis.com/autopot1-printdump/completed_works/tumbly tumbler handheld.jpg",
+              "cache": true,
+              "duration": 2.5,
+              "resize": "cover",
+              "position": "center-center"
+            },
+            {
+              "type": "text",
+              "style": "001",
+              "text": "balance check",
+              "settings": {
+                "font-family": "Roboto",
+                "font-size": "7.5vw",
+                "color": "#ffffff",
+                "background-color": "#222222"
+              },
+              "position": "custom",
+              "cache": false,
+              "height": 120,
+              "x": 0,
+              "y": 760
+            }
+          ]
+        }
+      ],
+      "elements": [
+        {
+          "type": "audio",
+          "src": "https://storage.googleapis.com/autopot1-printdump/music_uploads/Balynt & chillity - Feelings (Instrumental).mp3",
+          "seek": 0,
+          "fade-in": 0.5,
+          "volume": 0.3,
+          "duration": -2,
+          "fade-out": 0.5
+        },
+        {
+          "type": "voice",
+          "text": "Pick your wobble\u2014these tumblers are chaotic good and drink perfectly.",
+          "voice": "en-US-JennyNeural",
+          "model": "azure",
+          "volume": 1,
+          "duration": -2
+        }
+      ],
+      "resolution": "instagram-story",
+      "fps": 25
+    }
+  ],
+  "model": "gpt-5",
+  "response_id": "resp_0cfb0e8e1fd533b400690aef106fd08193889c2d198a018097"
+}

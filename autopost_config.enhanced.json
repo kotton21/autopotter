@@ -27,8 +27,8 @@
         "json2video_templates": "resources/json2video_templates.md",
         "gcs_content_notes": "resources/gcs_content_notes.md"
     },
-    "gpt_use_previous_response_id": false,
-    "gpt_model": "gpt-4o",
+    "gpt_use_previous_response_id": true,
+    "gpt_model": "gpt-5", 
     "gpt_temperature": 0.7,
     "json2video_api_key": "${JSON2VIDEO_API_KEY}",
     "json2video_base_url": "https://api.json2video.com/v2",
