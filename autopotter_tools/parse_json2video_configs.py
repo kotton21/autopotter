@@ -8,6 +8,12 @@ import sys
 import re
 from pathlib import Path
 
+# Try importing logger from autopotter_tools first, fallback to local import
+try:
+    from autopotter_tools.logger import get_logger
+except ImportError:
+    from logger import get_logger
+
 def parse_json2video_config(config_str, video_title="Unknown"):
     """
     Parse and validate a json2video config string with multiple fallback strategies.
@@ -19,8 +25,14 @@ def parse_json2video_config(config_str, video_title="Unknown"):
     Returns:
         Tuple of (success: bool, config_json: dict, error_message: str)
     """
+    logger = get_logger('parse_json2video_configs')
+    logger.debug(f"Parsing json2video config for video: {video_title}")
+    
     if not config_str:
+        logger.warning(f"No config string provided for video '{video_title}'")
         return False, None, "No config string provided"
+    
+    logger.debug(f"Config string length: {len(config_str)} characters")
     
     # Define repair strategies with their descriptions
     repair_strategies = [
@@ -33,22 +45,35 @@ def parse_json2video_config(config_str, video_title="Unknown"):
     # Try each repair strategy
     for repair_func, strategy_name in repair_strategies:
         try:
+            logger.debug(f"Trying parsing strategy: {strategy_name}")
             config_json = json.loads(repair_func(config_str))
+            
+            if strategy_name == "direct parsing":
+                logger.info(f"Successfully parsed json2video config for '{video_title}' (direct parsing)")
+            else:
+                logger.info(f"Successfully parsed json2video config for '{video_title}' using {strategy_name}")
+            
             return True, config_json, f"Fixed via {strategy_name}" if strategy_name != "direct parsing" else None
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.debug(f"Strategy '{strategy_name}' failed: {str(e)}")
             continue
     
     # If all strategies fail, identify the specific issue
+    logger.warning(f"All parsing strategies failed for '{video_title}', attempting line-by-line analysis")
     try:
         lines = config_str.split('\n')
         for i, line in enumerate(lines, 1):
             try:
                 json.loads(line)
-            except json.JSONDecodeError:
-                return False, None, f"Line {i} has JSON error: {line[:100]}..."
-    except Exception:
+            except json.JSONDecodeError as e:
+                error_msg = f"Line {i} has JSON error: {line[:100]}..."
+                logger.error(f"JSON parsing failed for '{video_title}': {error_msg}")
+                return False, None, error_msg
+    except Exception as e:
+        logger.debug(f"Line-by-line analysis failed: {e}")
         pass
     
+    logger.error(f"All JSON parsing strategies failed for '{video_title}'")
     return False, None, "All JSON parsing strategies failed"
 
 def test_json2video_configs():
