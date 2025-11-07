@@ -4,6 +4,8 @@
 
 -The file size of the videos correlates roughly to the duration, so give preference to shorter videos when putting multiple in series.
 
+- Make sure you follow the latest instructions from karlsbayer if any are included in the instagram comments.
+
 
 ##The basic contents of each folder are as follows:
 - video_uploads contains timelapse videos of individual print jobs, and photos of the print job immediately after completion.
