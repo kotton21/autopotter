@@ -1169,8 +1169,14 @@ def main():
         import argparse
         
         parser = argparse.ArgumentParser(description="Instagram Analytics Manager")
-        parser.add_argument("--fulltest", action="store_true", help="Run full diagnostics (account info, permissions, field/insights tests) before exporting")
-        parser.add_argument("-o", "--output", default="instagram_analytics_result.json", help="Output JSON file path")
+        parser.add_argument("--fulltest", 
+                            type=bool,
+                            default=False,
+                            help="Run full diagnostics (account info, permissions, field/insights tests) before exporting")
+        parser.add_argument("-o", "--output", 
+                            type=str,
+                            default="instagram_analytics_result.json", 
+                            help="Output JSON file path")
         args = parser.parse_args()
         
         print("🚀 Instagram Analytics Manager")

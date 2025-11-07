@@ -209,14 +209,20 @@ class InstagramVideoUploader:
         self.log_message("Uploading video...")
         upload_result = self.upload_video(creation_id, video_path)
         self.log_message(f"Upload result: {upload_result}")
+        if upload_result.get("success") is False:
+            self.log_message("Upload failed. Exiting...")
+            return None
         
         self.log_message("Publishing video...")
         publish_result = self.publish_video(creation_id)
         self.log_message(f"Publish result: {publish_result}")
+        if publish_result.get("success") is False:
+            self.log_message("Publish failed. Exiting...")
+            return None
         
         self.log_message("Video uploaded successfully!")
 
-        return publish_result
+        return True
 
 
 
