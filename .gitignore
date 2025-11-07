@@ -1,13 +1,32 @@
 # Exclude sensitive files
 .env
+.env.backup
 *.json.key
 service-account*.json
 autopot-cloud-*.json
 
-# Exclude old config files with sensitive data (if they exist)
-# */config_fb*
-# */config_gpt*
+
+*.mp4
 
 # Exclude cache and temporary files
-autopotter_tools/__pycache__/*
-*.mp4
+*.DS_Store*
+*__pycache__/*
+__pycache__/*
+*.pyc*
+*.pyc
+
+autopotter_tools/old/*
+
+autopotter_tools/anothertest2.mov
+resources/autodraft_output.enhanced.json
+full_instructions.txt
+resources/autodraft_output.enhanced.json
+resources/instagram_analytics_result.json
+resources/autodraft_output.enhanced.json
+
+# clear this and add it in order to force a new thread?
+autopost_config.enhanced.temp.json
+
+test_json2video_configs.py
+
+autodraft_output.enhanced.json
