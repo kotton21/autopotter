@@ -3,7 +3,7 @@ import json
 import re
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Union
-from autopotter_tools.logger import get_logger
+from autopotter_tools.simplelogger import Logger
 
 class ConfigManager:
     """
@@ -14,17 +14,16 @@ class ConfigManager:
     def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config_path = config_path
         self.temp_config_path = config_path.replace('.json', '.temp.json')
-        self.logger = get_logger('config')
         self.config = {}
         self.load_config()
     
     def load_config(self) -> Dict[str, Any]:
         """Load configuration from file with environment variable resolution."""
         try:
-            self.logger.info(f"Loading configuration from {self.config_path}")
+            Logger.info(f"Loading configuration from {self.config_path}")
             
             if not os.path.exists(self.config_path):
-                self.logger.warning(f"Config file {self.config_path} not found. Creating default configuration.")
+                Logger.warning(f"Config file {self.config_path} not found. Creating default configuration.")
                 self.create_default_config()
             
             with open(self.config_path, 'r') as f:
@@ -38,27 +37,27 @@ class ConfigManager:
                     
                     # Merge temp config into main config (temp values override main values)
                     self.config.update(temp_config)
-                    self.logger.info(f"Loaded {len(temp_config)} temporary configuration parameters from {self.temp_config_path}")
+                    Logger.info(f"Loaded {len(temp_config)} temporary configuration parameters from {self.temp_config_path}")
                     
                 except Exception as e:
-                    self.logger.warning(f"Could not load temporary config from {self.temp_config_path}: {e}")
+                    Logger.warning(f"Could not load temporary config from {self.temp_config_path}: {e}")
             
             # First, load environment variables from .env file
             env_file_path = self.config.get('env_file_path', None)
             if env_file_path:
                 self.load_dotenv(env_file_path)
             else:
-                self.logger.warning("No environment file path configured. Skipping environment variable loading.")
+                Logger.warning("No environment file path configured. Skipping environment variable loading.")
             
             
             # Resolve environment variables
             self.config = self.resolve_environment_variables(self.config)
             
-            self.logger.info("Configuration loaded successfully")
+            Logger.info("Configuration loaded successfully")
             return self.config
             
         except Exception as e:
-            self.logger.error(f"Failed to load configuration: {e}")
+            Logger.error(f"Failed to load configuration: {e}")
             raise
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -66,7 +65,7 @@ class ConfigManager:
         
         if key == 'instagram_access_token':
             if self.is_instagram_token_expired():
-                self.logger.info("Instagram token is expired or expiring soon. Attempting automatic refresh...")
+                Logger.info("Instagram token is expired or expiring soon. Attempting automatic refresh...")
                 self.refresh_instagram_token()
         
         return self.config.get(key, default)
@@ -84,7 +83,7 @@ class ConfigManager:
                     with open(self.temp_config_path, 'r') as f:
                         temp_config = json.load(f)
                 except Exception as e:
-                    self.logger.warning(f"Could not read existing temp config file: {e}")
+                    Logger.warning(f"Could not read existing temp config file: {e}")
             
             # Update temp config with new value
             temp_config[key] = value
@@ -93,10 +92,10 @@ class ConfigManager:
             with open(self.temp_config_path, 'w') as f:
                 json.dump(temp_config, f, indent=4)
             
-            self.logger.info(f"Configuration value '{key}' set and saved to temporary config: {self.temp_config_path}")
+            Logger.info(f"Configuration value '{key}' set and saved to temporary config: {self.temp_config_path}")
             
         except Exception as e:
-            self.logger.error(f"Failed to set configuration value '{key}': {e}")
+            Logger.error(f"Failed to set configuration value '{key}': {e}")
             raise
     
     def load_dotenv(self, env_file_path: str = ".env") -> bool:
@@ -111,7 +110,7 @@ class ConfigManager:
         """
         try:
             if not os.path.exists(env_file_path):
-                self.logger.warning(f"Environment file {env_file_path} not found")
+                Logger.warning(f"Environment file {env_file_path} not found")
                 return False
             
             with open(env_file_path, 'r') as f:
@@ -130,15 +129,15 @@ class ConfigManager:
                         # Only set if not already in environment
                         if key not in os.environ:
                             os.environ[key] = value
-                            self.logger.debug(f"Loaded environment variable: {key}")
+                            Logger.debug(f"Loaded environment variable: {key}")
                         else:
-                            self.logger.debug(f"Environment variable {key} already set, skipping")
+                            Logger.debug(f"Environment variable {key} already set, skipping")
             
-            self.logger.info(f"Environment variables loaded from {env_file_path}")
+            Logger.info(f"Environment variables loaded from {env_file_path}")
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to load environment variables from {env_file_path}: {e}")
+            Logger.error(f"Failed to load environment variables from {env_file_path}: {e}")
             return False
     
     def resolve_environment_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
@@ -152,9 +151,9 @@ class ConfigManager:
                 env_value = os.getenv(env_var)
                 if env_value:
                     resolved_config[key] = env_value
-                    self.logger.debug(f"Resolved {key} from environment variable {env_var}")
+                    Logger.debug(f"Resolved {key} from environment variable {env_var}")
                 else:
-                    self.logger.warning(f"Environment variable {env_var} not set for {key}")
+                    Logger.warning(f"Environment variable {env_var} not set for {key}")
                     resolved_config[key] = value  # Keep original placeholder
             else:
                 resolved_config[key] = value
@@ -221,7 +220,7 @@ class ConfigManager:
         with open(self.config_path, 'w') as f:
             json.dump(default_config, f, indent=4)
         
-        self.logger.info(f"Default configuration created at {self.config_path}")
+        Logger.info(f"Default configuration created at {self.config_path}")
         self.config = default_config
     
     
@@ -235,7 +234,7 @@ class ConfigManager:
                 # Create .env file if it doesn't exist
                 with open(env_file_path, 'w') as f:
                     f.write(f"{key}={value}\n")
-                self.logger.info(f"Created new .env file at {env_file_path}")
+                Logger.info(f"Created new .env file at {env_file_path}")
                 return True
             
             # Read existing .env file
@@ -257,21 +256,21 @@ class ConfigManager:
             with open(env_file_path, 'w') as f:
                 f.writelines(lines)
             
-            self.logger.debug(f"Updated {key} in .env file {env_file_path}")
+            Logger.debug(f"Updated {key} in .env file {env_file_path}")
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to update .env file {env_file_path}: {e}")
+            Logger.error(f"Failed to update .env file {env_file_path}: {e}")
             return False
     
     def _update_environment_variable(self, key: str, value: str) -> bool:
         """Update an environment variable in the current process."""
         try:
             os.environ[key] = value
-            self.logger.debug(f"Updated environment variable {key}")
+            Logger.debug(f"Updated environment variable {key}")
             return True
         except Exception as e:
-            self.logger.error(f"Failed to update environment variable {key}: {e}")
+            Logger.error(f"Failed to update environment variable {key}: {e}")
             return False
     
     
@@ -286,12 +285,12 @@ class ConfigManager:
         # Update .env file for persistence across restarts
         self._update_env_file('INSTAGRAM_ACCESS_TOKEN', access_token)
         
-        self.logger.info("Instagram tokens updated and persisted to environment and .env file")
+        Logger.info("Instagram tokens updated and persisted to environment and .env file")
     
     def refresh_instagram_token(self):
         """Automatically refresh the Instagram access token using Facebook API."""
         try:
-            self.logger.info("Requesting a new long-lived access token from Facebook...")
+            Logger.info("Requesting a new long-lived access token from Facebook...")
             
             import requests
             
@@ -308,7 +307,7 @@ class ConfigManager:
             
             if "access_token" in response_data:
                 new_token = response_data["access_token"]
-                self.logger.info("✅ New access token obtained successfully")
+                Logger.info("✅ New access token obtained successfully")
                 
                 # Get new expiration date from Facebook API
                 new_expiration = self._get_facebook_token_expiration(new_token)
@@ -326,20 +325,20 @@ class ConfigManager:
                 # # Save the updated config (access token will be placeholder, expiration will be updated)
                 # self.save_config()
                 
-                self.logger.info("✅ Instagram token refreshed and updated successfully")
+                Logger.info("✅ Instagram token refreshed and updated successfully")
                 
             else:
-                self.logger.error(f"❌ Failed to obtain new token: {response_data}")
+                Logger.error(f"❌ Failed to obtain new token: {response_data}")
                 raise Exception("Unable to refresh Instagram access token")
                 
         except Exception as e:
-            self.logger.error(f"❌ Error refreshing Instagram access token: {e}")
+            Logger.error(f"❌ Error refreshing Instagram access token: {e}")
             raise
     
     def _get_facebook_token_expiration(self, access_token: str) -> str:
         """Get token expiration by polling Facebook API."""
         try:
-            self.logger.info("Getting token expiration date from Facebook API...")
+            Logger.info("Getting token expiration date from Facebook API...")
             
             import requests
             
@@ -363,17 +362,17 @@ class ConfigManager:
                 expiration_date = datetime.fromtimestamp(exp)
                 new_expiration = expiration_date.strftime('%Y-%m-%d %H:%M:%S')
                 
-                self.logger.info(f"✅ Token expiration determined: {new_expiration}")
+                Logger.info(f"✅ Token expiration determined: {new_expiration}")
                 return new_expiration
                 
             else:
-                self.logger.warning("⚠️ Could not determine new token expiration, using current time + 60 days")
+                Logger.warning("⚠️ Could not determine new token expiration, using current time + 60 days")
                 # Fallback: set expiration to 60 days from now
                 fallback_expiration = (datetime.now() + timedelta(days=60)).strftime('%Y-%m-%d %H:%M:%S')
                 return fallback_expiration
                 
         except Exception as e:
-            self.logger.error(f"⚠️ Error getting token expiration: {e}")
+            Logger.error(f"⚠️ Error getting token expiration: {e}")
             # Fallback: set expiration to 60 days from now
             fallback_expiration = (datetime.now() + timedelta(days=60)).strftime('%Y-%m-%d %H:%M:%S')
             return fallback_expiration
@@ -383,7 +382,7 @@ class ConfigManager:
         try:
             access_token = self.config['instagram_access_token']
             if not access_token or access_token.startswith('${'):
-                self.logger.warning("No valid Instagram access token available")
+                Logger.warning("No valid Instagram access token available")
                 return True
             
             # Get fresh expiration data from Facebook API
@@ -392,11 +391,11 @@ class ConfigManager:
             days_left = (expiration_date - datetime.now()).days
             days_before_refresh = self.config.get('instagram_days_before_token_should_autorefresh', 7)
             
-            self.logger.debug(f"Instagram token expires in {days_left} days (from Facebook API)")
+            Logger.debug(f"Instagram token expires in {days_left} days (from Facebook API)")
             return days_left <= days_before_refresh
             
         except Exception as e:
-            self.logger.error(f"Error checking Instagram token expiration from Facebook API: {e}")
+            Logger.error(f"Error checking Instagram token expiration from Facebook API: {e}")
             return True  # Assume expired if there's an error
     
 

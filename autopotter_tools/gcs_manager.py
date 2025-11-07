@@ -14,11 +14,10 @@ from typing import Dict, List, Any
 from google.cloud import storage
 
 # Import from the package
-# from autopotter_tools.logger import get_logger
 try:
-    from logger import get_logger
+    from simplelogger import Logger
 except ImportError:
-    from autopotter_tools.logger import get_logger
+    from autopotter_tools.simplelogger import Logger
 
 from config import get_config
 
@@ -29,7 +28,6 @@ class GCSManager:
     
     def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config = get_config(config_path)
-        self.logger = get_logger('gcs_manager')
         self.gcs_config = self.config.get_gcs_config()
         
         # Validate required configuration
@@ -46,7 +44,7 @@ class GCSManager:
         # Configure folders to scan
         self.folders_to_scan = self.gcs_config.get('folders', None)
         
-        self.logger.info(f"GCS Manager initialized for bucket: {self.bucket_name}")
+        Logger.info(f"GCS Manager initialized for bucket: {self.bucket_name}")
     
     # ==================== INVENTORY OPERATIONS ====================
     
@@ -60,7 +58,7 @@ class GCSManager:
         Returns:
             List of file metadata dictionaries
         """
-        self.logger.info(f"Scanning folder: {folder_prefix}")
+        Logger.info(f"Scanning folder: {folder_prefix}")
         
         try:
             blobs = list(self.bucket.list_blobs(prefix=folder_prefix))
@@ -87,11 +85,11 @@ class GCSManager:
                 
                 files.append(file_info)
             
-            self.logger.info(f"Found {len(files)} files in {folder_prefix}")
+            Logger.info(f"Found {len(files)} files in {folder_prefix}")
             return files
             
         except Exception as e:
-            self.logger.error(f"Failed to scan folder {folder_prefix}: {e}")
+            Logger.error(f"Failed to scan folder {folder_prefix}: {e}")
             return []
     
     def _categorize_file(self, filename: str) -> str:
@@ -134,7 +132,7 @@ class GCSManager:
         Returns:
             Dictionary containing organized inventory data by folder
         """
-        self.logger.info("Generating simplified GCS file inventory organized by folder")
+        Logger.info("Generating simplified GCS file inventory organized by folder")
         
         try:
             inventory_data = {
@@ -174,7 +172,7 @@ class GCSManager:
                         inventory_data['files_by_folder'][folder_url] = file_names
                     
                 except Exception as e:
-                    self.logger.error(f"Error scanning folder {folder}: {e}")
+                    Logger.error(f"Error scanning folder {folder}: {e}")
             
             # Round total size
             inventory_data['summary']['total_size_mb'] = round(inventory_data['summary']['total_size_mb'], 2)
@@ -183,13 +181,13 @@ class GCSManager:
             if output_path:
                 with open(output_path, 'w') as f:
                     json.dump(inventory_data, f, indent=2)
-                self.logger.info(f"File inventory saved to: {output_path}")
+                Logger.info(f"File inventory saved to: {output_path}")
             
-            self.logger.info("GCS file inventory generation completed")
+            Logger.info("GCS file inventory generation completed")
             return inventory_data
             
         except Exception as e:
-            self.logger.error(f"Failed to generate file inventory: {e}")
+            Logger.error(f"Failed to generate file inventory: {e}")
             raise
     
     # ==================== UPLOAD OPERATIONS ====================
@@ -208,10 +206,10 @@ class GCSManager:
         try:
             blob = self.bucket.blob(destination_blob_name)
             blob.upload_from_filename(source_file_path)
-            self.logger.info(f"Uploaded {source_file_path} to {self.bucket_name}/{destination_blob_name}")
+            Logger.info(f"Uploaded {source_file_path} to {self.bucket_name}/{destination_blob_name}")
             return True
         except Exception as e:
-            self.logger.error(f"Failed to upload {source_file_path}: {e}")
+            Logger.error(f"Failed to upload {source_file_path}: {e}")
             return False
     
     def upload_folder(self, source_folder: str, destination_folder_prefix: str = "") -> bool:
@@ -234,10 +232,10 @@ class GCSManager:
                     if not self.upload_file(local_file_path, destination_blob_name):
                         return False
             
-            self.logger.info(f"Uploaded folder {source_folder} to {self.bucket_name}/{destination_folder_prefix}")
+            Logger.info(f"Uploaded folder {source_folder} to {self.bucket_name}/{destination_folder_prefix}")
             return True
         except Exception as e:
-            self.logger.error(f"Failed to upload folder {source_folder}: {e}")
+            Logger.error(f"Failed to upload folder {source_folder}: {e}")
             return False
     
     def get_most_recent_file_creation_time(self, prefix: str = None) -> datetime:
@@ -256,15 +254,15 @@ class GCSManager:
             # Filter out folder blobs
             file_blobs = [blob for blob in blobs if not blob.name.endswith('/')]
             if not file_blobs:
-                self.logger.info("No files found.")
+                Logger.info("No files found.")
                 return None
             
             most_recent_blob = max(file_blobs, key=lambda blob: blob.time_created)
-            self.logger.info(f"The most recent file is: {most_recent_blob.name}")
+            Logger.info(f"The most recent file is: {most_recent_blob.name}")
             return most_recent_blob.time_created
             
         except Exception as e:
-            self.logger.error(f"Failed to get most recent file creation time: {e}")
+            Logger.error(f"Failed to get most recent file creation time: {e}")
             return None
     
     def upload_new_files(self, source_folder: str, destination_folder_prefix: str = "") -> bool:
@@ -292,11 +290,11 @@ class GCSManager:
                         if not self.upload_file(local_file_path, destination_blob_name):
                             return False
             
-            self.logger.info(f"Uploaded new files from {source_folder} to {self.bucket_name}/{destination_folder_prefix}")
+            Logger.info(f"Uploaded new files from {source_folder} to {self.bucket_name}/{destination_folder_prefix}")
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to upload new files: {e}")
+            Logger.error(f"Failed to upload new files: {e}")
             return False
     
     # ==================== SELECTION OPERATIONS ====================
@@ -341,7 +339,7 @@ class GCSManager:
             return video_files
             
         except Exception as e:
-            self.logger.error(f"Failed to get available videos: {e}")
+            Logger.error(f"Failed to get available videos: {e}")
             return []
     
     def select_next_video(self, uploaded_videos: List[Dict[str, str]]) -> Dict[str, Any]:
@@ -369,12 +367,12 @@ class GCSManager:
             
             # Optional: Check for minimum video quality/size
             if selected_video['size'] < 1024 * 1024:  # Less than 1MB
-                self.logger.warning(f"Selected video {selected_video['name']} is very small ({selected_video['size']} bytes)")
+                Logger.warning(f"Selected video {selected_video['name']} is very small ({selected_video['size']} bytes)")
             
             return selected_video
             
         except Exception as e:
-            self.logger.error(f"Failed to select next video: {e}")
+            Logger.error(f"Failed to select next video: {e}")
             return None
     
     def get_audio_options(self) -> List[Dict[str, Any]]:
@@ -408,7 +406,7 @@ class GCSManager:
             return audio_files
             
         except Exception as e:
-            self.logger.error(f"Failed to get audio options: {e}")
+            Logger.error(f"Failed to get audio options: {e}")
             return []
     
     def select_random_audio(self, exclude_recent: int = None) -> Dict[str, Any]:
@@ -439,7 +437,7 @@ class GCSManager:
             return random.choice(available_audio)
             
         except Exception as e:
-            self.logger.error(f"Failed to select random audio: {e}")
+            Logger.error(f"Failed to select random audio: {e}")
             return None
 
 def main():

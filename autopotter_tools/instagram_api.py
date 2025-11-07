@@ -12,10 +12,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import ConfigManager
 
+# Try importing logger from autopotter_tools first, fallback to local import
+try:
+    from autopotter_tools.simplelogger import Logger
+except ImportError:
+    from simplelogger import Logger
+
 
 class InstagramVideoUploader:
     def __init__(self, config_path="autopost_config.enhanced.json", log_file=None):
-        self.log_file = log_file
+        # self.log_file = log_file
         self.config_manager = ConfigManager(config_path)
         # self.config = self.config_manager.get_instagram_config()
 
@@ -228,14 +234,14 @@ class InstagramVideoUploader:
 
 
     def log_message(self, message):
-        """Log a message to the log file with a timestamp."""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        msg = f"[{timestamp}] InstagramUploader: {message}\n"
-        if self.log_file is None:
-            print(msg, end="")
+        """Log a message using the simple logger."""
+        # Determine log level based on message content
+        if "❌" in message or "Failed" in message or "Error" in message or "error" in message.lower():
+            Logger.error(message)
+        elif "⚠️" in message or "Warning" in message or "warning" in message.lower():
+            Logger.warning(message)
         else:
-            with open(self.log_file, "a") as f:
-                f.write(msg)
+            Logger.info(message)
 
 
 def main():

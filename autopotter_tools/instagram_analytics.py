@@ -12,13 +12,12 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 # Add the parent directory to Python path to import config
-# sys.path.insert(0, str(Path(__file__).parent.parent))
-# sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
-    from logger import get_logger
+    from simplelogger import Logger
 except ImportError:
-    from autopotter_tools.logger import get_logger
+    from autopotter_tools.simplelogger import Logger
     
 from config import get_config
 
@@ -36,7 +35,6 @@ class InstagramAnalyticsManager:
     
     def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         self.config = get_config(config_path)
-        self.logger = get_logger('instagram_analytics')
         # self.instagram_config = self.config.get_instagram_config()
         
         self.base_url = "https://graph.facebook.com/v22.0"
@@ -64,7 +62,7 @@ class InstagramAnalyticsManager:
             self.check_token_permissions()
             raise ValueError("During __INIT__, No Instagram Business Account found")
         
-        self.logger.info(f"Instagram Analytics Manager initialized with limits: media={self.max_media_items}, comments={self.max_comments_per_media}, replies={self.max_replies_per_comment}")
+        Logger.info(f"Instagram Analytics Manager initialized with limits: media={self.max_media_items}, comments={self.max_comments_per_media}, replies={self.max_replies_per_comment}")
     
     def get_current_config(self) -> Dict[str, Any]:
         """
@@ -108,14 +106,14 @@ class InstagramAnalyticsManager:
                             if ig_data.get('instagram_business_account'):
                                 self.instagram_account_id = ig_data['instagram_business_account']['id']
                                 self.page_access_token = page_token
-                                self.logger.info(f"Found Instagram Business Account: {self.instagram_account_id}")
+                                Logger.info(f"Found Instagram Business Account: {self.instagram_account_id}")
                                 return
             
             if not self.instagram_account_id:
-                self.logger.warning("No Instagram Business Account found")
+                Logger.warning("No Instagram Business Account found")
                 
         except Exception as e:
-            self.logger.error(f"Failed to find Instagram account: {e}")
+            Logger.error(f"Failed to find Instagram account: {e}")
     
     def check_token_permissions(self) -> Dict[str, Any]:
         """
@@ -125,7 +123,7 @@ class InstagramAnalyticsManager:
         Returns:
             Dictionary containing comprehensive token permission information
         """
-        self.logger.info("🔍 Checking token permissions and scopes...")
+        Logger.info("🔍 Checking token permissions and scopes...")
         
         try:
             url = "https://graph.facebook.com/debug_token"
@@ -136,7 +134,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.error(f"❌ Failed to check token permissions: {response.status_code} - {response.text}")
+                Logger.error(f"❌ Failed to check token permissions: {response.status_code} - {response.text}")
                 return {
                     'error': f'API error: {response.status_code}',
                     'available_scopes': [],
@@ -145,7 +143,7 @@ class InstagramAnalyticsManager:
             
             token_data = response.json()
             if 'data' not in token_data:
-                self.logger.error("❌ No token data in response")
+                Logger.error("❌ No token data in response")
                 return {
                     'error': 'No token data in response',
                     'available_scopes': [],
@@ -219,51 +217,51 @@ class InstagramAnalyticsManager:
             }
             
             # Verbose logging of all permissions and metadata
-            self.logger.info("🔑 Token Permission Analysis Complete")
-            self.logger.info(f"📱 App ID: {data.get('app_id', 'Unknown')}")
-            self.logger.info(f"👤 User ID: {data.get('user_id', 'Unknown')}")
-            self.logger.info(f"📋 Token Type: {data.get('type', 'Unknown')}")
-            self.logger.info(f"🏢 Application: {data.get('application', 'Unknown')}")
+            Logger.info("🔑 Token Permission Analysis Complete")
+            Logger.info(f"📱 App ID: {data.get('app_id', 'Unknown')}")
+            Logger.info(f"👤 User ID: {data.get('user_id', 'Unknown')}")
+            Logger.info(f"📋 Token Type: {data.get('type', 'Unknown')}")
+            Logger.info(f"🏢 Application: {data.get('application', 'Unknown')}")
             
             # Log scope information
-            self.logger.info(f"✅ Available Scopes ({len(available_scopes)}): {', '.join(available_scopes)}")
+            Logger.info(f"✅ Available Scopes ({len(available_scopes)}): {', '.join(available_scopes)}")
             if missing_scopes:
-                self.logger.warning(f"❌ Missing Required Scopes ({len(missing_scopes)}): {', '.join(missing_scopes)}")
+                Logger.warning(f"❌ Missing Required Scopes ({len(missing_scopes)}): {', '.join(missing_scopes)}")
             else:
-                self.logger.info("🎉 All required scopes are available!")
+                Logger.info("🎉 All required scopes are available!")
             
             # Log Instagram access status
             if has_instagram_access:
-                self.logger.info("📸 Instagram access: ✅ Available")
+                Logger.info("📸 Instagram access: ✅ Available")
             else:
-                self.logger.warning("📸 Instagram access: ❌ Not available (missing instagram_basic scope)")
+                Logger.warning("📸 Instagram access: ❌ Not available (missing instagram_basic scope)")
             
             # Log expiration information
             if expires_at:
-                self.logger.info(f"⏰ Token expires: {expires_date}")
+                Logger.info(f"⏰ Token expires: {expires_date}")
                 if expires_in_days is not None:
                     if expires_in_days > 30:
-                        self.logger.info(f"⏰ Token expires in: {expires_in_days} days")
+                        Logger.info(f"⏰ Token expires in: {expires_in_days} days")
                     elif expires_in_days > 7:
-                        self.logger.warning(f"⚠️ Token expires in: {expires_in_days} days")
+                        Logger.warning(f"⚠️ Token expires in: {expires_in_days} days")
                     elif expires_in_days > 0:
-                        self.logger.error(f"🚨 Token expires in: {expires_in_days} days!")
+                        Logger.error(f"🚨 Token expires in: {expires_in_days} days!")
                     else:
-                        self.logger.error(f"🚨 Token expired {abs(expires_in_days)} days ago!")
+                        Logger.error(f"🚨 Token expired {abs(expires_in_days)} days ago!")
             else:
-                self.logger.info("⏰ Token expiration: Never (long-lived token)")
+                Logger.info("⏰ Token expiration: Never (long-lived token)")
             
             if data_access_expires_at:
-                self.logger.info(f"🔒 Data access expires: {data_access_expires_date}")
+                Logger.info(f"🔒 Data access expires: {data_access_expires_date}")
                 if data_access_expires_in_days is not None:
                     if data_access_expires_in_days > 30:
-                        self.logger.info(f"🔒 Data access expires in: {data_access_expires_in_days} days")
+                        Logger.info(f"🔒 Data access expires in: {data_access_expires_in_days} days")
                     elif data_access_expires_in_days > 7:
-                        self.logger.warning(f"⚠️ Data access expires in: {data_access_expires_in_days} days")
+                        Logger.warning(f"⚠️ Data access expires in: {data_access_expires_in_days} days")
                     elif data_access_expires_in_days > 0:
-                        self.logger.error(f"🚨 Data access expires in: {data_access_expires_in_days} days!")
+                        Logger.error(f"🚨 Data access expires in: {data_access_expires_in_days} days!")
                     else:
-                        self.logger.error(f"🚨 Data access expired {abs(data_access_expires_in_days)} days ago!")
+                        Logger.error(f"🚨 Data access expired {abs(data_access_expires_in_days)} days ago!")
             
             # Log granular scopes if available
             if data.get('granular_scopes'):
@@ -280,28 +278,28 @@ class InstagramAnalyticsManager:
                             scope_strings.append(str(scope_name))
                         else:
                             scope_strings.append(str(scope))
-                    self.logger.info(f"🔍 Granular Scopes: {', '.join(scope_strings)}")
+                    Logger.info(f"🔍 Granular Scopes: {', '.join(scope_strings)}")
                 else:
-                    self.logger.info(f"🔍 Granular Scopes: {granular_scopes}")
+                    Logger.info(f"🔍 Granular Scopes: {granular_scopes}")
             
             # Log token validity
             if data.get('is_valid', False):
-                self.logger.info("✅ Token is valid")
+                Logger.info("✅ Token is valid")
             else:
-                self.logger.error("❌ Token is invalid!")
+                Logger.error("❌ Token is invalid!")
             
             # Log issuance date
             if data.get('issued_at'):
                 issued_date = datetime.fromtimestamp(data.get('issued_at')).strftime('%Y-%m-%d %H:%M:%S UTC')
-                self.logger.info(f"📅 Token issued: {issued_date}")
+                Logger.info(f"📅 Token issued: {issued_date}")
             
             # Summary
-            self.logger.info(f"📊 Summary: {len(available_scopes)} scopes available, {len(missing_scopes)} missing, Instagram access: {'✅' if has_instagram_access else '❌'}")
+            Logger.info(f"📊 Summary: {len(available_scopes)} scopes available, {len(missing_scopes)} missing, Instagram access: {'✅' if has_instagram_access else '❌'}")
             
             return permission_info
             
         except Exception as e:
-            self.logger.error(f"❌ Failed to check token permissions: {e}")
+            Logger.error(f"❌ Failed to check token permissions: {e}")
             return {
                 'error': str(e),
                 'available_scopes': [],
@@ -470,10 +468,10 @@ class InstagramAnalyticsManager:
                     }
                     response = requests.get(url, params=params)
                     if response.status_code != 200:
-                        self.logger.debug(f"Insights request failed metric={metric_name} period={period}: {response.status_code} - {response.text}")
+                        Logger.debug(f"Insights request failed metric={metric_name} period={period}: {response.status_code} - {response.text}")
                         continue
                     insights_data = response.json()
-                    self.logger.debug(f"Insights response for {metric_name} {period}: {insights_data}")
+                    Logger.debug(f"Insights response for {metric_name} {period}: {insights_data}")
                     for insight in insights_data.get('data', []):
                         name = insight.get('name')
                         if name not in aggregated:
@@ -489,17 +487,17 @@ class InstagramAnalyticsManager:
                                 value_to_store = values[-1]['value']
                         if value_to_store is not None:
                             aggregated[name][period] = value_to_store
-                            self.logger.debug(f"Stored {name}[{period}] = {value_to_store}")
+                            Logger.debug(f"Stored {name}[{period}] = {value_to_store}")
                         else:
-                            self.logger.debug(f"No value found for {name} {period}, insight: {insight}")
+                            Logger.debug(f"No value found for {name} {period}, insight: {insight}")
             
-            self.logger.info(f"Successfully aggregated {len(aggregated)} metrics: {list(aggregated.keys())}")
+            Logger.info(f"Successfully aggregated {len(aggregated)} metrics: {list(aggregated.keys())}")
             for metric, periods in aggregated.items():
-                self.logger.info(f"  {metric}: {periods}")
+                Logger.info(f"  {metric}: {periods}")
             return aggregated
                 
         except Exception as e:
-            self.logger.warning(f"Could not retrieve account insights: {e}")
+            Logger.warning(f"Could not retrieve account insights: {e}")
             return {}
     
     def get_account_info(self) -> Dict[str, Any]:
@@ -509,10 +507,10 @@ class InstagramAnalyticsManager:
         Returns:
             Dictionary containing Instagram account analytics
         """
-        self.logger.info("Retrieving Instagram account information")
+        Logger.info("Retrieving Instagram account information")
         
         if not self.instagram_account_id:
-            self.logger.warning("No Instagram Business Account found")
+            Logger.warning("No Instagram Business Account found")
             return {
                 'account_id': self.user_id,
                 'username': 'Unknown',
@@ -535,7 +533,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.error(f"Failed to retrieve Instagram account info: {response.status_code} - {response.text}")
+                Logger.error(f"Failed to retrieve Instagram account info: {response.status_code} - {response.text}")
                 # Fallback to basic info
                 return {
                     'account_id': self.instagram_account_id,
@@ -551,7 +549,7 @@ class InstagramAnalyticsManager:
                 }
             
             account_data = response.json()
-            self.logger.debug(f"Instagram account data retrieved: {account_data}")
+            Logger.debug(f"Instagram account data retrieved: {account_data}")
             
             # Get account insights for additional metrics
             account_insights = self.get_account_insights()
@@ -572,7 +570,7 @@ class InstagramAnalyticsManager:
             }
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve Instagram account info: {e}")
+            Logger.error(f"Failed to retrieve Instagram account info: {e}")
             raise
     
     def get_comprehensive_account_info(self) -> Dict[str, Any]:
@@ -582,7 +580,7 @@ class InstagramAnalyticsManager:
         Returns:
             Dictionary containing complete account analytics with permissions
         """
-        self.logger.info("Retrieving comprehensive Instagram account information")
+        Logger.info("Retrieving comprehensive Instagram account information")
         
         # Get basic account info
         account_info = self.get_account_info()
@@ -630,10 +628,10 @@ class InstagramAnalyticsManager:
         if limit is None:
             limit = self.max_media_items
             
-        self.logger.info(f"Retrieving recent Instagram media (limit: {limit})")
+        Logger.info(f"Retrieving recent Instagram media (limit: {limit})")
         
         if not self.instagram_account_id:
-            self.logger.warning("No Instagram Business Account found")
+            Logger.warning("No Instagram Business Account found")
             return []
         
         try:
@@ -647,7 +645,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.error(f"Failed to retrieve Instagram media: {response.status_code} - {response.text}")
+                Logger.error(f"Failed to retrieve Instagram media: {response.status_code} - {response.text}")
                 return []
             
             media_data = response.json()
@@ -681,11 +679,11 @@ class InstagramAnalyticsManager:
                 
                 media_items.append(media_item)
             
-            self.logger.info(f"Retrieved {len(media_items)} Instagram media items")
+            Logger.info(f"Retrieved {len(media_items)} Instagram media items")
             return media_items
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve Instagram media: {e}")
+            Logger.error(f"Failed to retrieve Instagram media: {e}")
             return []
     
     def get_media_comments(self, media_id: str) -> List[Dict[str, Any]]:
@@ -711,7 +709,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.debug(f"Failed to retrieve comments for media {media_id}: {response.status_code} - {response.text}")
+                Logger.debug(f"Failed to retrieve comments for media {media_id}: {response.status_code} - {response.text}")
                 return []
             
             comments_data = response.json()
@@ -738,7 +736,7 @@ class InstagramAnalyticsManager:
             return comments
             
         except Exception as e:
-            self.logger.debug(f"Failed to retrieve comments for media {media_id}: {e}")
+            Logger.debug(f"Failed to retrieve comments for media {media_id}: {e}")
             return []
     
     def get_comment_replies(self, comment_id: str) -> List[Dict[str, Any]]:
@@ -764,7 +762,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.debug(f"Failed to retrieve replies for comment {comment_id}: {response.status_code} - {response.text}")
+                Logger.debug(f"Failed to retrieve replies for comment {comment_id}: {response.status_code} - {response.text}")
                 return []
             
             replies_data = response.json()
@@ -787,7 +785,7 @@ class InstagramAnalyticsManager:
             return replies
             
         except Exception as e:
-            self.logger.debug(f"Failed to retrieve replies for comment {comment_id}: {e}")
+            Logger.debug(f"Failed to retrieve replies for comment {comment_id}: {e}")
             return []
     
     def get_media_insights(self, media_id: str, media_type: str) -> Dict[str, Any]:
@@ -829,7 +827,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.debug(f"Failed to retrieve insights for media {media_id}: {response.status_code} - {response.text}")
+                Logger.debug(f"Failed to retrieve insights for media {media_id}: {response.status_code} - {response.text}")
                 return {}
             
             insights_data = response.json()
@@ -843,7 +841,7 @@ class InstagramAnalyticsManager:
             return insights
             
         except Exception as e:
-            self.logger.debug(f"Failed to retrieve insights for media {media_id}: {e}")
+            Logger.debug(f"Failed to retrieve insights for media {media_id}: {e}")
             return {}
     
     def get_video_insights(self, media_id: str) -> Dict[str, Any]:
@@ -856,7 +854,7 @@ class InstagramAnalyticsManager:
         Returns:
             Dictionary containing video insights
         """
-        self.logger.info(f"Retrieving video insights for media ID: {media_id}")
+        Logger.info(f"Retrieving video insights for media ID: {media_id}")
         
         try:
             url = f"{self.base_url}/{media_id}/insights"
@@ -873,11 +871,11 @@ class InstagramAnalyticsManager:
             for insight in insights_data.get('data', []):
                 insights[insight['name']] = insight['values'][0]['value']
             
-            self.logger.debug(f"Video insights retrieved: {insights}")
+            Logger.debug(f"Video insights retrieved: {insights}")
             return insights
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve video insights: {e}")
+            Logger.error(f"Failed to retrieve video insights: {e}")
             return {}
     
     def get_recent_comments(self, media_id: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -891,7 +889,7 @@ class InstagramAnalyticsManager:
         Returns:
             List of comments with user and engagement data
         """
-        self.logger.info(f"Retrieving recent comments for media ID: {media_id}")
+        Logger.info(f"Retrieving recent comments for media ID: {media_id}")
         
         try:
             url = f"{self.base_url}/{media_id}/comments"
@@ -915,11 +913,11 @@ class InstagramAnalyticsManager:
                     'like_count': comment.get('like_count', 0)
                 })
             
-            self.logger.debug(f"Retrieved {len(comments)} comments")
+            Logger.debug(f"Retrieved {len(comments)} comments")
             return comments
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve comments: {e}")
+            Logger.error(f"Failed to retrieve comments: {e}")
             return []
     
     
@@ -933,10 +931,10 @@ class InstagramAnalyticsManager:
         Returns:
             List of recent activity items
         """
-        self.logger.info(f"Retrieving recent Instagram activity (limit: {limit})")
+        Logger.info(f"Retrieving recent Instagram activity (limit: {limit})")
         
         if not self.instagram_account_id:
-            self.logger.warning("No Instagram Business Account found")
+            Logger.warning("No Instagram Business Account found")
             return []
         
         try:
@@ -950,7 +948,7 @@ class InstagramAnalyticsManager:
             
             response = requests.get(url, params=params)
             if response.status_code != 200:
-                self.logger.error(f"Failed to retrieve Instagram activity: {response.status_code} - {response.text}")
+                Logger.error(f"Failed to retrieve Instagram activity: {response.status_code} - {response.text}")
                 return []
             
             media_data = response.json()
@@ -970,11 +968,11 @@ class InstagramAnalyticsManager:
                 
                 activity_items.append(activity_item)
             
-            self.logger.info(f"Retrieved {len(activity_items)} Instagram activity items")
+            Logger.info(f"Retrieved {len(activity_items)} Instagram activity items")
             return activity_items
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve Instagram activity: {e}")
+            Logger.error(f"Failed to retrieve Instagram activity: {e}")
             return []
     
     def get_hashtag_performance(self, hashtags: List[str] = None) -> Dict[str, Any]:
@@ -987,7 +985,7 @@ class InstagramAnalyticsManager:
         Returns:
             Dictionary containing hashtag performance data
         """
-        self.logger.info(f"Analyzing hashtag performance for: {hashtags}")
+        Logger.info(f"Analyzing hashtag performance for: {hashtags}")
         
         if not hashtags:
             hashtags = ['3dprinting', 'pottery', 'ceramics', 'art', 'design']
@@ -1034,11 +1032,11 @@ class InstagramAnalyticsManager:
                                          hashtag_stats[hashtag]['total_impressions']) * 100
                         hashtag_stats[hashtag]['avg_engagement_rate'] = round(engagement_rate, 2)
             
-            self.logger.debug(f"Hashtag performance analysis completed")
+            Logger.debug(f"Hashtag performance analysis completed")
             return hashtag_stats
             
         except Exception as e:
-            self.logger.error(f"Failed to analyze hashtag performance: {e}")
+            Logger.error(f"Failed to analyze hashtag performance: {e}")
             return {}
     
     def export_to_json(self, output_path: str = None) -> Dict[str, Any]:
@@ -1051,7 +1049,7 @@ class InstagramAnalyticsManager:
         Returns:
             Dictionary containing all analytics data
         """
-        self.logger.info("Generating comprehensive Instagram analytics JSON")
+        Logger.info("Generating comprehensive Instagram analytics JSON")
         
         try:
             # Collect all analytics data
@@ -1090,13 +1088,13 @@ class InstagramAnalyticsManager:
             if output_path:
                 with open(output_path, 'w') as f:
                     json.dump(analytics_data, f, indent=2)
-                self.logger.info(f"Analytics data saved to: {output_path}")
+                Logger.info(f"Analytics data saved to: {output_path}")
             
-            self.logger.info("Instagram analytics JSON generation completed")
+            Logger.info("Instagram analytics JSON generation completed")
             return analytics_data
             
         except Exception as e:
-            self.logger.error(f"Failed to export analytics to JSON: {e}")
+            Logger.error(f"Failed to export analytics to JSON: {e}")
             raise
     
     def get_latest_video_performance(self) -> Dict[str, Any]:
@@ -1106,7 +1104,7 @@ class InstagramAnalyticsManager:
         Returns:
             Dictionary containing latest video performance data
         """
-        self.logger.info("Retrieving latest video performance metrics")
+        Logger.info("Retrieving latest video performance metrics")
         
         try:
             # Get recent media and find the latest video
@@ -1114,7 +1112,7 @@ class InstagramAnalyticsManager:
             video_posts = [media for media in recent_media if media.get('media_type') == 'VIDEO']
             
             if not video_posts:
-                self.logger.warning("No video posts found in recent media")
+                Logger.warning("No video posts found in recent media")
                 return {}
             
             latest_video = video_posts[0]  # Already sorted by timestamp
@@ -1156,11 +1154,11 @@ class InstagramAnalyticsManager:
                 play_rate = (video_insights.get('plays', 0) / video_insights['impressions']) * 100
                 video_performance['performance_summary']['play_rate'] = round(play_rate, 2)
             
-            self.logger.info(f"Latest video performance retrieved: {latest_video['id']}")
+            Logger.info(f"Latest video performance retrieved: {latest_video['id']}")
             return video_performance
             
         except Exception as e:
-            self.logger.error(f"Failed to retrieve latest video performance: {e}")
+            Logger.error(f"Failed to retrieve latest video performance: {e}")
             return {}
 
 def main():
@@ -1170,8 +1168,7 @@ def main():
         
         parser = argparse.ArgumentParser(description="Instagram Analytics Manager")
         parser.add_argument("--fulltest", 
-                            type=bool,
-                            default=False,
+                            action='store_true',
                             help="Run full diagnostics (account info, permissions, field/insights tests) before exporting")
         parser.add_argument("-o", "--output", 
                             type=str,

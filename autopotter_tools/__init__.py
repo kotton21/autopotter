@@ -5,6 +5,6 @@ A collection of tools for managing GPT interactions, Instagram APIs, and other a
 """
 
 # Make autopotter_tools a proper Python package
-from .logger import get_logger
+from .simplelogger import Logger
 
-__all__ = ['get_logger']
+__all__ = ['Logger']

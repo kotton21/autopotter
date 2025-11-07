@@ -29,7 +29,7 @@ class Logger:
 
     LEVEL_EMOJIS = {
         'DEBUG': '🔍',
-        'INFO': 'ℹ️',
+        'INFO': "",
         'WARNING': '⚠️',
         'ERROR': '❌'
     }
@@ -40,7 +40,14 @@ class Logger:
             return
         
         frame = inspect.currentframe().f_back.f_back
-        caller_name = frame.f_code.co_name if frame else "unknown"
+        if not frame:
+            caller_name = "unknown"
+        else:
+            # Try to get class name if called from a method
+            caller_name = frame.f_code.co_name
+            if 'self' in frame.f_locals:
+                class_name = frame.f_locals['self'].__class__.__name__
+                caller_name = f"{class_name}.{caller_name}"
 
         logtext = f"[ {caller_name} ] {Logger.LEVEL_EMOJIS[level.upper()]}   {msg}"
 

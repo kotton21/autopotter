@@ -1,6 +1,6 @@
 import openai
 from typing import Optional, Any
-from autopotter_tools.logger import get_logger
+from autopotter_tools.simplelogger import Logger
 
 
 class GPTAPI:
@@ -18,27 +18,26 @@ class GPTAPI:
             use_previous_response_id: Whether to save previous_response_id from responses
             previous_response_id: Optional previous response ID to pass to API calls
         """
-        self.logger = get_logger('gpt_api')
         self.model = model
         self.use_previous_response_id = use_previous_response_id
         self.previous_response_id = previous_response_id
         
-        self.logger.info("Initializing GPT API client...")
+        Logger.info("Initializing GPT API client...")
         
         # Initialize OpenAI client
         try:
             self.client = openai.OpenAI()
-            self.logger.info("OpenAI client created")
+            Logger.info("OpenAI client created")
         except Exception as e:
-            self.logger.error(f"Failed to create OpenAI client: {e}")
+            Logger.error(f"Failed to create OpenAI client: {e}")
             raise
         
         # Check API access
         self._check_access()
         
-        self.logger.info("GPT API initialized successfully")
+        Logger.info("GPT API initialized successfully")
         if self.use_previous_response_id:
-            self.logger.info(f"Previous response ID tracking enabled: {self.previous_response_id}")
+            Logger.info(f"Previous response ID tracking enabled: {self.previous_response_id}")
     
     def _check_access(self):
         """
@@ -46,28 +45,28 @@ class GPTAPI:
         Raises an error if access is not available.
         """
         try:
-            self.logger.info("Checking API access...")
+            Logger.info("Checking API access...")
             # Try to list models as a simple access check
             # This is a lightweight operation that verifies API key validity
             models = self.client.models.list()
-            self.logger.info("API access verified successfully")
+            Logger.info("API access verified successfully")
         except openai.AuthenticationError as e:
-            self.logger.error(f"Authentication failed: {e}")
+            Logger.error(f"Authentication failed: {e}")
             raise ValueError(f"OpenAI API authentication failed: {e}")
         except openai.PermissionDeniedError as e:
-            self.logger.error(f"Permission denied: {e}")
+            Logger.error(f"Permission denied: {e}")
             raise ValueError(f"OpenAI API permission denied: {e}")
         except openai.RateLimitError as e:
-            self.logger.error(f"Rate limit exceeded: {e}")
+            Logger.error(f"Rate limit exceeded: {e}")
             raise ValueError(f"OpenAI API rate limit exceeded: {e}")
         except openai.ServiceUnavailableError as e:
-            self.logger.error(f"Service unavailable: {e}")
+            Logger.error(f"Service unavailable: {e}")
             raise ValueError(f"OpenAI API service unavailable: {e}")
         except openai.APIError as e:
-            self.logger.error(f"API error: {e}")
+            Logger.error(f"API error: {e}")
             raise ValueError(f"OpenAI API error: {e}")
         except Exception as e:
-            self.logger.error(f"Unexpected Error durning API access check: {e}")
+            Logger.error(f"Unexpected Error durning API access check: {e}")
             raise ValueError(f"Unexpected Error during API access check: {e}")
     
     def prompt(
@@ -88,7 +87,7 @@ class GPTAPI:
         Returns:
             The API response object
         """
-        self.logger.info(f"Sending prompt to model: {self.model}")
+        Logger.info(f"Sending prompt to model: {self.model}")
         
         try:
             # Prepare API call parameters
@@ -98,25 +97,25 @@ class GPTAPI:
                     {"role": "user", "content": user_instructions}
                 ]
             }
-            self.logger.debug("Added user instructions")
+            Logger.debug("Added user instructions")
             
             if developer_instructions:
                 api_params["input"].append({"role": "developer", "content": developer_instructions})
-                self.logger.debug("Added developer instructions")
+                Logger.debug("Added developer instructions")
             
             
             # Add text_format if provided
             if text_format:
                 api_params["text_format"] = text_format
-                self.logger.debug("Using structured output format")
+                Logger.debug("Using structured output format")
             
             # Add previous_response_id if available
             if self.use_previous_response_id and self.previous_response_id:
                 api_params["previous_response_id"] = self.previous_response_id
-                self.logger.debug(f"Using previous response ID: {self.previous_response_id}")
+                Logger.debug(f"Using previous response ID: {self.previous_response_id}")
             
             # Make API call
-            self.logger.debug("Calling responses.parse API...")
+            Logger.debug("Calling responses.parse API...")
             response = self.client.responses.parse(**api_params)
 
             # print("\n\n")
@@ -125,13 +124,13 @@ class GPTAPI:
             
             # Check for errors early in response
             if response is None:
-                self.logger.error("API response is None.")
+                Logger.error("API response is None.")
                 raise RuntimeError("API response is None.")
             
             # Check for error field in response
             if hasattr(response, 'error') and response.error is not None:
                 error_msg = f"API response contains error: {response.error}"
-                self.logger.error(error_msg)
+                Logger.error(error_msg)
                 # raise RuntimeError(error_msg)
             
             # Check response status
@@ -140,19 +139,19 @@ class GPTAPI:
                     status_msg = f"API response status is '{response.status}' (expected 'completed')"
                     if hasattr(response, 'incomplete_details') and response.incomplete_details:
                         status_msg += f" - Details: {response.incomplete_details}"
-                    self.logger.warning(status_msg)
+                    Logger.warning(status_msg)
 
             # ensure response contains a parsed output when using text_format
             if text_format:
                 if not hasattr(response, "output_parsed"):
-                    self.logger.error("API response must contain a parsed output when using text_format.")
+                    Logger.error("API response must contain a parsed output when using text_format.")
                     raise RuntimeError("API response must contain a parsed output when using text_format.")
             
             # ensure response contains a message/content item when not using text_format
             else:
                 # The response may have reasoning items first, so we need to find the message item
                 if not hasattr(response, "output") or response.output is None or len(response.output) == 0:
-                    self.logger.error("API response is empty or missing output.")
+                    Logger.error("API response is empty or missing output.")
                     raise RuntimeError("API response is empty or missing output.")
                 
                 # Find the message item (may not be at index 0 if there's a reasoning item)
@@ -163,7 +162,7 @@ class GPTAPI:
                             ret = item
 
                 if ret is None:
-                    self.logger.error("API response does not contain a message item with content.")
+                    Logger.error("API response does not contain a message item with content.")
                     raise RuntimeError("API response does not contain a message item with content.")
                     
             # Log token usage information
@@ -175,20 +174,20 @@ class GPTAPI:
                 reasoning_tokens = getattr(response.usage.output_tokens_details, 'reasoning_tokens', None)
                 # max_output_tokens = getattr(response, 'max_output_tokens', None)
                 
-                self.logger.info(f"Tokens Used - Total: {total_tokens}, Input: {input_tokens} ({cached_tokens} cached), Output: {output_tokens} ({reasoning_tokens} reasoning)")
+                Logger.info(f"Tokens Used - Total: {total_tokens}, Input: {input_tokens} ({cached_tokens} cached), Output: {output_tokens} ({reasoning_tokens} reasoning)")
 
             else:
-                self.logger.warning("Token usage information not available in response")
+                Logger.warning("Token usage information not available in response")
             
             # Save response ID if configured
             if self.use_previous_response_id and hasattr(response, 'id'):
                 self.previous_response_id = response.id
-                self.logger.info(f"Saved previous response ID: {response.id}")
+                Logger.info(f"Saved previous response ID: {response.id}")
             
-            self.logger.info("API call completed successfully")
+            Logger.info("API call completed successfully")
             return response
             
         except Exception as e:
-            self.logger.error(f"Error during API call: {e}")
+            Logger.error(f"Error during API call: {e}")
             raise
     

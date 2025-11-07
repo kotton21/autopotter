@@ -12,7 +12,7 @@ from config import ConfigManager
 from datetime import datetime
 from autopotter_tools.parse_json2video_configs import parse_json2video_config
 from autopotter_tools.gpt_api import GPTAPI
-from autopotter_tools.logger import get_logger
+from autopotter_tools.simplelogger import Logger
 
 
 class DraftVideo(BaseModel):
@@ -22,10 +22,9 @@ class DraftVideo(BaseModel):
     json2video_config_str: str #dict # shouldn't this be a dict?!
     
     def get_json2video_config(self):
-        logger = get_logger('enhanced_autodraft')
         config_json = parse_json2video_config(self.json2video_config_str, self.title)
         if config_json is None:
-            logger.error(f"Failed to parse json2video config for '{self.title}'")
+            Logger.error(f"Failed to parse json2video config for '{self.title}'")
         return config_json
 
 class DraftVideoList(BaseModel):
@@ -40,7 +39,6 @@ def resolve_file_inclusions(config: ConfigManager) -> str:
     Resolve gpt_responses_other_files_to_include and replace <<filename>> placeholders
     with the actual file contents. Returns the resolved text to append to instructions.
     """
-    logger = get_logger('enhanced_autodraft')
     other_files = config.get('gpt_responses_other_files_to_include', {})
     resolved_text = ""
     
@@ -51,9 +49,9 @@ def resolve_file_inclusions(config: ConfigManager) -> str:
                     content = f.read()
                 resolved_text += f"\n\n{key.upper()}:\n{content}"
             else:
-                logger.warning(f"File {filepath} not found for {key}")
+                Logger.warning(f"File {filepath} not found for {key}")
         except Exception as e:
-            logger.error(f"Error reading file {filepath}: {e}")
+            Logger.error(f"Error reading file {filepath}: {e}")
     
     return resolved_text
 
@@ -61,17 +59,16 @@ def resolve_file_inclusions(config: ConfigManager) -> str:
 def main_autodraft(outfile, config_file, prompt_override=None, minimal=False):
     # Load configuration first to initialize logging
     config = ConfigManager(config_file)
-    logger = get_logger('enhanced_autodraft')
     
-    logger.info(f"Output will be saved to: {outfile}")
+    Logger.info(f"Output will be saved to: {outfile}")
     
     # Use custom prompt if provided, otherwise use config default
     prompt = prompt_override if prompt_override else config.get('gpt_user_prompt_prompt')
     
-    logger.info(f"Using prompt: {prompt}")
+    Logger.info(f"Using prompt: {prompt}")
     
     if minimal:
-        logger.info("Minimal mode: Skipping file inclusions and base instructions")
+        Logger.info("Minimal mode: Skipping file inclusions and base instructions")
         full_instructions = ""
     else:
         # Get the base instructions from config
@@ -108,24 +105,24 @@ def main_autodraft(outfile, config_file, prompt_override=None, minimal=False):
             if hasattr(item, "content") and item.content and len(item.content) > 0:
                 if hasattr(item.content[0], "text"):
                     response_text = item.content[0].text
-                    logger.info(f"Response text: {response_text}")
+                    Logger.info(f"Response text: {response_text}")
                     break
     
     # Display response
-    logger.info("GPT Parsed Output ------------------------------")
+    Logger.info("GPT Parsed Output ------------------------------")
     # Log only the video title and caption(s) instead of the whole parsed_output
     if parsed_output and hasattr(parsed_output, "videos"):
         for idx, video in enumerate(parsed_output.videos):
             title = getattr(video, "title", "<No Title>")
             caption = getattr(video, "video_caption", "<No Caption>")
-            logger.info(f"Video {idx+1}:")
-            logger.info(f"  Title: {title}")
-            logger.info(f"  Caption: {caption}")
+            Logger.info(f"Video {idx+1}:")
+            Logger.info(f"  Title: {title}")
+            Logger.info(f"  Caption: {caption}")
     else:
-        logger.warning("No videos found in parsed_output.")
-    logger.info("JSON2Video Config ------------------------------")
-    # logger.debug(parsed_output.get_json2video_config())
-    logger.info(f"Response ID: {response.id}")
+        Logger.warning("No videos found in parsed_output.")
+    Logger.info("JSON2Video Config ------------------------------")
+    # Logger.debug(parsed_output.get_json2video_config())
+    Logger.info(f"Response ID: {response.id}")
 
     # Save response ID to config for future reference (GPTAPI already saved it internally)
     if config.get('gpt_use_previous_response_id'):
@@ -147,8 +144,8 @@ def main_autodraft(outfile, config_file, prompt_override=None, minimal=False):
             "response_id": response.id
         }, f, indent=2)
     
-    logger.info(f"Response saved to {outfile}")
-    logger.info(f"Response ID saved to config: {response.id}")
+    Logger.info(f"Response saved to {outfile}")
+    Logger.info(f"Response ID saved to config: {response.id}")
 
     # return parsed_json2video_configs
 

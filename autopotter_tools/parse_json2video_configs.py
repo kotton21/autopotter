@@ -9,9 +9,9 @@ from pathlib import Path
 
 # Try importing logger from autopotter_tools first, fallback to local import
 try:
-    from autopotter_tools.logger import get_logger
+    from autopotter_tools.simplelogger import Logger
 except ImportError:
-    from logger import get_logger
+    from simplelogger import Logger
 
 
 # class JSON2VideoConfigParseError(Exception):
@@ -34,16 +34,15 @@ def parse_json2video_config(config_str, video_title="Unknown"):
     # Raises:
     #     JSON2VideoConfigParseError: If all parsing strategies fail
 
-    logger = get_logger('parse_json2video_configs')
-    logger.debug(f"Parsing json2video config for video: {video_title}")
+    Logger.debug(f"Parsing json2video config for video: {video_title}")
     
     if not config_str:
         error_msg = f"No config string provided for video '{video_title}'"
-        logger.error(error_msg)
+        Logger.error(error_msg)
         # raise JSON2VideoConfigParseError(error_msg)
         return {}
     
-    logger.debug(f"Config string length: {len(config_str)} characters")
+    Logger.debug(f"Config string length: {len(config_str)} characters")
     
     # Define repair strategies with their descriptions
     repair_strategies = [
@@ -56,17 +55,17 @@ def parse_json2video_config(config_str, video_title="Unknown"):
     # Try each repair strategy
     for repair_func, strategy_name in repair_strategies:
         try:
-            logger.debug(f"Trying parsing strategy: {strategy_name}")
+            Logger.debug(f"Trying parsing strategy: {strategy_name}")
             config_json = json.loads(repair_func(config_str))
             
             if strategy_name == "direct parsing":
-                logger.info(f"Successfully parsed json2video config for '{video_title}' (direct parsing)")
+                Logger.info(f"Successfully parsed json2video config for '{video_title}' (direct parsing)")
             else:
-                logger.info(f"Successfully parsed json2video config for '{video_title}' using {strategy_name}")
+                Logger.info(f"Successfully parsed json2video config for '{video_title}' using {strategy_name}")
             
             return config_json
         except json.JSONDecodeError as e:
-            logger.debug(f"Strategy '{strategy_name}' failed: {str(e)}")
+            Logger.debug(f"Strategy '{strategy_name}' failed: {str(e)}")
             continue
     
     # If all strategies fail, identify the specific issue
@@ -91,7 +90,7 @@ def parse_json2video_config(config_str, video_title="Unknown"):
     # else:
     error_msg += ": All JSON parsing strategies failed"
     
-    logger.error(error_msg)
+    Logger.error(error_msg)
     # raise JSON2VideoConfigParseError(error_msg)
     return {}
 
