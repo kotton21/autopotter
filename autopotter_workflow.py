@@ -84,6 +84,7 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
         if not json2video_api.test_connection():
             raise Exception("Failed to connect to json2video API")
         
+        
         # Try videos until one succeeds
         import random
         video_success = False
