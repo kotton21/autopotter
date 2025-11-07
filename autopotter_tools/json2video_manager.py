@@ -14,6 +14,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import ConfigManager
 
+# Try importing logger from autopotter_tools first, fallback to local import
+try:
+    from autopotter_tools.logger import get_logger
+except ImportError:
+    from logger import get_logger
+
 
 class Json2VideoAPI:
     """
@@ -22,6 +28,7 @@ class Json2VideoAPI:
     """
     
     def __init__(self, config_path="autopost_config.enhanced.json"):
+        self.logger = get_logger('json2video_manager')
         self.config_manager = ConfigManager(config_path)
         
         # Initialize API settings from config
@@ -36,40 +43,42 @@ class Json2VideoAPI:
         
         # Validate API key
         if not self.api_key or self.api_key.startswith("${"):
-            raise ValueError("Please set your json2video API key in the config file")
+            error_msg = "Please set your json2video API key in the config file"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
         
-        print(f"Json2VideoAPI initialized with base URL: {self.base_url}")
+        self.logger.info(f"Json2VideoAPI initialized with base URL: {self.base_url}")
         
     def test_connection(self):
         """Test the connection to the json2video API"""
         try:
-            print("Testing connection to json2video API...")
+            self.logger.info("Testing connection to json2video API...")
             
             url = f"{self.base_url}/movies"
             response = requests.get(url, headers=self.headers)
             
             if response.status_code == 200:
-                print("✅ API connection successful")
+                self.logger.info("API connection successful")
                 return True
             elif response.status_code == 401:
-                print("❌ API key authentication failed")
+                self.logger.error("API key authentication failed")
                 return False
             elif response.status_code == 403:
-                print("❌ API access forbidden - check API key permissions")
+                self.logger.error("API access forbidden - check API key permissions")
                 return False
             else:
-                print(f"⚠️ Unexpected response: {response.status_code}")
+                self.logger.warning(f"Unexpected response: {response.status_code}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Connection test failed: {e}")
+            self.logger.error(f"Connection test failed: {e}")
             return False
     
     def create_video(self, video_config):
         """Create a video using json2video API"""
         try:
             url = f"{self.base_url}/movies"
-            print(f"Creating video with API...")
+            self.logger.info("Creating video with API...")
             
             response = requests.post(url, headers=self.headers, json=video_config)
             response.raise_for_status()
@@ -78,22 +87,24 @@ class Json2VideoAPI:
             project_id = result.get('project')
             
             if not project_id:
-                raise Exception("No project ID in API response")
+                error_msg = "No project ID in API response"
+                self.logger.error(error_msg)
+                raise Exception(error_msg)
             
-            print(f"✅ Video creation initiated. Project ID: {project_id}")
+            self.logger.info(f"Video creation initiated. Project ID: {project_id}")
             
             # Return with 'id' field for compatibility
             result['id'] = project_id
             return result
             
         except Exception as e:
-            print(f"❌ Error creating video: {e}")
+            self.logger.error(f"Error creating video: {e}")
             raise
     
     def wait_for_completion(self, project_id):
         """Wait for video creation to complete"""
         start_time = time.time()
-        print(f"Waiting for project {project_id} to complete...")
+        self.logger.info(f"Waiting for project {project_id} to complete...")
         
         # Note: We don't validate project existence upfront because newly created projects
         # might not immediately appear in the API response. We'll check during the first status check.
@@ -112,22 +123,22 @@ class Json2VideoAPI:
                     success = status_info.get('success', False)
                 
                 if status == 'done' or success:
-                    print(f"✅ Project {project_id} completed successfully!")
+                    self.logger.info(f"Project {project_id} completed successfully!")
                     
-                    # Print the finished video URL
+                    # Log the finished video URL
                     if 'movie' in status_info:
                         movie_info = status_info['movie']
                         video_url = movie_info.get('url')
                         if video_url:
-                            print(f"🎬 Finished video URL: {video_url}")
+                            self.logger.info(f"Finished video URL: {video_url}")
                         else:
-                            print("⚠️ No video URL found in response")
+                            self.logger.warning("No video URL found in response")
                     else:
                         video_url = status_info.get('url')
                         if video_url:
-                            print(f"🎬 Finished video URL: {video_url}")
+                            self.logger.info(f"Finished video URL: {video_url}")
                         else:
-                            print("⚠️ No video URL found in response")
+                            self.logger.warning("No video URL found in response")
                     
                     return status_info
                 elif status == 'error':
@@ -139,24 +150,27 @@ class Json2VideoAPI:
                             error_msg = f"Video creation failed: {movie_info['error']}"
                         elif 'message' in movie_info:
                             error_msg = f"Video creation failed: {movie_info['message']}"
+                    self.logger.error(error_msg)
                     raise Exception(error_msg)
                 elif status in ['pending', 'processing', 'running']:
-                    print(f"Still {status}... waiting 10 seconds")
+                    self.logger.debug(f"Still {status}... waiting 10 seconds")
                     time.sleep(10)
                 elif status == 'not_found_yet':
-                    print(f"Project {project_id} not found yet (may be newly created), waiting 10 seconds")
+                    self.logger.debug(f"Project {project_id} not found yet (may be newly created), waiting 10 seconds")
                     time.sleep(10)
                 else:
-                    print(f"Unknown status: {status}, waiting 10 seconds")
+                    self.logger.warning(f"Unknown status: {status}, waiting 10 seconds")
                     time.sleep(10)
                     
             except Exception as e:
-                print(f"❌ Error checking status: {e}")
+                self.logger.error(f"Error checking status: {e}")
                 # If we get an error during status check, it likely means the project failed
                 # Don't continue waiting, raise the exception to stop the process
                 raise Exception(f"Video creation failed with error: {e}")
         
-        raise Exception(f"Video creation timed out after {self.timeout} seconds")
+        error_msg = f"Video creation timed out after {self.timeout} seconds"
+        self.logger.error(error_msg)
+        raise Exception(error_msg)
     
     def get_project_status(self, project_id):
         """Get the current status of a video creation project"""
@@ -164,6 +178,7 @@ class Json2VideoAPI:
             url = f"{self.base_url}/movies"
             params = {"project": project_id}
             
+            self.logger.debug(f"Getting project status for {project_id}")
             response = requests.get(url, headers=self.headers, params=params)
             response.raise_for_status()
             
@@ -179,7 +194,7 @@ class Json2VideoAPI:
             return result
             
         except Exception as e:
-            print(f"❌ Error getting project status: {e}")
+            self.logger.error(f"Error getting project status: {e}")
             raise
     
     def download_video(self, project_id, output_path=None):
@@ -196,7 +211,9 @@ class Json2VideoAPI:
                 download_url = status_info.get('url')
             
             if not download_url:
-                raise Exception("No download URL found in project status")
+                error_msg = "No download URL found in project status"
+                self.logger.error(error_msg)
+                raise Exception(error_msg)
             
             # Determine output path
             if not output_path:
@@ -204,7 +221,7 @@ class Json2VideoAPI:
                 output_path = os.path.join(tempfile.gettempdir(), filename)
             
             # Download the video
-            print(f"Downloading video to: {output_path}")
+            self.logger.info(f"Downloading video to: {output_path}")
             response = requests.get(download_url, stream=True)
             response.raise_for_status()
             
@@ -212,24 +229,25 @@ class Json2VideoAPI:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
             
-            print(f"✅ Video downloaded successfully to: {output_path}")
+            self.logger.info(f"Video downloaded successfully to: {output_path}")
             return output_path
             
         except Exception as e:
-            print(f"❌ Error downloading video: {e}")
+            self.logger.error(f"Error downloading video: {e}")
             raise
 
 
 def main():
     """Simple test function"""
+    logger = get_logger('json2video_manager')
     try:
         api = Json2VideoAPI()
         if api.test_connection():
-            print("✅ Connection test passed")
+            logger.info("Connection test passed")
         else:
-            print("❌ Connection test failed")
+            logger.error("Connection test failed")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"Error: {e}")
 
 
 if __name__ == "__main__":
