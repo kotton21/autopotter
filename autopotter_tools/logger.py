@@ -78,10 +78,30 @@ class CentralLogger:
             # Clear any existing handlers
             self._logger.handlers.clear()
             
+            # Create custom formatter class to replace level names with emojis
+            class EmojiFormatter(logging.Formatter):
+                LEVEL_EMOJIS = {
+                    'DEBUG': '🔍',
+                    'INFO': 'ℹ️',
+                    'WARNING': '⚠️',
+                    'ERROR': '❌',
+                    'CRITICAL': '🚨'
+                }
+                
+                def format(self, record):
+                    # Replace levelname with emoji
+                    level_emoji = self.LEVEL_EMOJIS.get(record.levelname, record.levelname)
+                    # Temporarily replace levelname for formatting
+                    original_levelname = record.levelname
+                    record.levelname = level_emoji
+                    result = super().format(record)
+                    record.levelname = original_levelname
+                    return result
+            
             # Create formatter
-            formatter = logging.Formatter(
+            formatter = EmojiFormatter(
                 '[%(asctime)s] %(name)s:%(levelname)s: %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
+                datefmt='%H:%M:%S'
             )
             
             # Add console handler (always enabled)
@@ -131,7 +151,7 @@ class CentralLogger:
             self.initialize()  # Initialize with defaults if not done yet
         
         if name:
-            return logging.getLogger(f'autopotter.{name}')
+            return logging.getLogger(f'{name}')
         return self._logger
     
     def set_level(self, level: str):

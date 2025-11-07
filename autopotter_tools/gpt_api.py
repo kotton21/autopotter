@@ -118,6 +118,10 @@ class GPTAPI:
             # Make API call
             self.logger.debug("Calling responses.parse API...")
             response = self.client.responses.parse(**api_params)
+
+            # print("\n\n")
+            # print(response)
+            # print("\n\n")
             
             # Check for errors early in response
             if response is None:
@@ -164,16 +168,15 @@ class GPTAPI:
                     
             # Log token usage information
             if hasattr(response, 'usage') and response.usage:
+                total_tokens = getattr(response.usage, 'total_tokens', None)
                 input_tokens = getattr(response.usage, 'input_tokens', None)
                 output_tokens = getattr(response.usage, 'output_tokens', None)
-                total_tokens = getattr(response.usage, 'total_tokens', None)
-                max_output_tokens = getattr(response, 'max_output_tokens', None)
+                cached_tokens = getattr(response.usage.input_tokens_details, 'cached_tokens', None)
+                reasoning_tokens = getattr(response.usage.output_tokens_details, 'reasoning_tokens', None)
+                # max_output_tokens = getattr(response, 'max_output_tokens', None)
                 
-                self.logger.info(f"Token Usage - Input: {input_tokens}, Output: {output_tokens}, Total: {total_tokens}")
-                if max_output_tokens is not None:
-                    self.logger.info(f"Max Output Tokens: {max_output_tokens}")
-                else:
-                    self.logger.debug("Max Output Tokens: Not specified")
+                self.logger.info(f"Tokens Used - Total: {total_tokens}, Input: {input_tokens} ({cached_tokens} cached), Output: {output_tokens} ({reasoning_tokens} reasoning)")
+
             else:
                 self.logger.warning("Token usage information not available in response")
             

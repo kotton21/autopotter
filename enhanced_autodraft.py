@@ -19,18 +19,14 @@ class DraftVideo(BaseModel):
     title: str
     video_strategy: str  
     video_caption: str
-    json2video_config_str: str
+    json2video_config_str: str #dict # shouldn't this be a dict?!
     
     def get_json2video_config(self):
         logger = get_logger('enhanced_autodraft')
-        success, config_json, error_message = parse_json2video_config(self.json2video_config_str, self.title)
-        if success:
-            if error_message:
-                logger.warning(f"Fixed json2video config for '{self.title}': {error_message}")
-            return config_json
-        else:
-            logger.error(f"Failed to parse json2video config for '{self.title}': {error_message}")
-            return {}
+        config_json = parse_json2video_config(self.json2video_config_str, self.title)
+        if config_json is None:
+            logger.error(f"Failed to parse json2video config for '{self.title}'")
+        return config_json
 
 class DraftVideoList(BaseModel):
     videos: List[DraftVideo]
@@ -96,12 +92,11 @@ def main_autodraft(outfile, config_file, prompt_override=None, minimal=False):
         previous_response_id=config.get('gpt_previous_response_id', None)
     )
     
-    # Send request using GPT API with structured output
-    # In minimal mode, only send user_instructions, skip developer_instructions
+    
     response = api.prompt(
-        user_instructions=prompt,
-        developer_instructions=full_instructions if not minimal else None,
-        text_format=DraftVideoList
+        developer_instructions=full_instructions,
+        text_format=DraftVideoList,
+        user_instructions=prompt
     )
     
     parsed_output = response.output_parsed
@@ -113,6 +108,7 @@ def main_autodraft(outfile, config_file, prompt_override=None, minimal=False):
             if hasattr(item, "content") and item.content and len(item.content) > 0:
                 if hasattr(item.content[0], "text"):
                     response_text = item.content[0].text
+                    logger.info(f"Response text: {response_text}")
                     break
     
     # Display response
@@ -137,6 +133,7 @@ def main_autodraft(outfile, config_file, prompt_override=None, minimal=False):
         config.set('gpt_previous_response_date', datetime.now().isoformat())
     # config.save_config()
 
+
     parsed_json2video_configs = parsed_output.get_json2video_config() if parsed_output else None
 
     # Save to file
@@ -159,7 +156,7 @@ if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Enhanced autopost system main entrypoint')
     parser.add_argument('--outfile', '-o',
-                       default='autodraft_output.enhanced.json',
+                       default='resources/autodraft_output.enhanced.json',
                        help='Output file path (default: autodraft.enhanced.json)')
     parser.add_argument('--prompt', '-p',
                        default=None,

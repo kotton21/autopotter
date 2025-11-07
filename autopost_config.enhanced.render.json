@@ -29,7 +29,7 @@
     },
     "gpt_use_previous_response_id": false,
     "gpt_previous_response_id": "resp_68a8bb67066481978ff8ed8603bd73b50757fbb4e304ba84",
-    "gpt_model": "gpt-5",
+    "gpt_model": "gpt-5-2025-08-07",
     "gpt_temperature": 0.7,
     "json2video_api_key": "${JSON2VIDEO_API_KEY}",
     "json2video_base_url": "https://api.json2video.com/v2",

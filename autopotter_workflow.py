@@ -76,23 +76,6 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
         
         print(f"🎲 Found {len(available_videos)} video ideas to choose from")
         
-        # Randomly select one video and its corresponding config
-        import random
-        selected_index = random.randint(0, len(available_videos) - 1)
-        selected_video = available_videos[selected_index]
-        selected_json2vid_config = available_configs[selected_index]
-        selected_caption = selected_video['video_caption']
-        
-        print(f"🎯 Randomly selected video #{selected_index + 1} of {len(available_videos)}")
-        print(f"📝 Selected caption: {selected_video['video_caption'][:100]}...")
-        
-        # Use the selected video config and caption
-        
-        print(f"✅ Autodraft completed. Caption: {selected_caption[:100]}...")
-        print(f"📹 Video config extracted with {len(selected_json2vid_config.get('scenes', []))} scenes")
-        print(f"🔍 Debug - Video config keys: {list(selected_json2vid_config.keys())}")
-        print(f"🔍 Debug - First scene has {len(selected_json2vid_config.get('scenes', [{}])[0].get('elements', []))} elements")
-        
         # Step 2: Upload to json2video
         print("\n🎬 Step 2: Uploading to json2video...")
         json2video_api = Json2VideoAPI(config_file)
@@ -101,34 +84,64 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
         if not json2video_api.test_connection():
             raise Exception("Failed to connect to json2video API")
         
-        # Create video and wait for completion
-        print("Creating video with json2video...")
-        creation_result = json2video_api.create_video(selected_json2vid_config)
-        project_id = creation_result['id']
-        print(f"✅ Video creation initiated. Project ID: {project_id}")
-        
-        # Wait for completion
-        print("Waiting for video to complete...")
-        completion_status = json2video_api.wait_for_completion(project_id)
-        print("✅ Video completed successfully!")
-        
-        # Extract video metadata from completion status
-        # if 'movie' in completion_status:
-        movie_info = completion_status['movie']
-        video_duration = movie_info.get('duration')
-        print(f"⏱️  Duration: {movie_info.get('duration')} seconds")
-        print(f"📐 Dimensions: {movie_info.get('width')}x{movie_info.get('height')}")
-        print(f"💾 File size: {movie_info.get('size')}")
-        print(f"🔗 Video URL: {movie_info.get('url')}")
+        # Try videos until one succeeds
+        import random
+        video_success = False
+        while available_videos and not video_success:
+            # Randomly select one video and its corresponding config
+            selected_index = random.randint(0, len(available_videos) - 1)
+            selected_video = available_videos[selected_index]
+            selected_json2vid_config = available_configs[selected_index]
+            
+            # Check if config was successfully parsed
+            if not selected_json2vid_config or selected_json2vid_config == {}:
+                print(f"⚠️  Video #{selected_index + 1} has invalid config, trying another...")
+                available_videos.pop(selected_index)
+                available_configs.pop(selected_index)
+                continue
+            
+            selected_caption = selected_video['video_caption']
+            print(f"🎯 Trying video #{selected_index + 1} of {len(available_videos)}")
+            print(f"📝 Caption: {selected_video['video_caption'][:100]}...")
+            print(f"📹 Video config has {len(selected_json2vid_config.get('scenes', []))} scenes")
+            
+            try:
+                # Create video and wait for completion
+                print("Create video with json2video...")
+                creation_result = json2video_api.create_video(selected_json2vid_config)
+                project_id = creation_result['id']
+                
+                # Wait for completion
+                print("Wait for video to complete...")
+                completion_status = json2video_api.wait_for_completion(project_id)
+                
+                # Extract video metadata from completion status
+                movie_info = completion_status['movie']
+                video_duration = movie_info.get('duration')
+                print(f"⏱️  Duration: {movie_info.get('duration')} seconds")
+                print(f"📐 Dimensions: {movie_info.get('width')}x{movie_info.get('height')}")
+                print(f"💾 File size: {movie_info.get('size')}")
+                print(f"🔗 Video URL: {movie_info.get('url')}")
 
-        if video_duration < 2:
-            raise Exception("❌ Video duration is less than 2 seconds")
+                if video_duration < 2:
+                    raise Exception("❌ Video duration is less than 2 seconds")
+                
+                # Download the video to the specified output file
+                print(f"\nDownloading video to: {video_outfile}")
+                video_path = json2video_api.download_video(project_id, video_outfile)
+                print(f"✅ Video downloaded to: {video_path}")
+                
+                video_success = True
+                
+            except Exception as e:
+                print(f"⚠️  Video #{selected_index + 1} failed: {e}")
+                print(f"🔄 Trying another video...")
+                available_videos.pop(selected_index)
+                available_configs.pop(selected_index)
+                continue
         
-        
-        # Download the video to the specified output file
-        print(f"\nDownloading video to: {video_outfile}")
-        video_path = json2video_api.download_video(project_id, video_outfile)
-        print(f"✅ Video downloaded to: {video_path}")
+        if not video_success:
+            raise Exception("❌ All videos failed to render successfully")
 
         
         

@@ -425,3 +425,9 @@ Write a quick script to downsample the images, and grab frames from the videos?
 What will providing this do for chatgpt?
 
 Autopost_workflow should re-run if there is a json or video creation error!
+- grab a new json if it can't be parsed
+- re-run the flow if the video doesn't render or is too short!
+
+Another Note:
+https://platform.openai.com/docs/guides/prompt-caching#frequently-asked-questions
+Prompt-caching is not usefull in my case as cache evictions occur every 5-10 min. So, this would only save money if regularly generating vids in quick succession. Can avoid uploading all new gcs and system instructions data as input by using the previous_response_id, but will need to re-upload the ig analytics (or at least recent comments) every time. 
