@@ -27,8 +27,7 @@
         "json2video_templates": "resources/json2video_templates.md",
         "gcs_content_notes": "resources/gcs_content_notes.md"
     },
-    "gpt_use_previous_response_id": false,
-    "gpt_previous_response_id": "resp_68a8bb67066481978ff8ed8603bd73b50757fbb4e304ba84",
+    "gpt_use_previous_response_id": true,
     "gpt_model": "gpt-5-2025-08-07",
     "gpt_temperature": 0.7,
     "json2video_api_key": "${JSON2VIDEO_API_KEY}",

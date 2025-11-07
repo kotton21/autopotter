@@ -203,7 +203,7 @@ class InstagramVideoUploader:
         if not creation_id:
             self.log_message("Media container is None. Exiting...")
             self.log_message("Token may be expired: https://developers.facebook.com/tools/explorer")
-            return
+            return None
         self.log_message(f"Media container created: {creation_id}")
         
         self.log_message("Uploading video...")
@@ -215,6 +215,8 @@ class InstagramVideoUploader:
         self.log_message(f"Publish result: {publish_result}")
         
         self.log_message("Video uploaded successfully!")
+
+        return publish_result
 
 
 

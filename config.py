@@ -44,7 +44,12 @@ class ConfigManager:
                     self.logger.warning(f"Could not load temporary config from {self.temp_config_path}: {e}")
             
             # First, load environment variables from .env file
-            self.load_dotenv(self.config.get('env_file_path', '.env'))
+            env_file_path = self.config.get('env_file_path', None)
+            if env_file_path:
+                self.load_dotenv(env_file_path)
+            else:
+                self.logger.warning("No environment file path configured. Skipping environment variable loading.")
+            
             
             # Resolve environment variables
             self.config = self.resolve_environment_variables(self.config)
