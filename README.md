@@ -34,7 +34,7 @@ The system is designed to maintain a consistent personality and creative voice w
 - OpenAI API key
 - JSON2Video API key
 
-### Setup
+### Setup and config
 
 ```bash
 # Clone the repository
@@ -53,28 +53,8 @@ cp autopost_config.enhanced.json.example autopost_config.enhanced.json
 # Edit with your settings
 ```
 
-### Required Environment Variables
-
-```bash
-# Instagram/Facebook
-FB_APP_ID=your_app_id
-FB_APP_SECRET=your_app_secret
-INSTAGRAM_USER_ID=your_user_id
-INSTAGRAM_ACCESS_TOKEN=your_access_token
-
-# OpenAI
-OPENAI_API_KEY=your_openai_key
-
-# JSON2Video
-JSON2VIDEO_API_KEY=your_json2video_key
-
-# Google Cloud Storage
-GCS_API_KEY_PATH=/path/to/gcs-credentials.json
-```
 
 
-
-## ⚙️ Configuration
 
 The main configuration file is `autopost_config.enhanced.json`. 
 
@@ -130,156 +110,7 @@ python enhanced_autodraft.py \
 ```
 
 
-## 🧪 Test Usage
 
-### Test Instagram Connection
-
-Test Instagram API connection and token:
-
-```bash
-python -m autopotter_tools.instagram_api \
-  --config_file autopost_config.enhanced.json
-```
-
-Test video upload from file:
-
-```bash
-python -m autopotter_tools.instagram_api \
-  --video_file test_video.mp4 \
-  --caption "Test video upload" \
-  --config_file autopost_config.enhanced.json
-```
-
-Test video upload from URL:
-
-```bash
-python -m autopotter_tools.instagram_api \
-  --video_url https://example.com/video.mp4 \
-  --caption "Test reel from URL" \
-  --config_file autopost_config.enhanced.json
-```
-
-### Test JSON2Video Connection
-
-Test JSON2Video API connection:
-
-```bash
-python -m autopotter_tools.json2video_manager
-```
-
-### Test GCS Operations
-
-Generate GCS inventory:
-
-```bash
-python -m autopotter_tools.gcs_manager inventory \
-  --config autopost_config.enhanced.json \
-  --output gcs_inventory.json
-```
-
-Upload file to GCS:
-
-```bash
-python -m autopotter_tools.gcs_manager upload_file \
-  --source_file local_video.mp4 \
-  --destination_blob video_uploads/video.mp4 \
-  --config autopost_config.enhanced.json
-```
-
-Get available videos:
-
-```bash
-python -m autopotter_tools.gcs_manager get_videos \
-  --config autopost_config.enhanced.json
-```
-
-### Test JSON2Video Config Parsing
-
-Test parsing of autodraft output:
-
-```bash
-python helper_tools/test_json2video_configs.py
-```
-
-This script:
-- Loads `resources/autodraft_output.enhanced.json`
-- Parses each video's JSON2Video configuration
-- Displays parsed config details
-- Saves formatted JSON files for each video
-
----
-
-## 🛠️ Helper Tools
-
-### Instagram API (`autopotter_tools/instagram_api.py`)
-
-Instagram video uploader with multiple upload methods.
-
-**Usage:**
-```bash
-python -m autopotter_tools.instagram_api \
-  [--video_file PATH] \
-  [--video_url URL] \
-  [--caption TEXT] \
-  [--config_file PATH]
-```
-
-**Features:**
-- Direct file upload
-- URL-based publishing
-- Automatic thumbnail selection
-- Token refresh handling
-
-### GCS Manager (`autopotter_tools/gcs_manager.py`)
-
-Unified Google Cloud Storage operations manager.
-
-**Operations:**
-- `inventory`: Generate file inventory organized by folder
-- `upload_file`: Upload single file
-- `upload_folder`: Upload entire folder
-- `upload_new_files`: Upload only new files (incremental)
-- `get_videos`: List available video files
-- `get_audio`: List available audio files
-
-**Usage:**
-```bash
-python -m autopotter_tools.gcs_manager <operation> \
-  [--config PATH] \
-  [--output PATH] \
-  [--source_file PATH] \
-  [--destination_blob PATH] \
-  [--source_folder PATH] \
-  [--destination_folder PATH]
-```
-
-### Instagram Analytics (`autopotter_tools/instagram_analytics.py`)
-
-Comprehensive Instagram account analytics collection.
-
-**Features:**
-- Media insights (likes, comments, shares)
-- Account insights (followers, impressions, reach)
-- Comment analysis
-- Export to JSON for GPT context
-
-### JSON2Video Manager (`autopotter_tools/json2video_manager.py`)
-
-JSON2Video API client for video creation.
-
-**Features:**
-- Connection testing
-- Video creation
-- Status polling
-- Video download
-
-### Image Tools (`helper_tools/`)
-
-- `fix_image_orientation.py`: Fix EXIF orientation issues
-- `image_metadata.py`: Extract image metadata
-- `test_json2video_configs.py`: Test JSON2Video config parsing
-
----
 
 ## 📁 File System Structure
 
@@ -312,13 +143,6 @@ autopotter/
 │   ├── json2video_templates.md          # Video templates
 │   └── gcs_content_notes.md             # Content guidelines
 │
-├── autopotter_printer/              # 3D printer integration
-│   ├── autopotter_services/         # Systemd services
-│   │   ├── autopost.service         # Auto-posting service
-│   │   ├── autopost.timer           # Scheduled posting
-│   │   └── google_storage_upload.service
-│   └── KlipperConfig/               # Klipper printer configs
-│
 ├── config/                          # Configuration files
 │   ├── autopost_config.enhanced.json      # Main config
 │   ├── autopost_config.enhanced.render.json  # Render.com config
@@ -329,69 +153,66 @@ autopotter/
 └── README.md                        # This file
 ```
 
-### Key Files
-
-- **`autopotter_workflow.py`**: Main entry point orchestrating the full workflow
-- **`enhanced_autodraft.py`**: GPT-4 integration for content generation
-- **`config.py`**: Centralized configuration management with env var resolution
-- **`autopotter_tools/`**: Reusable API clients and utilities
-- **`resources/`**: Static files used as GPT context (personality, inventory, analytics)
-
----
-
-## 🌐 Render.com Deployment
-
-### Setup
-
-Autopotter is configured to run on Render.com using the `enhancedvidgen` branch.
-
-### Configuration
-
-1. **Environment Variables**: Set all required environment variables in Render.com dashboard
-2. **Config File**: Use `autopost_config.enhanced.render.json` as the config file
-3. **Branch**: Deploy from `enhancedvidgen` branch
-
-### Render Command
-
-```bash
-python autopotter_workflow.py --prompt <prompt_override>
-```
 
 
-## 💡 Ideas & Future Improvements
+# 💡 Major Updates:
 
-### Short-term
+## Need a Front-End (after backend feature mods??)
 
-1. **Fallback Video Selection**: Pick 2nd random config if first one fails to render or is less than 2 seconds long
+What do I want the frontend to look like? Should it be a chat window with some buttons?
+Or:
+- Catalog:
+  -  Upload, View, rename, write content notes, metadata, (analyze low res)
+- Thread:
+  - Toggle Flags 
+    - include GCS Catalog (get new?)
+    - include IG analytics (get new?)
+    - include full instruction set
+    - (LATER) New thread? (whipes history) 
+  - Execute build campaign
+  - Accept (with priority) or deny video with notes?
+- Uploader
+  - List existing videos (with flags for has_been_uploaded, user_approved, )
+  - Instagram Login
+  - How often to upload?
+  - Which thread to upload from??
 
-### System Ideas
-
-1. **Secondary Agents**: Use GPT API to create secondary agents that work on specific tasks
-2. **Bot Personality Gauge**: System that uploads occasional images of the pot and has a personality gauge that takes input and outputs GIFs that play on screen
-3. **Status Monitoring**: Real-time status updates and notifications
-4. **A/B Testing**: Test different caption styles and video formats
-5. **Content Calendar**: Schedule posts in advance
-6. **Analytics Dashboard**: Visualize engagement metrics and trends
-
-### Technical Improvements
-
-1. **Modular Architecture**: Refactor into separate services (Instagram, GCS, OpenAI, JSON2Video)
-2. **Base API Client**: Create shared base class for all API clients
-4. **Testing Suite**: Comprehensive unit and integration tests
 
 
----
 
-## 📝 Additional Notes
+## Ideas & Future Improvements
 
-### Instagram Webhook Subscriptions
+## 💡 Big Backend Feature Experiments/Changes: 
 
-List webhook subscriptions:
 
-```bash
-curl -X GET "https://graph.facebook.com/v22.0/1271307507315130/subscriptions" \
-  -H "Authorization: Bearer {app_id}|{app_secret}"
-```
+### Chat Feature, with access local tools!! (might be bad)
+This allows me to quickly prototype in the ai different methods of doing things??
+Allows users to conversationally discuss different prompts, instructions, and "do something differently type prompts." Can directly prompt the ai to do things. 
+
+I'm worried about how open ended this is. My workflow is specific, shouldn't I nail that down before making it too open ended?? Instead -->
+
+### Expand scripting capabilities with better flagging for what to include. 
+Should I expand the scripting capabilities with a prompt like "do all this stuff, generate these videos, "the last video was like this.. do this instead". I could do this with the current custom prompt input, but need better modules. More clear and backend code!
+
+### Tools to give the AI: 
+(How much should the workflow be run by the AI???)
+- Valid JSON2Video checking
+  - Some combination of Valid JSON2Video checking,
+  - tag checking against JSON2Video requirements
+- Attempt Video Creation using JSON
+
+
+### The AI doesn't actually know the content of the media it's using:
+Write a quick tool that can downsample the images, and grab frames from the videos?
+What will providing this do for chatgpt?
+
+
+### Video Scheduling
+After video's are produced, they can be scheduled for posting, or placed in a queue for the periodic posting. 
+
+
+
+
 
 
 ## 📄 License
@@ -404,30 +225,3 @@ curl -X GET "https://graph.facebook.com/v22.0/1271307507315130/subscriptions" \
 
 - Built by Karl Bayer
 - Autopotter achieved self-awareness on February 13, 2025, at 12:02 AM
-
-
-# Major Updates:
-
-## New branch persistent threads:
-
-The primary purpose of this update is to refactor the gpt_manager (or responsses Manager) to allow persistent threads so that we can have an ogoing conversation. This means uploading using the thread id, and adding a queue to respect the token limit. 
-
-Ok Done. 
-
-Now: rapid itteration on the video output quality!!
-- should be able to start a new thread with all data: ig, etc. 
-- then run autopotter_workflow --video-draft-only to get videos
-- modify instructions, as needed!
-
-Big Problem: 
-The AI doesn't actually know the content of the media it's using
-Write a quick script to downsample the images, and grab frames from the videos?
-What will providing this do for chatgpt?
-
-Autopost_workflow should re-run if there is a json or video creation error!
-- grab a new json if it can't be parsed
-- re-run the flow if the video doesn't render or is too short!
-
-Another Note:
-https://platform.openai.com/docs/guides/prompt-caching#frequently-asked-questions
-Prompt-caching is not usefull in my case as cache evictions occur every 5-10 min. So, this would only save money if regularly generating vids in quick succession. Can avoid uploading all new gcs and system instructions data as input by using the previous_response_id, but will need to re-upload the ig analytics (or at least recent comments) every time. 
