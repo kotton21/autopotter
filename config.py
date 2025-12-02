@@ -274,19 +274,6 @@ class ConfigManager:
             return False
     
     
-    def update_instagram_tokens(self, access_token: str, expiration: str):
-        """Update Instagram access token and expiration with full persistence."""
-        # Update in-memory configuration
-        self.config['instagram_access_token'] = access_token
-        
-        # Update environment variable for current process
-        self._update_environment_variable('INSTAGRAM_ACCESS_TOKEN', access_token)
-        
-        # Update .env file for persistence across restarts
-        self._update_env_file('INSTAGRAM_ACCESS_TOKEN', access_token)
-        
-        Logger.info("Instagram tokens updated and persisted to environment and .env file")
-    
     def refresh_instagram_token(self):
         """Automatically refresh the Instagram access token using Facebook API."""
         try:
@@ -382,12 +369,18 @@ class ConfigManager:
         try:
             access_token = self.config['instagram_access_token']
             if not access_token or access_token.startswith('${'):
-                Logger.warning("No valid Instagram access token available")
-                return True
+                Logger.error("No valid Instagram access token available")
+                exit(1)
             
             # Get fresh expiration data from Facebook API
             fresh_expiration = self._get_facebook_token_expiration(access_token)
             expiration_date = datetime.strptime(fresh_expiration, "%Y-%m-%d %H:%M:%S")
+            
+            if expiration_date < datetime.now():
+                Logger.error("Instagram token is already expired")
+                Logger.error("✨✨  https://developers.facebook.com/tools/explorer  ✨✨")
+                exit(1)
+                
             days_left = (expiration_date - datetime.now()).days
             days_before_refresh = self.config.get('instagram_days_before_token_should_autorefresh', 7)
             
@@ -400,9 +393,33 @@ class ConfigManager:
     
 
 # Convenience function for getting configuration
-def get_config(config_path: str = "autopost_config.enhanced.json") -> ConfigManager:
-    """Get a configuration manager instance."""
-    return ConfigManager(config_path)
+_config_manager: Optional[ConfigManager] = None
+
+
+def get_config(
+    config_path: str = "autopost_config.enhanced.json",
+    force_reload: bool = False,
+) -> ConfigManager:
+    """
+    Get a shared configuration manager instance.
+    
+    Args:
+        config_path: Path to the configuration file.
+        force_reload: If True, rebuilds the ConfigManager even if one exists.
+    """
+    global _config_manager
+    
+    if force_reload or _config_manager is None:
+        if force_reload and _config_manager is not None:
+            Logger.info("Force reloading configuration manager")
+        _config_manager = ConfigManager(config_path)
+    else:
+        if _config_manager.config_path != config_path:
+            Logger.warning(
+                f"Config already loaded from {_config_manager.config_path}; ignoring new path {config_path}"
+            )
+    
+    return _config_manager
 
 
 if __name__ == "__main__":
