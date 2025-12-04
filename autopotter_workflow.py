@@ -160,11 +160,11 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
         Logger.info(f"Uploading video with caption: {selected_caption[:100]}...")
         upload_result = instagram_uploader.upload_and_publish(video_path, selected_caption, thumbnail_offset)
         
-        if not upload_result is True:
-            Logger.error("Failed to upload video to Instagram")
+        if not upload_result or not upload_result.get("success"):
+            Logger.error(f"Failed to upload video to Instagram: {upload_result}")
             return False
         
-        Logger.info("✅ Video uploaded to Instagram successfully!")
+        Logger.info(f"✅ Video uploaded to Instagram successfully! Media ID: {upload_result.get('media_id')}")
         
         # Cleanup temporary file after Instagram upload
         if os.path.exists(video_path):
