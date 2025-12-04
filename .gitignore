@@ -30,3 +30,13 @@ autopost_config.enhanced.temp.json
 test_json2video_configs.py
 
 autodraft_output.enhanced.json
+instagram_analytics_result.json
+
+tests/test_images/*
+tests/*.mov
+tests/*.mp4
+tests/*.jpg
+tests/*.png
+.vscode/settings.json
+instagram_analytics_result.json
+tests/gcs_inventory_integration_test.json
