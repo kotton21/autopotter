@@ -40,12 +40,18 @@ class InstagramAnalyticsManager:
         self.base_url = "https://graph.facebook.com/v22.0"
         self.access_token = self.config.get('instagram_access_token', None)
         self.user_id = self.config.get('instagram_user_id', None)
+        self.app_id = self.config.get('instagram_app_id', None)
+        self.app_secret = self.config.get('instagram_app_secret', None)
 
         # Validate required configuration
         if not self.access_token:
             raise ValueError("Instagram access token not configured")
         if not self.user_id:
             raise ValueError("Instagram user ID not configured")
+        if not self.app_id or str(self.app_id).startswith("${"):
+            Logger.warning("Instagram app ID missing or unresolved; webhook subscription checks disabled.")
+        if not self.app_secret or str(self.app_secret).startswith("${"):
+            Logger.warning("Instagram app secret missing or unresolved; webhook subscription checks disabled.")
         
         
         # Configuration parameters for data retrieval limits
@@ -304,6 +310,55 @@ class InstagramAnalyticsManager:
                 'error': str(e),
                 'available_scopes': [],
                 'missing_scopes': []
+            }
+
+    def get_webhook_subscriptions(self) -> Dict[str, Any]:
+        """
+        Retrieve current webhook subscriptions for the configured Facebook app.
+
+        Returns:
+            Dictionary describing the current subscription status/results.
+        """
+        Logger.info("📡 Retrieving webhook subscriptions...")
+
+        if (not self.app_id or str(self.app_id).startswith("${") or
+                not self.app_secret or str(self.app_secret).startswith("${")):
+            message = "Instagram app credentials not configured; cannot list webhook subscriptions."
+            Logger.warning(message)
+            return {
+                'status': 'missing_credentials',
+                'error': message
+            }
+
+        try:
+            url = f"{self.base_url}/{self.app_id}/subscriptions"
+            params = {
+                "access_token": f"{self.app_id}|{self.app_secret}"
+            }
+
+            response = requests.get(url, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                subscriptions = data.get('data', [])
+                Logger.info(f"📡 Retrieved {len(subscriptions)} webhook subscriptions")
+                return {
+                    'status': 'success',
+                    'data': subscriptions,
+                    'raw': data
+                }
+
+            Logger.error(f"❌ Failed to retrieve webhook subscriptions: {response.status_code} - {response.text}")
+            return {
+                'status': 'error',
+                'status_code': response.status_code,
+                'error': response.text
+            }
+
+        except Exception as e:
+            Logger.error(f"❌ Exception while retrieving webhook subscriptions: {e}")
+            return {
+                'status': 'exception',
+                'error': str(e)
             }
     
     def test_available_fields(self) -> Dict[str, Any]:
@@ -1238,6 +1293,29 @@ def main():
             print(f"  Can Publish: {account_info.get('can_publish', False)}")
             print(f"  Can Manage Comments: {account_info.get('can_manage_comments', False)}")
             print(f"  Can View Insights: {account_info.get('can_view_insights', False)}")
+
+            # Display webhook subscription information
+            print(f"\n📡 Webhook Subscriptions:")
+            webhook_info = analytics_manager.get_webhook_subscriptions()
+            status = webhook_info.get('status')
+            if status == 'success':
+                subscriptions = webhook_info.get('data', [])
+                if subscriptions:
+                    for idx, sub in enumerate(subscriptions, start=1):
+                        print(f"  #{idx}: object={sub.get('object')}, active={sub.get('active')}")
+                        print(f"      callback: {sub.get('callback_url', 'n/a')}")
+                        fields = sub.get('fields') or []
+                        if isinstance(fields, list):
+                            field_list = ', '.join(fields)
+                        else:
+                            field_list = str(fields)
+                        print(f"      fields: {field_list if field_list else 'n/a'}")
+                else:
+                    print("  ⚠️ No webhook subscriptions configured.")
+            elif status == 'missing_credentials':
+                print(f"  ⚠️ {webhook_info.get('error')}")
+            else:
+                print(f"  ❌ Unable to retrieve subscriptions: {webhook_info.get('error', 'Unknown error')}")
             
             # Test available fields
             print(f"\n🔬 Testing available Instagram API fields...")
