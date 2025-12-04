@@ -33,11 +33,13 @@ class EmbeddingService:
         """Flatten metadata into a short descriptive string."""
         parts = [
             metadata.shot_type or "",
-            metadata.use_case or "",
             metadata.emotional_tone or "",
+            metadata.use_case or "",
             " ".join(metadata.activities),
             " ".join(metadata.materials),
+            " ".join(metadata.objects_detected),
             metadata.quality_notes or "",
+            " ".join(metadata.embedding_hints),
         ]
         return " ".join(part for part in parts if part).strip()
 

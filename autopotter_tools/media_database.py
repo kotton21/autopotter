@@ -10,6 +10,10 @@ from autopotter_tools.simplelogger import Logger
 
 
 class MediaDatabase:
+    """
+    MediaDatabase is a SQLite database that stores media items and frames, and their embeddings.
+    """
+
     def __init__(self, db_path: Path):
         self.db_path = Path(db_path)
         if self.db_path.parent:

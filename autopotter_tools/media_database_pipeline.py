@@ -254,7 +254,7 @@ def main():
     if args.keyword:
         results = pipeline.keyword_search(args.keyword)
         print(f"[media-pipeline] keyword '{args.keyword}' hits={len(results)}")
-        for frame in results[:10]:
+        for frame in results[:5]:
             print("  --- search result ---")
             print(frame.model_dump_json() if hasattr(frame, "model_dump_json") else frame.json())
 

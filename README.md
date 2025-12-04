@@ -112,48 +112,6 @@ python enhanced_autodraft.py \
 
 
 
-## 📁 File System Structure
-
-```
-autopotter/
-├── autopotter_workflow.py          # Main workflow orchestrator
-├── enhanced_autodraft.py            # GPT-4 autodraft generation
-├── config.py                        # Configuration manager
-│
-├── autopotter_tools/                # Core tools and services
-│   ├── __init__.py
-│   ├── logger.py                    # Centralized logging
-│   ├── instagram_api.py             # Instagram upload client
-│   ├── instagram_analytics.py       # Analytics collection
-│   ├── json2video_manager.py        # JSON2Video API client
-│   ├── gcs_manager.py              # GCS operations
-│   ├── gpt_responses_manager.py     # GPT response management
-│   └── parse_json2video_configs.py # Config parser
-│
-├── helper_tools/                    # Utility scripts
-│   ├── test_json2video_configs.py   # Test JSON parsing
-│   ├── fix_image_orientation.py     # Image orientation fix
-│   └── image_metadata.py            # Image metadata extractor
-│
-├── resources/                       # Static resources
-│   ├── autodraft_output.enhanced.json    # Autodraft output
-│   ├── autopotter_personality.v2.md     # Bot personality
-│   ├── gcs_inventory_simplified.json    # Media inventory
-│   ├── instagram_analytics_result.json  # Analytics data
-│   ├── json2video_templates.md          # Video templates
-│   └── gcs_content_notes.md             # Content guidelines
-│
-├── config/                          # Configuration files
-│   ├── autopost_config.enhanced.json      # Main config
-│   ├── autopost_config.enhanced.render.json  # Render.com config
-│   └── autopost_config.enhanced.temp.json   # Runtime config
-│
-├── requirements.txt                 # Python dependencies
-├── .env                             # Environment variables (gitignored)
-└── README.md                        # This file
-```
-
-
 
 # 💡 Major Updates:
 
