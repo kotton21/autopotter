@@ -40,3 +40,5 @@ tests/*.png
 .vscode/settings.json
 instagram_analytics_result.json
 tests/gcs_inventory_integration_test.json
+tests/test_images_previews/*
+tests/test_media_frames.sqlite

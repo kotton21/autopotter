@@ -1,3 +1,7 @@
 openai
 requests
 google-cloud-storage
+pydantic>=2.7,<3
+Pillow
+opencv-python-headless
+pytest

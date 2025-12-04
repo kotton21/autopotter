@@ -84,7 +84,32 @@ autopotter/
 - Formats responses for downstream systems (JSON2Video, social copy, etc.).
 
 
+## Goals:
+***Current Goals:***
+1. Better Understanding of the content that I have available (analyze all my content, either upload everything, or make searchable) 
+2.  Better Understanding of the type of content that I want!! (analyze a separate account's content, and tell me what my catalog is missing in order to emulate)
 
+
+***Later Goals:***
+- UX and GUI
+- Chat stream???
+- Give the AI more tools??? (Is this is a UX mod since scripting can test everything??)
+- 
+
+## Goal Actualization
+
+### Analyze all my content:
+- Capture periodic frame-grabs from all videos
+- Downsample all framegrabs and images
+- upload individual items to gpt for analysis with a prompt of some kind...
+    - System: "You are a media tagging and shot-classification expert..."
+    - User: "analyze this..."
+- save analysis, and all metadata in a database
+- generate embeddings, then store in database??
+- Search function for database...
+
+### Analyze another account's content
+- 
 
 ## Ideas & Future Improvements
 
@@ -108,13 +133,14 @@ Should I expand the scripting capabilities with a prompt like "do all this stuff
   - tag checking against JSON2Video requirements
 - Attempt Video Creation using JSON
 
-
 ### The AI doesn't actually know the content of the media it's using:
 Write a quick tool that can downsample the images, and grab frames from the videos?
 What will providing this do for chatgpt?
 
 ### Video Scheduling
 After video's are produced, they can be scheduled for posting, or placed in a queue for the periodic posting. 
+
+
 
 ### Future Feature Highlights
 
@@ -141,3 +167,39 @@ After video's are produced, they can be scheduled for posting, or placed in a qu
 `Scheduling and queueing`
 - Add a post-production queue where approved videos wait for scheduled publish windows.
 - Optionally integrate recurring cron-style posting or manual review checkpoints before pushing live.
+
+
+## New API's:
+... Make all the API's available to the AI!!! Just have it do it??
+
+### Video Tools API
+Make a video tools api with the following features:
+- Get video length
+- extract single thumbnail (position_in_video, resolution, focus detection??)
+- extract thumbnail series (for AI analysis)
+- fix pic/video orientation (cause JSON2Vid doesn't interpret the metadata orientation)
+- build media DB
+- search media DB
+
+### API for media library classification:
+Primary purpose is to build a database of all available media, with metadata and ai classification tags or description. This is sortof to create a starting point for user's to add their own information and descriptions.
+- get_media_metadata(path) Returns: duration, resolution, fps, orientation, bit rate, file size
+- get_video_frames(path, count=N) Your downsampler script, for if there is something missing from media DB
+- analyze_frames_with_ai() Analyzes, then saves the results to a db.
+
+- search_media_library(query) Let the model retrieve clips by tags you pre-classified.
+
+- analyze_video_style()
+
+
+### API that wraps all the tools available for OpenAI api
+This should be the only file that an openai gui or terminal needs to import. It should conveniently wrap everything needed. 
+- list_analytics(period) Pull IG analytics in a structured way.
+- validate_json2video(config)
+- 
+
+
+### User Model: 
+- (Done) Update the config system so that the same config class is passed through each request..
+- Leave all config, user, and campaign params in the existing config system for now.
+- Can update to separate user_model, campaign_model, and media_model later.
