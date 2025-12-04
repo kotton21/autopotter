@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""
-Unified Google Cloud Storage Manager for Phase 2.
-Combines inventory management and upload operations in a single interface.
-"""
+"""Lightweight, pythonic helpers for interacting with Google Cloud Storage."""
 
-import os
-import sys
+from __future__ import annotations
+
+import argparse
 import json
 import random
-import argparse
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Any
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Sequence
+
 from google.cloud import storage
 
-# Import from the package
 try:
     from simplelogger import Logger
 except ImportError:
@@ -21,516 +20,356 @@ except ImportError:
 
 from config import get_config
 
+VIDEO_EXTENSIONS = (
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".mkv",
+    ".wmv",
+    ".flv",
+    ".webm",
+    ".m4v",
+)
+AUDIO_EXTENSIONS = (
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".aac",
+    ".flac",
+    ".ogg",
+    ".wma",
+    ".aiff",
+)
+RESERVED_METADATA_PREFIX = "goog-reserved-"
+VIDEO_FOLDER = "video_uploads/"
+AUDIO_FOLDER = "music_uploads/"
+
+
+@dataclass(frozen=True)
+class FileRecord:
+    """Simple representation of a blob we care about."""
+
+    name: str
+    size_bytes: int
+    public_url: str
+    metadata: Dict[str, str]
+    created: Optional[datetime]
+    updated: Optional[datetime]
+
+    @property
+    def size_mb(self) -> float:
+        if not self.size_bytes:
+            return 0.0
+        return round(self.size_bytes / (1024 * 1024), 2)
+
+
 class GCSManager:
-    """
-    Unified GCS manager that handles both inventory operations and upload operations.
-    """
-    
-    def __init__(self, config_path: str = "autopost_config.enhanced.json"):
+    """Small, dependency-injected wrapper around a Google Cloud Storage bucket."""
+
+    def __init__(
+        self,
+        config_path: str = "autopost_config.enhanced.json",
+        *,
+        storage_client: Optional[storage.Client] = None,
+        bucket=None,
+    ) -> None:
         self.config = get_config(config_path)
-        self.gcs_config = self.config.get_gcs_config()
-        
-        # Validate required configuration
-        if not self.gcs_config.get('api_key_path'):
-            raise ValueError("GCS API key path not configured")
-        if not self.gcs_config.get('bucket'):
-            raise ValueError("GCS bucket name not configured")
-        
-        # Initialize GCS client
-        self.client = storage.Client.from_service_account_json(self.gcs_config['api_key_path'])
-        self.bucket_name = self.gcs_config['bucket']
-        self.bucket = self.client.bucket(self.bucket_name)
-        
-        # Configure folders to scan
-        self.folders_to_scan = self.gcs_config.get('folders', None)
-        
+
+        self.api_key_path = self._require_setting("gcs_api_key_path")
+        self.bucket_name = self._require_setting("gcs_bucket")
+        folders = self.config.get("gcs_folders", [])
+        normalized_folders = (
+            self._normalize_folder_prefix(folder) for folder in (folders or [])
+        )
+        self.folders_to_scan = tuple(filter(None, normalized_folders))
+
+        if bucket is not None:
+            self.client = storage_client
+            self.bucket = bucket
+        else:
+            self.client = storage_client or storage.Client.from_service_account_json(self.api_key_path)
+            self.bucket = self.client.bucket(self.bucket_name)
+
         Logger.info(f"GCS Manager initialized for bucket: {self.bucket_name}")
-    
-    # ==================== INVENTORY OPERATIONS ====================
-    
-    def scan_folder(self, folder_prefix: str) -> List[Dict[str, Any]]:
-        """
-        Scan a specific folder and return basic file information.
-        
-        Args:
-            folder_prefix: Folder prefix to scan (e.g., 'video_uploads/')
-            
-        Returns:
-            List of file metadata dictionaries
-        """
+
+    # -------------------- Inventory helpers -------------------- #
+    def scan_folder(self, folder_prefix: str, *, extensions: Optional[Sequence[str]] = None) -> List[FileRecord]:
+        """Return all blob records in a folder, optionally filtered by extension."""
         Logger.info(f"Scanning folder: {folder_prefix}")
-        
+
         try:
             blobs = list(self.bucket.list_blobs(prefix=folder_prefix))
-            files = []
-            
-            for blob in blobs:
-                # Skip folder markers (blobs ending with /)
-                if blob.name.endswith('/'):
-                    continue
-                
-                # Get basic file info
-                file_info = {
-                    'name': blob.name,
-                    'size_mb': round(blob.size / (1024 * 1024), 2) if blob.size else 0,
-                    'public_url': f"https://storage.googleapis.com/{self.bucket_name}/{blob.name}",
-                    'metadata': {}
-                }
-                
-                # Add custom metadata (excluding goog-reserved fields)
-                if blob.metadata:
-                    for key, value in blob.metadata.items():
-                        if not key.startswith('goog-reserved-'):
-                            file_info['metadata'][key] = value
-                
-                files.append(file_info)
-            
-            Logger.info(f"Found {len(files)} files in {folder_prefix}")
-            return files
-            
-        except Exception as e:
-            Logger.error(f"Failed to scan folder {folder_prefix}: {e}")
+        except Exception as exc:  # pragma: no cover - defensive logging
+            Logger.error(f"Failed to list blobs for {folder_prefix}: {exc}")
             return []
-    
-    def _categorize_file(self, filename: str) -> str:
-        """
-        Categorize a file based on its extension.
-        
-        Args:
-            filename: Name of the file
-            
-        Returns:
-            Category string: 'videos', 'images', 'music', or 'other'
-        """
-        filename_lower = filename.lower()
-        
-        # Video file extensions
-        video_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v']
-        if any(filename_lower.endswith(ext) for ext in video_extensions):
-            return 'videos'
-        
-        # Image file extensions
-        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp', '.svg']
-        if any(filename_lower.endswith(ext) for ext in image_extensions):
-            return 'images'
-        
-        # Music/Audio file extensions
-        music_extensions = ['.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg', '.wma', '.aiff']
-        if any(filename_lower.endswith(ext) for ext in music_extensions):
-            return 'music'
-        
-        # Default to other for text, config, and unknown files
-        return 'other'
-    
-    def generate_inventory(self, output_path: str = None) -> Dict[str, Any]:
-        """
-        Generate file inventory organized by folder with simplified file listings.
-        
-        Args:
-            output_path: Optional path to save inventory JSON file
-            
-        Returns:
-            Dictionary containing organized inventory data by folder
-        """
-        Logger.info("Generating simplified GCS file inventory organized by folder")
-        
-        try:
-            inventory_data = {
-                'collection_info': {
-                    'collected_at': datetime.now().isoformat(),
-                    'source': 'gcs_manager',
-                    'collection_version': '2.1'
-                },
-                'files_by_folder': {},
-                'summary': {
-                    'total_files': 0,
-                    'total_size_mb': 0
-                }
-            }
-            
-            # Scan each configured folder
-            for folder in self.folders_to_scan:
-                try:
-                    files = self.scan_folder(folder)
-                    
-                    if files:
-                        # Create folder URL
-                        folder_url = f"https://storage.googleapis.com/{self.bucket_name}/{folder}/"
-                        
-                        # Extract just the filenames (without folder prefix)
-                        file_names = []
-                        for file_info in files:
-                            # Extract filename from full path (e.g., "video_uploads/file.mp4" -> "file.mp4")
-                            filename = os.path.basename(file_info['name'])
-                            file_names.append(filename)
-                            
-                            # Update summary counts
-                            inventory_data['summary']['total_files'] += 1
-                            inventory_data['summary']['total_size_mb'] += file_info.get('size_mb', 0)
-                        
-                        # Add folder to inventory
-                        inventory_data['files_by_folder'][folder_url] = file_names
-                    
-                except Exception as e:
-                    Logger.error(f"Error scanning folder {folder}: {e}")
-            
-            # Round total size
-            inventory_data['summary']['total_size_mb'] = round(inventory_data['summary']['total_size_mb'], 2)
-            
-            # Save to file if output path provided
-            if output_path:
-                with open(output_path, 'w') as f:
-                    json.dump(inventory_data, f, indent=2)
-                Logger.info(f"File inventory saved to: {output_path}")
-            
-            Logger.info("GCS file inventory generation completed")
-            return inventory_data
-            
-        except Exception as e:
-            Logger.error(f"Failed to generate file inventory: {e}")
-            raise
-    
-    # ==================== UPLOAD OPERATIONS ====================
-    
+
+        records: List[FileRecord] = []
+        normalized_extensions = tuple(ext.lower() for ext in extensions) if extensions else None
+
+        for blob in blobs:
+            if blob.name.endswith("/"):
+                continue
+
+            if normalized_extensions and not blob.name.lower().endswith(normalized_extensions):
+                continue
+
+            metadata = self._extract_metadata(getattr(blob, "metadata", None))
+            record = FileRecord(
+                name=blob.name,
+                size_bytes=int(getattr(blob, "size", 0) or 0),
+                public_url=self._public_url(blob.name),
+                metadata=metadata,
+                created=getattr(blob, "time_created", None),
+                updated=getattr(blob, "updated", None),
+            )
+            records.append(record)
+
+        Logger.info(f"Found {len(records)} files in {folder_prefix}")
+        return records
+
+    def generate_inventory(self, output_path: Optional[str] = None) -> Dict[str, Any]:
+        """Produce a light-weight inventory grouped by folder."""
+        Logger.info("Generating GCS inventory...")
+        inventory: Dict[str, Any] = {
+            "collection_info": {
+                "collected_at": datetime.now(timezone.utc).isoformat(),
+                "source": "gcs_manager",
+                "collection_version": "3.0",
+            },
+            "files_by_folder": {},
+            "summary": {"total_files": 0, "total_size_mb": 0.0},
+        }
+
+        if not self.folders_to_scan:
+            Logger.warning("No folders configured; returning empty inventory")
+            return inventory
+
+        for folder in self.folders_to_scan:
+            files = self.scan_folder(folder)
+            if not files:
+                continue
+
+            folder_url = self._folder_url(folder)
+            filenames = [Path(record.name).name for record in files]
+
+            inventory["files_by_folder"][folder_url] = filenames
+            inventory["summary"]["total_files"] += len(files)
+            inventory["summary"]["total_size_mb"] += sum(record.size_mb for record in files)
+
+        inventory["summary"]["total_size_mb"] = round(inventory["summary"]["total_size_mb"], 2)
+
+        if output_path:
+            Path(output_path).write_text(json.dumps(inventory, indent=2), encoding="utf-8")
+            Logger.info(f"Inventory saved to {output_path}")
+
+        return inventory
+
+    # -------------------- Upload helpers -------------------- #
     def upload_file(self, source_file_path: str, destination_blob_name: str) -> bool:
-        """
-        Upload a single file to GCS.
-        
-        Args:
-            source_file_path: Path to the local file
-            destination_blob_name: Destination blob name in GCS
-            
-        Returns:
-            True if successful, False otherwise
-        """
+        """Upload a single file to the configured bucket."""
+        source_path = Path(source_file_path)
+        if not source_path.is_file():
+            Logger.error(f"Source file does not exist: {source_path}")
+            return False
+
         try:
             blob = self.bucket.blob(destination_blob_name)
-            blob.upload_from_filename(source_file_path)
-            Logger.info(f"Uploaded {source_file_path} to {self.bucket_name}/{destination_blob_name}")
+            blob.upload_from_filename(str(source_path))
+            Logger.info(f"Uploaded {source_path} to {self.bucket_name}/{destination_blob_name}")
             return True
-        except Exception as e:
-            Logger.error(f"Failed to upload {source_file_path}: {e}")
+        except Exception as exc:  # pragma: no cover - network failure
+            Logger.error(f"Failed to upload {source_path}: {exc}")
             return False
-    
+
     def upload_folder(self, source_folder: str, destination_folder_prefix: str = "") -> bool:
-        """
-        Upload an entire folder to GCS.
-        
-        Args:
-            source_folder: Path to the local folder
-            destination_folder_prefix: Destination folder prefix in GCS
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            for root, _, files in os.walk(source_folder):
-                for file in files:
-                    local_file_path = os.path.join(root, file)
-                    relative_path = os.path.relpath(local_file_path, source_folder)
-                    destination_blob_name = os.path.join(destination_folder_prefix, relative_path).replace("\\", "/")
-                    if not self.upload_file(local_file_path, destination_blob_name):
-                        return False
-            
-            Logger.info(f"Uploaded folder {source_folder} to {self.bucket_name}/{destination_folder_prefix}")
-            return True
-        except Exception as e:
-            Logger.error(f"Failed to upload folder {source_folder}: {e}")
+        """Upload a directory tree to the bucket."""
+        source_path = Path(source_folder)
+        if not source_path.is_dir():
+            Logger.error(f"Source folder does not exist: {source_path}")
             return False
-    
-    def get_most_recent_file_creation_time(self, prefix: str = None) -> datetime:
-        """
-        Get the most recent file creation time in a folder.
-        
-        Args:
-            prefix: Folder prefix to check
-            
-        Returns:
-            Most recent creation time or None if no files found
-        """
+
+        for file_path in self._iter_local_files(source_path):
+            relative = file_path.relative_to(source_path)
+            destination = self._destination_name(destination_folder_prefix, relative)
+            if not self.upload_file(str(file_path), destination):
+                return False
+
+        Logger.info(f"Uploaded folder {source_path} to {self.bucket_name}/{destination_folder_prefix}")
+        return True
+
+    def get_most_recent_file_creation_time(self, prefix: Optional[str] = None) -> Optional[datetime]:
+        """Return the newest blob creation/update time for a prefix."""
+        newest_time: Optional[datetime] = None
         try:
-            blobs = list(self.bucket.list_blobs(prefix=prefix))
-            
-            # Filter out folder blobs
-            file_blobs = [blob for blob in blobs if not blob.name.endswith('/')]
-            if not file_blobs:
-                Logger.info("No files found.")
-                return None
-            
-            most_recent_blob = max(file_blobs, key=lambda blob: blob.time_created)
-            Logger.info(f"The most recent file is: {most_recent_blob.name}")
-            return most_recent_blob.time_created
-            
-        except Exception as e:
-            Logger.error(f"Failed to get most recent file creation time: {e}")
+            for blob in self.bucket.list_blobs(prefix=prefix):
+                if blob.name.endswith("/"):
+                    continue
+                blob_time = getattr(blob, "time_created", None) or getattr(blob, "updated", None)
+                if blob_time is None:
+                    continue
+                if newest_time is None or blob_time > newest_time:
+                    newest_time = blob_time
+        except Exception as exc:  # pragma: no cover - defensive logging
+            Logger.error(f"Failed to inspect blobs for prefix {prefix}: {exc}")
             return None
-    
+
+        if newest_time is None:
+            Logger.info("No files found.")
+        else:
+            Logger.info(f"Newest file timestamp for prefix '{prefix}': {newest_time.isoformat()}")
+
+        return newest_time
+
     def upload_new_files(self, source_folder: str, destination_folder_prefix: str = "") -> bool:
-        """
-        Upload only new files that are newer than the most recent file in GCS.
-        
-        Args:
-            source_folder: Path to the local folder
-            destination_folder_prefix: Destination folder prefix in GCS
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            most_recent_creation_time = self.get_most_recent_file_creation_time(destination_folder_prefix)
-            
-            for root, _, files in os.walk(source_folder):
-                for file in files:
-                    local_file_path = os.path.join(root, file)
-                    file_time = datetime.fromtimestamp(os.path.getmtime(local_file_path)).astimezone(timezone.utc)
-                    
-                    if most_recent_creation_time is None or file_time > most_recent_creation_time:
-                        relative_path = os.path.relpath(local_file_path, source_folder)
-                        destination_blob_name = os.path.join(destination_folder_prefix, relative_path).replace("\\", "/")
-                        if not self.upload_file(local_file_path, destination_blob_name):
-                            return False
-            
-            Logger.info(f"Uploaded new files from {source_folder} to {self.bucket_name}/{destination_folder_prefix}")
-            return True
-            
-        except Exception as e:
-            Logger.error(f"Failed to upload new files: {e}")
+        """Upload files that are newer than what currently exists in the bucket."""
+        source_path = Path(source_folder)
+        if not source_path.is_dir():
+            Logger.error(f"Source folder does not exist: {source_path}")
             return False
-    
-    # ==================== SELECTION OPERATIONS ====================
-    
+
+        newest_remote_time = self.get_most_recent_file_creation_time(destination_folder_prefix)
+
+        for file_path in self._iter_local_files(source_path):
+            modified_time = datetime.fromtimestamp(file_path.stat().st_mtime, tz=timezone.utc)
+            if newest_remote_time and modified_time <= newest_remote_time:
+                continue
+            relative = file_path.relative_to(source_path)
+            destination = self._destination_name(destination_folder_prefix, relative)
+            if not self.upload_file(str(file_path), destination):
+                return False
+
+        Logger.info(f"Uploaded new files from {source_path} to {self.bucket_name}/{destination_folder_prefix}")
+        return True
+
+    # -------------------- Selection helpers -------------------- #
     def get_available_videos(self) -> List[Dict[str, Any]]:
-        """
-        Get list of available video files from video_uploads folder.
-        
-        Returns:
-            List of video file dictionaries with metadata
-        """
-        try:
-            all_files = self.scan_folder("video_uploads/")
-            
-            # Filter for video files only
-            video_extensions = ['.mp4', '.mov', '.avi', '.mkv']
-            video_files = []
-            
-            for file_info in all_files:
-                if any(file_info['name'].lower().endswith(ext) for ext in video_extensions):
-                    # Get blob for additional metadata
-                    blob = self.bucket.blob(file_info['name'])
-                    blob.reload()
-                    
-                    # Handle None values for time fields
-                    created_time = blob.time_created if blob.time_created else blob.updated
-                    updated_time = blob.updated if blob.updated else created_time
-                    
-                    video_files.append({
-                        'name': file_info['name'],
-                        'size': blob.size,
-                        'size_mb': file_info['size_mb'],
-                        'created': created_time,
-                        'updated': updated_time,
-                        'public_url': file_info['public_url']
-                    })
-            
-            # Sort by creation time (newest first), filtering out None values
-            video_files = [v for v in video_files if v['created'] is not None]
-            video_files.sort(key=lambda x: x['created'], reverse=True)
-            
-            return video_files
-            
-        except Exception as e:
-            Logger.error(f"Failed to get available videos: {e}")
-            return []
-    
-    def select_next_video(self, uploaded_videos: List[Dict[str, str]]) -> Dict[str, Any]:
-        """
-        Select the next video to process based on upload history.
-        
-        Args:
-            uploaded_videos: List of already uploaded videos
-            
-        Returns:
-            Selected video dictionary or None if no new videos
-        """
-        try:
-            available_videos = self.get_available_videos()
-            
-            # Filter out already uploaded videos
-            uploaded_video_names = [item["video"] for item in uploaded_videos]
-            new_videos = [v for v in available_videos if v['name'] not in uploaded_video_names]
-            
-            if not new_videos:
-                return None
-            
-            # Select the most recent new video
-            selected_video = new_videos[0]
-            
-            # Optional: Check for minimum video quality/size
-            if selected_video['size'] < 1024 * 1024:  # Less than 1MB
-                Logger.warning(f"Selected video {selected_video['name']} is very small ({selected_video['size']} bytes)")
-            
-            return selected_video
-            
-        except Exception as e:
-            Logger.error(f"Failed to select next video: {e}")
-            return None
-    
+        """Return sorted video metadata dictionaries."""
+        records = self.scan_folder(VIDEO_FOLDER, extensions=VIDEO_EXTENSIONS)
+        payloads = [self._record_payload(record) for record in records if record.created]
+        payloads.sort(key=lambda item: item["created"], reverse=True)
+        return payloads
+
+    def select_next_video(self, uploaded_videos: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
+        """Return the newest video that has not yet been uploaded."""
+        uploaded_names = {item.get("video") for item in uploaded_videos}
+        for video in self.get_available_videos():
+            if video["name"] not in uploaded_names:
+                if video["size"] < 1024 * 1024:
+                    Logger.warning(f"Selected video {video['name']} is very small ({video['size']} bytes)")
+                return video
+        return None
+
     def get_audio_options(self) -> List[Dict[str, Any]]:
-        """
-        Get list of available audio files from music_uploads folder.
-        
-        Returns:
-            List of audio file dictionaries with metadata
-        """
-        try:
-            all_files = self.scan_folder("music_uploads/")
-            
-            # Filter for audio files only
-            audio_extensions = ['.mp3', '.wav', '.m4a', '.aac', '.flac']
-            audio_files = []
-            
-            for file_info in all_files:
-                if any(file_info['name'].lower().endswith(ext) for ext in audio_extensions):
-                    # Get blob for additional metadata
-                    blob = self.bucket.blob(file_info['name'])
-                    blob.reload()
-                    
-                    audio_files.append({
-                        'name': file_info['name'],
-                        'size': blob.size,
-                        'size_mb': file_info['size_mb'],
-                        'created': blob.time_created,
-                        'public_url': file_info['public_url']
-                    })
-            
-            return audio_files
-            
-        except Exception as e:
-            Logger.error(f"Failed to get audio options: {e}")
-            return []
-    
-    def select_random_audio(self, exclude_recent: int = None) -> Dict[str, Any]:
-        """
-        Select a random audio file, optionally excluding recently used ones.
-        
-        Args:
-            exclude_recent: Number of most recent audio files to exclude
-            
-        Returns:
-            Selected audio file dictionary or None if no audio available
-        """
-        try:
-            audio_options = self.get_audio_options()
-            
-            if not audio_options:
-                return None
-                
-            if exclude_recent and len(audio_options) > exclude_recent:
-                # Exclude the N most recently used audio files
-                available_audio = audio_options[exclude_recent:]
-            else:
-                available_audio = audio_options
-            
-            if not available_audio:
-                return audio_options[0] if audio_options else None
-            
-            return random.choice(available_audio)
-            
-        except Exception as e:
-            Logger.error(f"Failed to select random audio: {e}")
+        """Return metadata for all audio files."""
+        records = self.scan_folder(AUDIO_FOLDER, extensions=AUDIO_EXTENSIONS)
+        return [self._record_payload(record) for record in records]
+
+    def select_random_audio(self, exclude_recent: Optional[int] = None) -> Optional[Dict[str, Any]]:
+        """Pick a random audio track, optionally skipping the most recent ones."""
+        audio_options = self.get_audio_options()
+        if not audio_options:
             return None
 
-def main():
-    """Test the unified GCS Manager with inventory functionality."""
-    parser = argparse.ArgumentParser(description="Unified Google Cloud Storage operations")
-    parser.add_argument("operation", choices=["inventory", "upload_file", "upload_folder", "upload_new_files", "get_videos", "get_audio"], 
-                       help="Operation to perform")
-    parser.add_argument("--config", type=str, default="autopost_config.enhanced.json", help="Path to config file")
-    parser.add_argument("--output", type=str, default="gcs_inventory_result.json", help="Output file for inventory")
-    parser.add_argument("--source_file", type=str, help="Path to source file for upload operations")
-    parser.add_argument("--destination_blob", type=str, help="Destination blob name for upload operations")
-    parser.add_argument("--source_folder", type=str, help="Path to source folder for upload operations")
-    parser.add_argument("--destination_folder", type=str, help="Destination folder prefix for upload operations")
-    
-    args = parser.parse_args()
-    
-    try:
-        # Initialize the manager
-        gcs_manager = GCSManager(args.config)
-        
-        if args.operation == "inventory":
-            print("🔍 Generating GCS inventory organized by file type...")
-            inventory_data = gcs_manager.generate_inventory(args.output)
-            print("✅ GCS inventory generated successfully!")
-            print(f"📊 Total files: {inventory_data['summary']['total_files']}")
-            print(f"💾 Total size: {inventory_data['summary']['total_size_mb']:.2f} MB")
-            print(f"📁 Output saved to: {args.output}")
-            
-            # Display breakdown by folder
-            print("\n📁 File breakdown by folder:")
-            for folder_url, files in inventory_data['files_by_folder'].items():
-                folder_name = folder_url.split('/')[-2] if folder_url.endswith('/') else folder_url.split('/')[-1]
-                print(f"  📁 {folder_name}: {len(files)} files")
-            
-            # Show sample files from each folder
-            print("\n📁 Sample files by folder:")
-            for folder_url, files in inventory_data['files_by_folder'].items():
-                folder_name = folder_url.split('/')[-2] if folder_url.endswith('/') else folder_url.split('/')[-1]
-                print(f"  📁 {folder_name} ({len(files)} files):")
-                for filename in files[:3]:  # Show first 3 files
-                    print(f"    - {filename}")
-                if len(files) > 3:
-                    print(f"    ... and {len(files) - 3} more files")
-                print()
-            
-        elif args.operation == "upload_file":
-            if not args.source_file or not args.destination_blob:
-                parser.error("upload_file operation requires --source_file and --destination_blob")
-            print(f"📤 Uploading {args.source_file}...")
-            success = gcs_manager.upload_file(args.source_file, args.destination_blob)
-            if success:
-                print("✅ File uploaded successfully!")
-            else:
-                print("❌ File upload failed!")
-                
-        elif args.operation == "upload_folder":
-            if not args.source_folder or not args.destination_folder:
-                parser.error("upload_folder operation requires --source_folder and --destination_folder")
-            print(f"📁 Uploading folder {args.source_folder}...")
-            success = gcs_manager.upload_folder(args.source_folder, args.destination_folder)
-            if success:
-                print("✅ Folder uploaded successfully!")
-            else:
-                print("❌ Folder upload failed!")
-                
-        elif args.operation == "upload_new_files":
-            if not args.source_folder or not args.destination_folder:
-                parser.error("upload_new_files operation requires --source_folder and --destination_folder")
-            print(f"🆕 Uploading new files from {args.source_folder}...")
-            success = gcs_manager.upload_new_files(args.source_folder, args.destination_folder)
-            if success:
-                print("✅ New files uploaded successfully!")
-            else:
-                print("❌ New files upload failed!")
-                
-        elif args.operation == "get_videos":
-            print("🎥 Getting available videos...")
-            videos = gcs_manager.get_available_videos()
-            print(f"✅ Found {len(videos)} videos")
-            for video in videos[:5]:  # Show first 5
-                print(f"  - {video['name']} ({video['size_mb']:.2f} MB)")
-                
-        elif args.operation == "get_audio":
-            print("🎵 Getting available audio...")
-            audio_files = gcs_manager.get_audio_options()
-            print(f"✅ Found {len(audio_files)} audio files")
-            for audio in audio_files[:5]:  # Show first 5
-                print(f"  - {audio['name']} ({audio['size_mb']:.2f} MB)")
-        
-    except Exception as e:
-        print(f"❌ Operation failed: {e}")
-        import traceback
-        traceback.print_exc()
+        if exclude_recent and len(audio_options) > exclude_recent:
+            available_audio = audio_options[exclude_recent:]
+        else:
+            available_audio = audio_options
 
-if __name__ == "__main__":
+        if not available_audio:
+            return audio_options[0]
+
+        return random.choice(available_audio)
+
+    # -------------------- Internals -------------------- #
+    def _require_setting(self, key: str) -> str:
+        value = self.config.get(key)
+        if not value:
+            raise ValueError(f"GCS setting '{key}' is required")
+        return value
+
+    @staticmethod
+    def _extract_metadata(metadata: Optional[Dict[str, str]]) -> Dict[str, str]:
+        if not metadata:
+            return {}
+        return {k: v for k, v in metadata.items() if not k.startswith(RESERVED_METADATA_PREFIX)}
+
+    def _public_url(self, blob_name: str) -> str:
+        sanitized = blob_name.lstrip("/")
+        return f"https://storage.googleapis.com/{self.bucket_name}/{sanitized}"
+
+    def _folder_url(self, folder: str) -> str:
+        base = folder if folder.endswith("/") else f"{folder}/"
+        return self._public_url(base)
+
+    @staticmethod
+    def _iter_local_files(base_path: Path) -> Iterator[Path]:
+        for path in base_path.rglob("*"):
+            if path.is_file():
+                yield path
+
+    @staticmethod
+    def _destination_name(prefix: str, relative_path: Path) -> str:
+        clean_prefix = prefix.strip().strip("/")
+        relative = relative_path.as_posix()
+        return f"{clean_prefix}/{relative}" if clean_prefix else relative
+
+    @staticmethod
+    def _record_payload(record: FileRecord) -> Dict[str, Any]:
+        return {
+            "name": record.name,
+            "size": record.size_bytes,
+            "size_mb": record.size_mb,
+            "created": record.created,
+            "updated": record.updated or record.created,
+            "public_url": record.public_url,
+            "metadata": record.metadata,
+        }
+
+    @staticmethod
+    def _normalize_folder_prefix(folder: str) -> str:
+        value = (folder or "").strip()
+        if not value:
+            return value
+        return value if value.endswith("/") else f"{value}/"
+
+
+def main() -> None:
+    """Simple CLI for ad-hoc operations."""
+    parser = argparse.ArgumentParser(description="Google Cloud Storage helper")
+    parser.add_argument(
+        "operation",
+        choices=["inventory", "upload_file", "upload_folder", "upload_new_files", "get_videos", "get_audio"],
+    )
+    parser.add_argument("--config", default="autopost_config.enhanced.json")
+    parser.add_argument("--output", default="gcs_inventory_result.json")
+    parser.add_argument("--source_file")
+    parser.add_argument("--destination_blob")
+    parser.add_argument("--source_folder")
+    parser.add_argument("--destination_folder", default="")
+
+    args = parser.parse_args()
+    manager = GCSManager(args.config)
+
+    if args.operation == "inventory":
+        inventory = manager.generate_inventory(args.output)
+        print(json.dumps(inventory, indent=2))
+    elif args.operation == "upload_file":
+        if not args.source_file or not args.destination_blob:
+            parser.error("--source_file and --destination_blob are required")
+        manager.upload_file(args.source_file, args.destination_blob)
+    elif args.operation == "upload_folder":
+        if not args.source_folder:
+            parser.error("--source_folder is required")
+        manager.upload_folder(args.source_folder, args.destination_folder or "")
+    elif args.operation == "upload_new_files":
+        if not args.source_folder:
+            parser.error("--source_folder is required")
+        manager.upload_new_files(args.source_folder, args.destination_folder or "")
+    elif args.operation == "get_videos":
+        print(json.dumps(manager.get_available_videos(), indent=2, default=str))
+    elif args.operation == "get_audio":
+        print(json.dumps(manager.get_audio_options(), indent=2, default=str))
+
+
+if __name__ == "__main__":  # pragma: no cover - manual entry point
     main()
