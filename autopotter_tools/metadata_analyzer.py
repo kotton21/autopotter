@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import base64
 import json
+import mimetypes
 import re
-import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
 from pydantic import BaseModel
 
@@ -38,92 +39,16 @@ class FramesMetadataBatch(BaseModel):
 
 class BaseMetadataAnalyzer:
     def submit(self, request: FrameAnalysisRequest) -> List[MediaFrameMetadata]:
+        """Return metadata rows for a single frame request."""
         raise NotImplementedError
 
     def flush(self) -> List[MediaFrameMetadata]:
+        """Return any buffered results that still need to be emitted."""
         return []
 
-
-class SimpleMetadataAnalyzer(BaseMetadataAnalyzer):
-    """
-    Lightweight stand-in for GPT metadata extraction.
-    Uses filename cues + orientation hints to populate MediaFrameMetadata fields.
-    """
-
-    MATERIAL_KEYWORDS = {
-        "clay": "clay",
-        "porcelain": "porcelain",
-        "terra": "terracotta",
-        "timelapse": "timelapse",
-        "rv": "rv_series",
-    }
-
-    ACTIVITY_KEYWORDS = {
-        "timelapse": "timelapse",
-        "print": "3d_printing",
-        "gcode": "gcode_render",
-        "process": "process_detail",
-        "reveal": "reveal",
-    }
-
-    def submit(self, request: FrameAnalysisRequest) -> List[MediaFrameMetadata]:
-        metadata = self._describe_frame(request)
-        return [metadata]
-
-    def _describe_frame(self, request: FrameAnalysisRequest) -> MediaFrameMetadata:
-        shot_type = self._infer_shot_type(request.orientation)
-        activities = self._collect_keywords(request.filename_tokens, self.ACTIVITY_KEYWORDS)
-        materials = self._collect_keywords(request.filename_tokens, self.MATERIAL_KEYWORDS)
-
-        use_case = None
-        if "timelapse" in activities:
-            use_case = "process_detail"
-        elif request.timestamp is not None and request.timestamp < 1.0:
-            use_case = "hook"
-
-        quality_notes = "Auto-generated metadata from filename heuristics."
-
-        embedding_hints: List[str] = [
-            shot_type or "",
-            use_case or "",
-            request.orientation,
-        ]
-        embedding_hints.extend(activities)
-        embedding_hints.extend(materials)
-
-        return MediaFrameMetadata(
-            frame_id=request.frame_id,
-            parent_media_id=request.parent_media_id,
-            timestamp=request.timestamp,
-            image_path=str(request.preview_path),
-            shot_type=shot_type,
-            emotional_tone="artistic" if "timelapse" in activities else "calming",
-            use_case=use_case,
-            activities=activities,
-            materials=materials,
-            objects_detected=[],
-            quality_notes=quality_notes,
-            embedding_hints=[hint for hint in embedding_hints if hint],
-        )
-
-    @staticmethod
-    def _infer_shot_type(orientation: str) -> str:
-        if orientation == "portrait":
-            return "closeup"
-        return "wide"
-
-    @staticmethod
-    def _collect_keywords(tokens: Sequence[str], vocabulary: Dict[str, str]) -> List[str]:
-        collected: List[str] = []
-        for token in tokens:
-            normalized = re.sub(r"[^a-z0-9]+", "", token.lower())
-            if not normalized:
-                continue
-            for pattern, label in vocabulary.items():
-                if pattern in normalized:
-                    collected.append(label)
-        return sorted(set(collected))
-
+    def get_usage_totals(self) -> Dict[str, int]:
+        """Return aggregate token usage information, if available."""
+        return {}
 
 DEFAULT_SYSTEM_INSTRUCTIONS = dedent(
     """
@@ -156,91 +81,154 @@ class GPTMetadataAnalyzer(BaseMetadataAnalyzer):
         config: Dict[str, object],
         frames_per_call: int = 10,
     ):
+        """Configure GPT metadata analysis, batching, and prompt instructions."""
         self.config_manager = config_manager
         self.frames_per_call = max(1, frames_per_call)
         self.buffer: List[FrameAnalysisRequest] = []
+        self.total_input_tokens: int = 0
+        self.total_output_tokens: int = 0
+        self.total_image_tokens: int = 0
 
         previous_response_id = config.get("metadata_previous_response_id")
-        model = config.get("gpt_model")
-        use_prev = bool(config.get("gpt_use_previous_response_id", False))
+        model = config.get("metadata_gpt_model") or config.get("gpt_model")
+        use_prev = bool(config.get("metadata_use_previous_response_id", False))
         if GPTAPI is None:
             raise RuntimeError(
                 "GPTAPI is unavailable. Install OpenAI dependencies to use GPT metadata analysis."
             )
-        self.gpt_client = GPTAPI(
-            model=model,
-            use_previous_response_id=use_prev,
-            previous_response_id=previous_response_id,
-        )
+        try:
+            # Initialize GPT client with optional response-id reuse for threading.
+            self.gpt_client = GPTAPI(
+                model=model,
+                use_previous_response_id=use_prev,
+                previous_response_id=previous_response_id,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                "Failed to initialize GPT client for metadata analysis."
+            ) from exc
         self.prompt_context = str(
             config.get("metadata_prompt_instructions") or DEFAULT_PROMPT_INSTRUCTIONS
         )
         self.dev_instructions = str(
             config.get("metadata_system_prompt") or DEFAULT_SYSTEM_INSTRUCTIONS
-        )
+        ) + "\n" + str( 
+            config.get("campaign_specific_analysis_prompt") or ""
+        ).strip()
         Logger.info("Initialized GPTMetadataAnalyzer in GPT mode")
 
     def submit(self, request: FrameAnalysisRequest) -> List[MediaFrameMetadata]:
+        """Queue a frame for GPT processing and emit when the batch fills."""
         self.buffer.append(request)
         if len(self.buffer) >= self.frames_per_call:
             return self._process_buffer()
         return []
 
     def flush(self) -> List[MediaFrameMetadata]:
+        """Force processing of partially filled batches."""
         if not self.buffer:
             return []
         return self._process_buffer()
 
     def _process_buffer(self) -> List[MediaFrameMetadata]:
+        """Send queued frames to GPT and convert the structured response."""
         batch = self.buffer
         self.buffer = []
+        # Build the JSON payload that becomes part of the prompt for each frame.
         payload = [
             {
                 "frame_id": req.frame_id,
                 "parent_media_id": req.parent_media_id,
                 "image_path": str(req.preview_path),
                 "timestamp": req.timestamp,
-                "orientation": req.orientation,
-                "filename_tokens": list(req.filename_tokens),
             }
             for req in batch
         ]
 
-        prompt = dedent(
-            f"""
-            {self.prompt_context}
-
-            Frames JSON:
-            {json.dumps(payload, indent=2)}
-            """
-        ).strip()
+        # Alternate instruction text and encoded images to satisfy the multimodal API shape.
+        content_blocks: List[Dict[str, object]] = [
+            {"type": "input_text", "text": self.prompt_context}
+        ]
+        image_stats: List[Dict[str, object]] = []
+        for descriptor in payload:
+            # Provide structured JSON describing the frame for textual context.
+            content_blocks.append(
+                {
+                    "type": "input_text",
+                    "text": f"Frame request:\n{json.dumps(descriptor, indent=2)}",
+                }
+            )
+            image_url, byte_size = self._encode_image(Path(descriptor["image_path"]))
+            # Follow each description with the actual image data URL.
+            content_blocks.append(
+                {
+                    "type": "input_image",
+                    "image_url": image_url,
+                }
+            )
+            # Track bytes for logging/observability of image payload sizes.
+            image_stats.append(
+                {"frame_id": descriptor["frame_id"], "bytes": byte_size}
+            )
 
         try:
             response = self.gpt_client.prompt(
-                user_instructions=prompt,
+                user_instructions=content_blocks,
                 developer_instructions=self.dev_instructions,
                 text_format=FramesMetadataBatch,
             )
             results = response.output_parsed.frames  # type: ignore[attr-defined]
+
+            usage = getattr(response, "usage", None)
+            image_tokens = "?"
+            if usage:
+                input_tokens = getattr(usage, "input_tokens", 0) or 0
+                output_tokens = getattr(usage, "output_tokens", 0) or 0
+                self.total_input_tokens += int(input_tokens)
+                self.total_output_tokens += int(output_tokens)
+
+                if hasattr(usage, "input_tokens_details"):
+                    image_tokens_value = getattr(
+                        usage.input_tokens_details, "image_tokens", 0
+                    ) or 0
+                    self.total_image_tokens += int(image_tokens_value)
+                    image_tokens = image_tokens_value
+                else:
+                    image_tokens = "?"
+            # Track image token spend for observability on GPT usage.
+            Logger.info(
+                "Analyzed %s frames (%s bytes) -> image_tokens=%s"
+                % (
+                    len(image_stats),
+                    sum(item["bytes"] for item in image_stats),
+                    image_tokens,
+                )
+            )
+
             if self.gpt_client.previous_response_id:
                 self.config_manager.set(
                     "metadata_previous_response_id",
                     self.gpt_client.previous_response_id,
                 )
             return results
-        except Exception as exc:  # pragma: no cover - fallback path
-            Logger.error(f"GPT metadata analysis failed: {exc}. Falling back to heuristic analyzer.")
-            fallback = SimpleMetadataAnalyzer()
-            flattened: List[MediaFrameMetadata] = []
-            for request in payload:
-                frame_request = FrameAnalysisRequest(
-                    frame_id=request["frame_id"],
-                    parent_media_id=request["parent_media_id"],
-                    timestamp=request["timestamp"],
-                    preview_path=Path(request["image_path"]),
-                    orientation=request["orientation"],
-                    filename_tokens=request["filename_tokens"],
-                )
-                flattened.extend(fallback.submit(frame_request))
-            return flattened
+        except Exception as exc:  # pragma: no cover
+            Logger.error(f"GPT metadata analysis failed: {exc}")
+            raise
+
+    def _encode_image(self, path: Path) -> Tuple[str, int]:
+        """Return a data URL and byte length for embedding the preview in GPT prompts."""
+        raw = path.read_bytes()
+        mime_type, _ = mimetypes.guess_type(path.name)
+        mime_type = mime_type or "image/jpeg"
+        # data: URLs let us send the binary inline without an external host.
+        encoded = base64.b64encode(raw).decode("utf-8")
+        data_url = f"data:{mime_type};base64,{encoded}"
+        return data_url, len(raw)
+
+    def get_usage_totals(self) -> Dict[str, int]:
+        return {
+            "input_tokens": self.total_input_tokens,
+            "output_tokens": self.total_output_tokens,
+            "image_tokens": self.total_image_tokens,
+        }
 

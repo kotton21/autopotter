@@ -18,9 +18,39 @@ This system analyzes your entire media library by extracting key frames from vid
 
 7. Semantic Embedding Search: Finds visually and conceptually similar frames using embedding similarity.
 
-8. Clip Lookup Resolver: Maps a frame back to its original media file and exact timestamp for precise clip extraction. Maps groups of frames from the same file to a timestamp and duration.
+    Notes: It's clear that the embedding needs more info. Include the gcs library notes into the data so that filenames can be used. Is parent data included?? Would this data distract the model from it's purpose???
 
-9. AI Tool Interface: Exposes DB search and metadata functions as tools that the AI agent can call during video generation.
+    Need to develope some kind of readable summary of the database: How? Have gpt summarize the text content of the database so that it can create search parameters with some confidence. How??? Cluster all the parent embeddings then ouput the closest actual frame item as a description?
+
+    
+
+    ***⚠️ change the batching so that images are sent in batches, but videos are sent one at a time?? Should request some summary of what the video is about in addition to the frame notes? Or, change my structure so that there is no frame... just metadata blobs for images, and metadata blobs for videos... How do I want search to work? I think that defines the structure!!!***
+
+     ✅ organize the rest of the files into the sync folder, then execute.. perhaps, come up with a scheme to only add new media, not redo old media. 
+
+      ⚠️ Next Step: sync db, then build toolset
+
+      Later: validate Databse frames (count, and have parent)
+      
+
+8. ✅ Clip Lookup Resolver: Maps a frame back to its original media file and exact timestamp for precise clip extraction. Maps groups of frames from the same file to a timestamp and duration.
+
+9. AI Tool Interface: Exposes DB search and metadata functions as tools that the AI agent can call during video generation. Tell gpt that if searches don't produce good results, try again. Can loop... I think I should just give it the keyword search, the semantic search tool, and a tool for getting everything for a given video (so it can see where to start/stop) and see what it generates!!
+
+    Keep major logic in my pipeline, give openai tools which my stuff cant do:
+
+    ***Searches***
+    - Keyword search
+    - Semantic Search
+    - Filename Search.. (use keyword search on the fileid??)
+    
+    ***Tools***
+    - JSON Validator
+    
+    ***Expected Output***
+    - Run search or tool
+    - Done: with loops, jsonvalidated, switch back to my pipeline for vid creation
+
 
 10. System Testing & Ops: Automated tests plus orchestration scripts that validate the pipeline end-to-end and keep preview assets in sync with the media library.
 
@@ -88,8 +118,9 @@ class MediaFrameMetadata(BaseModel):
     activities: List[str] = []
     materials: List[str] = []
     objects_detected: List[str] = []
-    quality_notes: Optional[str]
+    image_qualities: List[str] = []
     embedding_hints: List[str] = []
+    description: Optional[str]
 ```
 
 ### 2.3 Frame Embedding

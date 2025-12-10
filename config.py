@@ -11,9 +11,14 @@ class ConfigManager:
     Provides flat key-value structure with environment variable resolution.
     """
     
-    def __init__(self, config_path: str = "autopost_config.enhanced.json"):
+    def __init__(
+        self,
+        config_path: str = "autopost_config.enhanced.json",
+        overrides: Optional[Dict[str, Any]] = None,
+    ):
         self.config_path = config_path
         self.temp_config_path = config_path.replace('.json', '.temp.json')
+        self.overrides = dict(overrides) if overrides else {}
         self.config = {}
         self.load_config()
     
@@ -52,6 +57,12 @@ class ConfigManager:
             
             # Resolve environment variables
             self.config = self.resolve_environment_variables(self.config)
+            
+            if self.overrides:
+                self.config.update(self.overrides)
+                Logger.info(
+                    f"Applied {len(self.overrides)} override configuration parameters"
+                )
             
             Logger.info("Configuration loaded successfully")
             return self.config
@@ -222,6 +233,7 @@ class ConfigManager:
         
         Logger.info(f"Default configuration created at {self.config_path}")
         self.config = default_config
+
     
     
     
@@ -399,6 +411,7 @@ _config_manager: Optional[ConfigManager] = None
 def get_config(
     config_path: str = "autopost_config.enhanced.json",
     force_reload: bool = False,
+    overrides: Optional[Dict[str, Any]] = None,
 ) -> ConfigManager:
     """
     Get a shared configuration manager instance.
@@ -406,14 +419,20 @@ def get_config(
     Args:
         config_path: Path to the configuration file.
         force_reload: If True, rebuilds the ConfigManager even if one exists.
+        overrides: Optional dictionary of in-memory values to overlay on the config.
     """
     global _config_manager
     
     if force_reload or _config_manager is None:
         if force_reload and _config_manager is not None:
             Logger.info("Force reloading configuration manager")
-        _config_manager = ConfigManager(config_path)
+        _config_manager = ConfigManager(config_path, overrides=overrides)
     else:
+        if overrides:
+            Logger.warning(
+                "Config overrides were provided but an existing ConfigManager instance "
+                "is being reused; overrides ignored. Use force_reload to apply them."
+            )
         if _config_manager.config_path != config_path:
             Logger.warning(
                 f"Config already loaded from {_config_manager.config_path}; ignoring new path {config_path}"

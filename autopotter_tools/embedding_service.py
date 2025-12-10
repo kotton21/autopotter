@@ -38,8 +38,9 @@ class EmbeddingService:
             " ".join(metadata.activities),
             " ".join(metadata.materials),
             " ".join(metadata.objects_detected),
-            metadata.quality_notes or "",
+            " ".join(metadata.image_qualities),
             " ".join(metadata.embedding_hints),
+            metadata.description or "",
         ]
         return " ".join(part for part in parts if part).strip()
 

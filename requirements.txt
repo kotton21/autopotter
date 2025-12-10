@@ -5,3 +5,6 @@ pydantic>=2.7,<3
 Pillow
 opencv-python-headless
 pytest
+numpy
+scikit-learn
+numpy

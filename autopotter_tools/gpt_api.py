@@ -71,7 +71,7 @@ class GPTAPI:
     
     def prompt(
         self,
-        user_instructions: Optional[str] = "hello world",
+        user_instructions: Optional[Any] = "hello world",
         developer_instructions: Optional[str] = None,
         text_format: Optional[Any] = None
     ):
@@ -91,16 +91,29 @@ class GPTAPI:
         
         try:
             # Prepare API call parameters
+            user_content = user_instructions
+            if isinstance(user_instructions, str):
+                user_content = [{"type": "input_text", "text": user_instructions}]
+            elif isinstance(user_instructions, list):
+                user_content = user_instructions
+            else:
+                user_content = [user_instructions]
+
             api_params = {
                 "model": self.model,
                 "input": [
-                    {"role": "user", "content": user_instructions}
+                    {"role": "user", "content": user_content}
                 ]
             }
             Logger.debug("Added user instructions")
             
             if developer_instructions:
-                api_params["input"].append({"role": "developer", "content": developer_instructions})
+                dev_content = (
+                    [{"type": "input_text", "text": developer_instructions}]
+                    if isinstance(developer_instructions, str)
+                    else developer_instructions
+                )
+                api_params["input"].append({"role": "developer", "content": dev_content})
                 Logger.debug("Added developer instructions")
             
             

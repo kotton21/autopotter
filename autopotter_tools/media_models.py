@@ -30,23 +30,36 @@ class MediaFrameMetadata(BaseModel):
     activities: List[str] = Field(default_factory=list)
     materials: List[str] = Field(default_factory=list)
     objects_detected: List[str] = Field(default_factory=list)
-    quality_notes: Optional[str] = None
+    image_qualities: List[str] = Field(default_factory=list)
     embedding_hints: List[str] = Field(default_factory=list)
+    description: Optional[str] = None
 
     def keyword_blob(self) -> str:
         """Return a flat string suitable for LIKE queries."""
         tokens: List[str] = []
-        attrs = [
-            self.shot_type,
-            self.emotional_tone,
-            self.use_case,
-            self.quality_notes,
-        ]
-        tokens.extend([a for a in attrs if a])
-        tokens.extend(self.activities)
-        tokens.extend(self.materials)
-        tokens.extend(self.objects_detected)
-        tokens.extend(self.embedding_hints)
+
+        def _extend(value) -> None:
+            if not value:
+                return
+            if isinstance(value, str):
+                tokens.append(value)
+            elif isinstance(value, (list, tuple, set)):
+                for item in value:
+                    if item:
+                        tokens.append(str(item))
+            else:
+                tokens.append(str(value))
+
+        _extend(self.shot_type)
+        _extend(self.emotional_tone)
+        _extend(self.use_case)
+        _extend(self.activities)
+        _extend(self.materials)
+        _extend(self.objects_detected)
+        _extend(self.image_qualities)
+        _extend(self.embedding_hints)
+        _extend(self.description)
+
         return " ".join(tokens).lower()
 
 
