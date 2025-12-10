@@ -30,6 +30,21 @@ This system analyzes your entire media library by extracting key frames from vid
 
       ⚠️ Next Step: sync db, then build toolset
 
+
+Next 2 phases. build toolset for the ageng, then give the agent the ability to call the search tools on the database in order to generate it's videos. 
+ 
+First: 
+agent_db_tools:
+TOOLS = [ the list of callable tools for the model. use the example function definition defined here https://platform.openai.com/docs/guides/function-calling ]
+ - check_get_db: checks local file system for a sqlite db with a path/name provided by the the config file "agent_metadata_database". Retraives it from gcs using the same path, if it doesn't exist locally. Fails hard if it can't accomplish. This should run on class init.
+ - search_keyword(keyword, limit): runs the keyword search to provide results to the agent
+ - search_semantic(text, limit): runs the semantic search to provide results to the agent
+ - get_agent_tool_defs -> List : Produces a list of tools for the agent, as specified here: https://platform.openai.com/docs/guides/function-calling
+
+ Seccond: modify enhanced_autodraft to allow the ai to make tool calls (specifically the ones surfaced by agent_db_tools)in a loop (maximum of 3 loops speced by config).
+
+ All new config parameters should be prefixed with "agentdraft_". create the first phase, but ask if any clarification is needed. Keep it as simple and straightforward as possible to accoplish the goal
+
       Later: validate Databse frames (count, and have parent)
       
 
