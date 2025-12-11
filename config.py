@@ -293,9 +293,9 @@ class ConfigManager:
             url = "https://graph.facebook.com/v22.0/oauth/access_token"
             params = {
                 "grant_type": "fb_exchange_token",
-                "client_id": self.get('instagram_app_id'),
-                "client_secret": self.get('instagram_app_secret'),
-                "fb_exchange_token": self.get('instagram_access_token')
+                "client_id": self.config.get('instagram_app_id'),
+                "client_secret": self.config.get('instagram_app_secret'),
+                "fb_exchange_token": self.config.get('instagram_access_token')
             }
             
             response = requests.get(url, params=params)
