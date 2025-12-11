@@ -41,6 +41,7 @@ def run_autopotter_workflow(
     try:
         # Load config to check for analytics reload option
         config = get_config(config_file, overrides=overrides)
+        Logger.debug(f"{config}")
         # config = ConfigManager(config_file)
         
         
@@ -213,9 +214,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.overrides:
-        overrides = dict(item.split('=') for item in args.overrides.split(' '))
+        print(f"Overrides: {args.overrides}")
+        overrides = json.loads(args.overrides)
+        print(f"Overrides: {overrides}")
     else:
         overrides = None
-    
-    success = run_autopotter_workflow(args.config, args.draft_outfile, args.prompt, args.video_outfile, args.video_draft_only, args.overrides)
+    print(f"Overrides: {overrides}")
+    success = run_autopotter_workflow(args.config, args.draft_outfile, args.prompt, args.video_outfile, args.video_draft_only, overrides)
     sys.exit(0 if success else 1)

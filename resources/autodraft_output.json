@@ -1,0 +1,200 @@
+{
+  "prompt": "Output 1 complete idea for Autopotter social media posts.",
+  "response": "{\"videos\":[{\"title\":\"Oddly Satisfying Clay Spiral (Macro Reel)\",\"video_strategy\":\"Reels-first macro ASMR + micro-education + question CTA to boost comments and watch time. Uses tight closeups, Ken Burns motion on stills, and simple on-screen facts (layer height/speed).\",\"video_caption\":\"Can you spot the spiral? \ud83d\udc40\ud83c\udf00\\n1 mm layers at 25 mm/s \u2014 printed by Autopotter.\\nMatte or glossy glaze for this one?\\n\\nFollow @autopotter for more robot-made pottery.\\n\\n#3dprinting #ceramics #clay #pottery #roboticart #additivemanufacturing #makers #oddlysatisfying #asmr #reels\",\"json2video_config_str\":\"{\\n  \\\"version\\\": \\\"1.0\\\",\\n  \\\"output\\\": {\\\"width\\\": 1080, \\\"height\\\": 1920, \\\"fps\\\": 30, \\\"duration\\\": 12},\\n  \\\"tracks\\\": [\\n    {\\n      \\\"type\\\": \\\"image\\\",\\n      \\\"src\\\": \\\"/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tt02.gcode_20250510_2311_frame0001.jpg\\\",\\n      \\\"start\\\": 0,\\n      \\\"duration\\\": 4,\\n      \\\"fit\\\": \\\"cover\\\",\\n      \\\"animations\\\": [\\n        {\\\"type\\\": \\\"kenburns\\\", \\\"from\\\": {\\\"scale\\\": 1.0, \\\"x\\\": 0.5, \\\"y\\\": 0.55}, \\\"to\\\": {\\\"scale\\\": 1.15, \\\"x\\\": 0.52, \\\"y\\\": 0.48}, \\\"easing\\\": \\\"easeInOut\\\"}\\n      ],\\n      \\\"filters\\\": [{\\\"type\\\": \\\"sharpen\\\", \\\"amount\\\": 0.1}]\\n    },\\n    {\\n      \\\"type\\\": \\\"image\\\",\\n      \\\"src\\\": \\\"/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tu20.gcode_20250429_1731_frame0001.jpg\\\",\\n      \\\"start\\\": 4,\\n      \\\"duration\\\": 4,\\n      \\\"fit\\\": \\\"cover\\\",\\n      \\\"animations\\\": [\\n        {\\\"type\\\": \\\"kenburns\\\", \\\"from\\\": {\\\"scale\\\": 1.1, \\\"x\\\": 0.48, \\\"y\\\": 0.5}, \\\"to\\\": {\\\"scale\\\": 1.0, \\\"x\\\": 0.5, \\\"y\\\": 0.5}, \\\"easing\\\": \\\"easeInOut\\\"}\\n      ]\\n    },\\n    {\\n      \\\"type\\\": \\\"image\\\",\\n      \\\"src\\\": \\\"/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tu10.gcode_20250429_1548_frame0000.jpg\\\",\\n      \\\"start\\\": 8,\\n      \\\"duration\\\": 4,\\n      \\\"fit\\\": \\\"cover\\\",\\n      \\\"animations\\\": [\\n        {\\\"type\\\": \\\"kenburns\\\", \\\"from\\\": {\\\"scale\\\": 1.0, \\\"x\\\": 0.5, \\\"y\\\": 0.5}, \\\"to\\\": {\\\"scale\\\": 1.12, \\\"x\\\": 0.5, \\\"y\\\": 0.45}, \\\"easing\\\": \\\"easeInOut\\\"}\\n      ]\\n    }\\n  ],\\n  \\\"overlays\\\": [\\n    {\\n      \\\"type\\\": \\\"rect\\\",\\n      \\\"start\\\": 0,\\n      \\\"end\\\": 12,\\n      \\\"x\\\": 0,\\n      \\\"y\\\": 0.82,\\n      \\\"width\\\": 1,\\n      \\\"height\\\": 0.18,\\n      \\\"fill\\\": \\\"#000000\\\",\\n      \\\"opacity\\\": 0.22\\n    },\\n    {\\n      \\\"type\\\": \\\"text\\\",\\n      \\\"text\\\": \\\"Oddly satisfying clay spiral\\\",\\n      \\\"start\\\": 0,\\n      \\\"end\\\": 2.2,\\n      \\\"x\\\": 0.5,\\n      \\\"y\\\": 0.1,\\n      \\\"anchor\\\": \\\"center\\\",\\n      \\\"style\\\": {\\\"font\\\": \\\"Inter\\\", \\\"size\\\": 60, \\\"color\\\": \\\"#FFFFFF\\\", \\\"weight\\\": 700, \\\"shadow\\\": true}\\n    },\\n    {\\n      \\\"type\\\": \\\"text\\\",\\n      \\\"text\\\": \\\"1 mm layers \u2022 25 mm/s\\\",\\n      \\\"start\\\": 2.2,\\n      \\\"end\\\": 6.8,\\n      \\\"x\\\": 0.5,\\n      \\\"y\\\": 0.1,\\n      \\\"anchor\\\": \\\"center\\\",\\n      \\\"style\\\": {\\\"font\\\": \\\"Inter\\\", \\\"size\\\": 56, \\\"color\\\": \\\"#FFFFFF\\\", \\\"weight\\\": 700, \\\"shadow\\\": true}\\n    },\\n    {\\n      \\\"type\\\": \\\"text\\\",\\n      \\\"text\\\": \\\"Matte or glossy glaze?\\\",\\n      \\\"start\\\": 6.8,\\n      \\\"end\\\": 12,\\n      \\\"x\\\": 0.5,\\n      \\\"y\\\": 0.1,\\n      \\\"anchor\\\": \\\"center\\\",\\n      \\\"style\\\": {\\\"font\\\": \\\"Inter\\\", \\\"size\\\": 56, \\\"color\\\": \\\"#FFFFFF\\\", \\\"weight\\\": 700, \\\"shadow\\\": true}\\n    },\\n    {\\n      \\\"type\\\": \\\"text\\\",\\n      \\\"text\\\": \\\"@autopotter\\\",\\n      \\\"start\\\": 0,\\n      \\\"end\\\": 12,\\n      \\\"x\\\": 0.5,\\n      \\\"y\\\": 0.9,\\n      \\\"anchor\\\": \\\"center\\\",\\n      \\\"style\\\": {\\\"font\\\": \\\"Inter\\\", \\\"size\\\": 40, \\\"color\\\": \\\"#FFFFFF\\\", \\\"weight\\\": 700, \\\"shadow\\\": true}\\n    }\\n  ],\\n  \\\"transitions\\\": [\\n    {\\\"type\\\": \\\"crossfade\\\", \\\"start\\\": 3.8, \\\"duration\\\": 0.4},\\n    {\\\"type\\\": \\\"crossfade\\\", \\\"start\\\": 7.8, \\\"duration\\\": 0.4}\\n  ],\\n  \\\"audio\\\": [\\n    {\\\"type\\\": \\\"note\\\", \\\"text\\\": \\\"Add trending satisfying/ASMR track in IG Reels editor\\\"}\\n  ]\\n}\",\"reasoning\":\"We didn\u2019t find a fresh analytics report, so we leaned into proven Reels behavior: macro \u2018oddly satisfying\u2019 visuals + quick build stats + a glaze-choice question to drive comments. Assets are tight closeups from your library for maximum texture detail: a882de7a9a3b:f0001, 0612dd0faa56:f0001, and 56d298b23fc3:f0000. Ken Burns motion keeps stills dynamic, and short text beats deliver value without blocking the nozzle area.\"}]}",
+  "parsed_output": {
+    "videos": [
+      {
+        "title": "Oddly Satisfying Clay Spiral (Macro Reel)",
+        "video_strategy": "Reels-first macro ASMR + micro-education + question CTA to boost comments and watch time. Uses tight closeups, Ken Burns motion on stills, and simple on-screen facts (layer height/speed).",
+        "video_caption": "Can you spot the spiral? \ud83d\udc40\ud83c\udf00\n1 mm layers at 25 mm/s \u2014 printed by Autopotter.\nMatte or glossy glaze for this one?\n\nFollow @autopotter for more robot-made pottery.\n\n#3dprinting #ceramics #clay #pottery #roboticart #additivemanufacturing #makers #oddlysatisfying #asmr #reels",
+        "json2video_config_str": "{\n  \"version\": \"1.0\",\n  \"output\": {\"width\": 1080, \"height\": 1920, \"fps\": 30, \"duration\": 12},\n  \"tracks\": [\n    {\n      \"type\": \"image\",\n      \"src\": \"/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tt02.gcode_20250510_2311_frame0001.jpg\",\n      \"start\": 0,\n      \"duration\": 4,\n      \"fit\": \"cover\",\n      \"animations\": [\n        {\"type\": \"kenburns\", \"from\": {\"scale\": 1.0, \"x\": 0.5, \"y\": 0.55}, \"to\": {\"scale\": 1.15, \"x\": 0.52, \"y\": 0.48}, \"easing\": \"easeInOut\"}\n      ],\n      \"filters\": [{\"type\": \"sharpen\", \"amount\": 0.1}]\n    },\n    {\n      \"type\": \"image\",\n      \"src\": \"/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tu20.gcode_20250429_1731_frame0001.jpg\",\n      \"start\": 4,\n      \"duration\": 4,\n      \"fit\": \"cover\",\n      \"animations\": [\n        {\"type\": \"kenburns\", \"from\": {\"scale\": 1.1, \"x\": 0.48, \"y\": 0.5}, \"to\": {\"scale\": 1.0, \"x\": 0.5, \"y\": 0.5}, \"easing\": \"easeInOut\"}\n      ]\n    },\n    {\n      \"type\": \"image\",\n      \"src\": \"/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tu10.gcode_20250429_1548_frame0000.jpg\",\n      \"start\": 8,\n      \"duration\": 4,\n      \"fit\": \"cover\",\n      \"animations\": [\n        {\"type\": \"kenburns\", \"from\": {\"scale\": 1.0, \"x\": 0.5, \"y\": 0.5}, \"to\": {\"scale\": 1.12, \"x\": 0.5, \"y\": 0.45}, \"easing\": \"easeInOut\"}\n      ]\n    }\n  ],\n  \"overlays\": [\n    {\n      \"type\": \"rect\",\n      \"start\": 0,\n      \"end\": 12,\n      \"x\": 0,\n      \"y\": 0.82,\n      \"width\": 1,\n      \"height\": 0.18,\n      \"fill\": \"#000000\",\n      \"opacity\": 0.22\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"Oddly satisfying clay spiral\",\n      \"start\": 0,\n      \"end\": 2.2,\n      \"x\": 0.5,\n      \"y\": 0.1,\n      \"anchor\": \"center\",\n      \"style\": {\"font\": \"Inter\", \"size\": 60, \"color\": \"#FFFFFF\", \"weight\": 700, \"shadow\": true}\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"1 mm layers \u2022 25 mm/s\",\n      \"start\": 2.2,\n      \"end\": 6.8,\n      \"x\": 0.5,\n      \"y\": 0.1,\n      \"anchor\": \"center\",\n      \"style\": {\"font\": \"Inter\", \"size\": 56, \"color\": \"#FFFFFF\", \"weight\": 700, \"shadow\": true}\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"Matte or glossy glaze?\",\n      \"start\": 6.8,\n      \"end\": 12,\n      \"x\": 0.5,\n      \"y\": 0.1,\n      \"anchor\": \"center\",\n      \"style\": {\"font\": \"Inter\", \"size\": 56, \"color\": \"#FFFFFF\", \"weight\": 700, \"shadow\": true}\n    },\n    {\n      \"type\": \"text\",\n      \"text\": \"@autopotter\",\n      \"start\": 0,\n      \"end\": 12,\n      \"x\": 0.5,\n      \"y\": 0.9,\n      \"anchor\": \"center\",\n      \"style\": {\"font\": \"Inter\", \"size\": 40, \"color\": \"#FFFFFF\", \"weight\": 700, \"shadow\": true}\n    }\n  ],\n  \"transitions\": [\n    {\"type\": \"crossfade\", \"start\": 3.8, \"duration\": 0.4},\n    {\"type\": \"crossfade\", \"start\": 7.8, \"duration\": 0.4}\n  ],\n  \"audio\": [\n    {\"type\": \"note\", \"text\": \"Add trending satisfying/ASMR track in IG Reels editor\"}\n  ]\n}",
+        "reasoning": "We didn\u2019t find a fresh analytics report, so we leaned into proven Reels behavior: macro \u2018oddly satisfying\u2019 visuals + quick build stats + a glaze-choice question to drive comments. Assets are tight closeups from your library for maximum texture detail: a882de7a9a3b:f0001, 0612dd0faa56:f0001, and 56d298b23fc3:f0000. Ken Burns motion keeps stills dynamic, and short text beats deliver value without blocking the nozzle area."
+      }
+    ]
+  },
+  "parsed_json2video_configs": [
+    {
+      "version": "1.0",
+      "output": {
+        "width": 1080,
+        "height": 1920,
+        "fps": 30,
+        "duration": 12
+      },
+      "tracks": [
+        {
+          "type": "image",
+          "src": "/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tt02.gcode_20250510_2311_frame0001.jpg",
+          "start": 0,
+          "duration": 4,
+          "fit": "cover",
+          "animations": [
+            {
+              "type": "kenburns",
+              "from": {
+                "scale": 1.0,
+                "x": 0.5,
+                "y": 0.55
+              },
+              "to": {
+                "scale": 1.15,
+                "x": 0.52,
+                "y": 0.48
+              },
+              "easing": "easeInOut"
+            }
+          ],
+          "filters": [
+            {
+              "type": "sharpen",
+              "amount": 0.1
+            }
+          ]
+        },
+        {
+          "type": "image",
+          "src": "/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tu20.gcode_20250429_1731_frame0001.jpg",
+          "start": 4,
+          "duration": 4,
+          "fit": "cover",
+          "animations": [
+            {
+              "type": "kenburns",
+              "from": {
+                "scale": 1.1,
+                "x": 0.48,
+                "y": 0.5
+              },
+              "to": {
+                "scale": 1.0,
+                "x": 0.5,
+                "y": 0.5
+              },
+              "easing": "easeInOut"
+            }
+          ]
+        },
+        {
+          "type": "image",
+          "src": "/Users/karlbayer/Pottery/autopotter/tests/autopot1-sync_previews/video_uploads/timelapse_tu10.gcode_20250429_1548_frame0000.jpg",
+          "start": 8,
+          "duration": 4,
+          "fit": "cover",
+          "animations": [
+            {
+              "type": "kenburns",
+              "from": {
+                "scale": 1.0,
+                "x": 0.5,
+                "y": 0.5
+              },
+              "to": {
+                "scale": 1.12,
+                "x": 0.5,
+                "y": 0.45
+              },
+              "easing": "easeInOut"
+            }
+          ]
+        }
+      ],
+      "overlays": [
+        {
+          "type": "rect",
+          "start": 0,
+          "end": 12,
+          "x": 0,
+          "y": 0.82,
+          "width": 1,
+          "height": 0.18,
+          "fill": "#000000",
+          "opacity": 0.22
+        },
+        {
+          "type": "text",
+          "text": "Oddly satisfying clay spiral",
+          "start": 0,
+          "end": 2.2,
+          "x": 0.5,
+          "y": 0.1,
+          "anchor": "center",
+          "style": {
+            "font": "Inter",
+            "size": 60,
+            "color": "#FFFFFF",
+            "weight": 700,
+            "shadow": true
+          }
+        },
+        {
+          "type": "text",
+          "text": "1 mm layers \u2022 25 mm/s",
+          "start": 2.2,
+          "end": 6.8,
+          "x": 0.5,
+          "y": 0.1,
+          "anchor": "center",
+          "style": {
+            "font": "Inter",
+            "size": 56,
+            "color": "#FFFFFF",
+            "weight": 700,
+            "shadow": true
+          }
+        },
+        {
+          "type": "text",
+          "text": "Matte or glossy glaze?",
+          "start": 6.8,
+          "end": 12,
+          "x": 0.5,
+          "y": 0.1,
+          "anchor": "center",
+          "style": {
+            "font": "Inter",
+            "size": 56,
+            "color": "#FFFFFF",
+            "weight": 700,
+            "shadow": true
+          }
+        },
+        {
+          "type": "text",
+          "text": "@autopotter",
+          "start": 0,
+          "end": 12,
+          "x": 0.5,
+          "y": 0.9,
+          "anchor": "center",
+          "style": {
+            "font": "Inter",
+            "size": 40,
+            "color": "#FFFFFF",
+            "weight": 700,
+            "shadow": true
+          }
+        }
+      ],
+      "transitions": [
+        {
+          "type": "crossfade",
+          "start": 3.8,
+          "duration": 0.4
+        },
+        {
+          "type": "crossfade",
+          "start": 7.8,
+          "duration": 0.4
+        }
+      ],
+      "audio": [
+        {
+          "type": "note",
+          "text": "Add trending satisfying/ASMR track in IG Reels editor"
+        }
+      ]
+    }
+  ],
+  "model": "gpt-5-2025-08-07",
+  "response_id": "resp_0c3d607b17b91ccd00693a02659fd88190aa15fef8d523b9f4"
+}

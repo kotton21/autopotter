@@ -8,7 +8,7 @@ import argparse
 from pathlib import Path
 from pydantic import BaseModel
 from typing import Any, List
-from config import get_config
+from config import get_config, ConfigManager
 from datetime import datetime
 from autopotter_tools.parse_json2video_configs import parse_json2video_config
 from autopotter_tools.gpt_api import GPTAPI
@@ -62,7 +62,7 @@ def resolve_file_inclusions(config: ConfigManager) -> str:
 def main_autodraft(outfile, config_file, prompt_override=None, minimal=False):
     # Load configuration first to initialize logging
     # config = ConfigManager(config_file)
-    config = get_config(config_file=config_file)
+    config = get_config(config_path=config_file)
     
     Logger.info(f"Output will be saved to: {outfile}")
     
