@@ -30,10 +30,12 @@
         "gcs_content_notes": "resources/gcs_content_notes.md"
     },
     "gpt_responses_other_files_to_include": {
-        "gcs_audio_inventory": "resources/gcs_audio_inventory.json",
         "autopotter_personality": "resources/autopotter_personality.v2.md",
+        "ig_analytics": "resources/instagram_analytics_result.json",
+        "gcs_audio_inventory": "resources/gcs_audio_inventory.json",
         "json2video_templates": "resources/json2video_templates.md",
-        "gcs_content_notes": "resources/gcs_content_notes.md"
+        "gcs_content_notes": "resources/gcs_content_notes.md",
+        "search_explanation": "resources/search_explanation.md"
     },
     "gpt_use_previous_response_id": true,
     "gpt_model": "gpt-5-2025-08-07", 
@@ -67,9 +69,5 @@
         "png",
         "mp4",
         "mov"
-    ],
-    "render_overrides": {
-        "autopost_reload_ig_analytics": true,
-        "env_file_path": null
-    }
+    ]
 }

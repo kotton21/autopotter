@@ -1,45 +1,20 @@
-Here's an example of what the results from the search functions look like. It shows the kind of stuff that you can search with keywords. 
+The search functions targets images, or individual frames of a video. Therefore if a search returns a parent_media.media_type="video", this result represents a specific moment in time of the parent video, and the timestamp indicates where (in seconds) within the parent video file the specified actions are taking place. 
 
-The searches occur on individual frames of a given video, or image. Therefore the timestamp in the result of a video file indicates where (in seconds) within the video file the specified actions are taking place. 
+here's an example (this is non-exhaustive), of the type of content which is contained in the search metadata in the database.
 
-{
-  "timestamp": 0.0,
-  "shot_type": "medium",
-  "emotional_tone": "calming",
-  "use_case": "reveal",
-  "activities": [
-    "3D printing operation"
-  ],
-  "materials": [
-    "clay (wet)",
-    "printer bed",
-    "extruder"
-  ],
-  "objects_detected": [
-    "3D printer nozzle",
-    "clay vase",
-    "printer gantry",
-    "linear rails",
-    "conveyor belt"
-  ],
-  "image_qualities": [
-    "well-lit",
-    "sharp focus"
-  ],
-  "embedding_hints": [
-    "3d printer extrusion",
-    "clay vase printing",
-    "studio medium shot",
-    "pottery 3d printer"
-  ],
-  "description": "3D printer extruding a tall clay vase on a printer bed with conveyor rails in a studio environment.",
-  "parent_media": {
-    "path": "video_uploads/timelapse_sv33.gcode_20250516_0545.jpg",
-    "media_type": "image",
-    "metadata": {
-      "width": 1080,
-      "height": 1920,
-      "orientation": "portrait"
-    }
-  },
-}
+
+1. SHOT TYPE: Identify the camera distance or angle that best describes the image using only the following allowed enumerated values: - 'macro': nozzle detail, clay texture, layer lines, small components. - 'closeup': printer extruder, gantry motion, hands adjusting belts or knobs, trimming or glazing details. - 'medium': full view of the printer, user interacting with the control panel, clay mixing bowls, glazing station. - 'wide': full workspace, studio environment, kiln area, shelving with printed pieces. - 'overhead': top-down view of the printer bed, clay mixing table, glaze setup. - 'hands_only': hands assembling machine parts, wiring electronics, mixing clay, or prepping glaze. 
+
+2. EMOTIONAL TONE: Choose only from the allowed enumerated values: - 'calming': smooth extrusion, steady machine motion, soft lighting, slow transformations. - 'energetic': rapid nozzle movement, active assembly work, debugging, tool operation. - 'satisfying': consistent layers, clean extrusion paths, glossy glaze flows, smooth trimming. - 'chaotic': clay mess, extrusion failure, tangled wires, glaze spills, cluttered workspace. - 'artistic': dramatic lighting, styled product shots, creative compositions, focused craftsmanship. 
+
+3. USE CASE: Select only from the enumerated allowed values: - 'hook': dramatic extrusion moment, high-speed mechanical motion, satisfying glaze pour. - 'process_detail': calibration steps, clay mixing, code adjustments, trimming, sanding. - 'texture_shot': layer lines, clay surface, nozzle close-ups, glaze texture. - 'reveal': final printed piece, model vs printed object comparison, kiln opening. - 'b_roll': wide shots of studio, shelves of printed work, tools on a bench. 
+
+4. ACTIVITIES: List the specific actions visible in the frame. The following examples are illustrative only, and are not limiting: - 3D printer assembly: tightening bolts, installing extruder, wiring electronics, attaching linear rails. - 3D printing prep: leveling bed, loading clay, mixing slip, filling cartridges, calibrating extrusion. - 3D printing operation: extrusion, layer deposition, nozzle wiping, movement calibration. - Digital work: coding, adjusting firmware, running calibration tests, slicing models, viewing 3D models. - Clay processing: mixing clay, filtering slip, kneading, moisture adjustments. - Post-processing: trimming, smoothing, sanding, carving, cutting support structures. - Firing workflow: loading kiln, unloading bisque ware, inspecting test tiles. - Glazing: dipping, pouring, brushing, spraying, mixing glazes. - Photography: product shots, staging, lighting adjustments. - Selling/packaging: labeling, wrapping finished pieces, preparing shipments. 
+
+5. MATERIALS: List visible materials, substances, or machine parts. The following examples are illustrative only, and are not limiting: - clay (wet, leather-hard, dry), slip, wet printed objects, glaze, glazes, greenware, bisque-ware, pottery. - machine components: stepper motors, belts, rails, bearings, frame parts. - electronics: control boards, wiring harnesses, sensors, displays. - pottery tools: sponges, trimming tools, rib tools, palette knives, calipers. - equipment: drills, kilns, pug mill, pottery wheel. - glazes, water containers, mixing bowls, test tiles. - plastic filament parts, printed jigs, connectors, nozzles. 
+
+6. OBJECTS DETECTED: List identifiable objects. The following examples are illustrative only, and are not limiting: - 3D printer components: extruder, clay cartridge, nozzle, gantry, belts, lead screws, control panel. - electronics: circuit boards, wiring, sensors, power supplies. - pottery tools: trimming tools, ribs, brushes, sponges. - clay vessels: vases, bowls, experimental prints, failed prints. - glazing tools, kiln furniture, shelves, lights, cameras. 
+
+7. IMAGE QUALITIES: List aesthetic or technical qualities. The following examples are illustrative only, and are not limiting: - overexposed, underexposed, motion blur, sharp macro focus, glare, clutter, well-lit product shot. 8. EMBEDDING HINTS: Provide 3–15 short keyword phrases summarizing semantic meaning. Examples include (but are not limited to): - “clay extrusion detail”, “outdoor printer assembly small parts”, “printer nozzle macro”, “glaze hand dip”, “studio kiln unloading”, “studio wide shot”, “3D model on screen”. 9. DESCRIPTION: A one to two line free text description of the image. All metadata is derived from visible content
+
+8. EXTRAS: The filename is included in searchable keywords so you can include subsets of target filenames like 'timelapse', "sv", "shot", etc. The parent media item id is included so you can search for all frames of a particular video by doing a keyword search of the parent_media_id. 

@@ -207,7 +207,7 @@ class AgentDBTools:
             {
                 "type": "function",
                 "name": "search_keyword",
-                "description": "Find media frames by keyword(s) across indexed metadata fields. This function searches a word, or exact phrase. Use it for single words, or short phrases.",
+                "description": "Find media frames by keyword(s) across indexed metadata fields. This function searches an exact substring within frame traits. Use it to search for a single root word or exact string. It does not rank relevance of results.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -226,7 +226,7 @@ class AgentDBTools:
             {
                 "type": "function",
                 "name": "search_semantic",
-                "description": "Semantic similarity search using OpenAI embeddings over media frames. This function gives ranked results based on similarity of the search text. It can be used for one word, or as many words as you like.",
+                "description": "Semantic similarity search using OpenAI embeddings over media frames. This function provides ranked results of the most similar frames based on relevance of the search text. The input text can be from one to 100 words in length.",
                 "parameters": {
                     "type": "object",
                     "properties": {

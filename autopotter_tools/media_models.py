@@ -82,6 +82,10 @@ class MediaFrameMetadata(BaseModel):
             else:
                 tokens.append(str(value))
 
+        _extend(self.frame_id)
+        _extend(self.parent_media_id)
+        _extend(self.timestamp)
+        _extend(self.image_path)
         _extend(self.shot_type)
         _extend(self.emotional_tone)
         _extend(self.use_case)

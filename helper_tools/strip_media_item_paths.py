@@ -5,21 +5,6 @@ from pathlib import Path
 from typing import Optional, Tuple
 import json
 
-from config import ConfigManager
-
-
-def load_db_path(config_path: Path) -> Path:
-    cfg = ConfigManager(str(config_path)).config
-    raw = (
-        cfg.get("agentdraft_metadata_database")
-        or cfg.get("dbbuilder_media_database_path")
-        or "media_frames.sqlite"
-    )
-    db_path = Path(raw)
-    if not db_path.is_absolute():
-        db_path = (config_path.parent / db_path).resolve()
-    return db_path
-
 
 def strip_paths(
     db_path: Path, *, dry_run_limit: Optional[int] = None
@@ -39,7 +24,7 @@ def strip_paths(
         if new_path != raw_path:
             updates_items.append((new_path, row["media_id"]))
             if dry_run_limit is not None and len(previews) < dry_run_limit:
-                previews.append(f"{raw_path} -> {new_path}")
+                previews.append(f"ITEM: {raw_path} -> {new_path}")
 
     # Frames table uses image_path column.
     rows_frames = cursor.execute("SELECT frame_id, image_path, metadata FROM frames").fetchall()
@@ -58,23 +43,36 @@ def strip_paths(
                 meta_obj["image_path"] = Path(meta_img).name if len(Path(meta_img).parts) < 2 else Path(meta_img).parts[-2] + "/" + Path(meta_img).name
                 meta_new = json.dumps(meta_obj)
         except Exception:
+            print(f"❌ ❌ ❌  Error parsing metadata for frame {row['frame_id']}: {meta_raw}")
             # keep original metadata if parsing fails
             meta_new = meta_raw
 
         if new_path != raw_path or meta_new != meta_raw:
             updates_frames.append((new_path, meta_new, row["frame_id"]))
-            if dry_run_limit is not None and len(previews) < dry_run_limit:
-                previews.append(f"{raw_path} -> {new_path}")
+        
+        if new_path != raw_path and dry_run_limit is not None and len(previews) < dry_run_limit:
+            previews.append(f"FRAME: {raw_path} -> {new_path}")
+        if meta_new != meta_raw and dry_run_limit is not None and len(previews) < dry_run_limit:
+            previews.append(f"METADATA: {raw_path} -> {new_path}")
 
     if (updates_items or updates_frames) and dry_run_limit is None:
-        cursor.executemany(
-            "UPDATE media_items SET path = ? WHERE media_id = ?",
-            updates_items,
-        )
-        cursor.executemany(
-            "UPDATE frames SET image_path = ?, metadata = ? WHERE frame_id = ?",
-            updates_frames,
-        )
+
+        if updates_items:
+            cursor.executemany(
+                "UPDATE media_items SET path = ? WHERE media_id = ?",
+                updates_items,
+            )
+            items_rowcount = cursor.rowcount
+            print(f"[strip_media_item_paths] media_items rows updated (rowcount): {items_rowcount}")
+
+        if updates_frames:
+            cursor.executemany(
+                "UPDATE frames SET image_path = ?, metadata = ? WHERE frame_id = ?",
+                updates_frames,
+            )
+            frames_rowcount = cursor.rowcount
+            print(f"[strip_media_item_paths] frames rows updated (rowcount): {frames_rowcount}")
+
         conn.commit()
 
     return len(rows_items), len(updates_items), len(updates_frames), previews
@@ -87,9 +85,10 @@ def main() -> None:
         description="Strip directory prefixes from media_items.path entries."
     )
     parser.add_argument(
-        "--config",
-        default="autopost_config.database.json",
-        help="Path to config file that points to the target database.",
+        "--db",
+        dest="db_path",
+        required=True,
+        help="Path to the target SQLite database.",
     )
     parser.add_argument(
         "--dry-run",
@@ -98,11 +97,10 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    config_path = Path(args.config).resolve()
-    db_path = load_db_path(config_path)
+    db_path = Path(args.db_path).resolve()
 
     total_items, changed_items, changed_frames, previews = strip_paths(
-        db_path, dry_run_limit=(10 if args.dry_run else None)
+        db_path, dry_run_limit=(1000 if args.dry_run else None)
     )
     if args.dry_run:
         print(

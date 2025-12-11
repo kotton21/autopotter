@@ -169,7 +169,7 @@ def run_autopotter_workflow(
         Logger.info(f"Uploading video with caption: {selected_caption[:100]}...")
         upload_result = instagram_uploader.upload_and_publish(video_path, selected_caption, thumbnail_offset)
         
-        if not upload_result or not upload_result.get("success"):
+        if not upload_result or not upload_result.get("success", False):
             Logger.error(f"Failed to upload video to Instagram: {upload_result}")
             return False
         

@@ -265,7 +265,7 @@ class InstagramVideoUploader:
         
         Logger.info("Video uploaded successfully!")
 
-        return media_id, creation_id
+        return {"success": True, "media_id": media_id, "creation_id": creation_id}
 
 
 

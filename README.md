@@ -169,8 +169,16 @@ What will providing this do for chatgpt?
 After video's are produced, they can be scheduled for posting, or placed in a queue for the periodic posting. 
 
 
+# sync local fs to gsutil
+Dry run
+```
+gsutil -m rsync -n -r ../autopot1-sync gs://autopot1-printdump/
+```
 
-
+Actual push update
+```
+gsutil -m rsync -r ../autopot1-sync gs://autopot1-printdump/
+```
 
 
 ## 📄 License

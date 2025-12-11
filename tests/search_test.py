@@ -16,13 +16,23 @@ def pretty_print(
 ):
     data = frame.model_dump() if hasattr(frame, "model_dump") else frame.dict()
     
+    #get keywords
+    data["keywords"] = frame.keyword_blob()
+
+    #get parent media item
     parent_media = db.get_media_item(frame.parent_media_id)
     if parent_media:
         data["parent_media"] = db.to_dict(parent_media)
+    
+    #get embedding
     embedding = db.get_embedding(frame.frame_id)
     data["embedding_length"] = len(embedding.embedding) if embedding else 0
+    
+    # any extra?
     if extra:
         data.update(extra)
+    
+    
     prefix = f"\n[hit {hit_index}]" if hit_index is not None else "\n"
     if verbose:
         print(prefix)
@@ -78,7 +88,7 @@ def main():
     parser.add_argument("--keyword", type=str, help="Keyword to search for.")
     parser.add_argument("--semantic", type=str, help="Semantic query text.")
     parser.add_argument(
-        "--limit", type=int, default=5, help="Maximum number of results to print."
+        "--limit", type=int, default=1, help="Maximum number of results to print."
     )
     parser.add_argument(
         "--verbose",
