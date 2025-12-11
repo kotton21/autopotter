@@ -19,8 +19,8 @@ def analyze_single_frame(config_path: str, media_path: Path) -> None:
     config_manager = ConfigManager(
         config_path,
         overrides={
-            "metadata_previous_response_id": None,
-            # "campaign_specific_analysis_prompt": "analyze this 3d printed pottery image",
+            "dbbuilder_previous_response_id": None,
+            # "dbbuilder_campaign_specific_analysis_prompt": "analyze this 3d printed pottery image",
         },
     )
     config = dict(config_manager.config)
@@ -39,7 +39,7 @@ def analyze_single_frame(config_path: str, media_path: Path) -> None:
     from PIL import Image
 
     with Image.open(media_path) as img:
-        downsample_and_store(img, preview_path, max_px=int(config.get("downsample_max_px", 320)))
+        downsample_and_store(img, preview_path, max_px=int(config.get("dbbuilder_downsample_max_px", 320)))
 
     metadata = get_media_metadata(media_path)
 

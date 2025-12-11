@@ -15,9 +15,12 @@ def pretty_print(
     hit_index: int | None = None,
 ):
     data = frame.model_dump() if hasattr(frame, "model_dump") else frame.dict()
-    data["parent_media"] = _load_parent_media(db, frame.parent_media_id)
-    embedding = _load_embedding(db, frame.frame_id)
-    data["embedding_length"] = len(embedding) if embedding else 0
+    
+    parent_media = db.get_media_item(frame.parent_media_id)
+    if parent_media:
+        data["parent_media"] = db.to_dict(parent_media)
+    embedding = db.get_embedding(frame.frame_id)
+    data["embedding_length"] = len(embedding.embedding) if embedding else 0
     if extra:
         data.update(extra)
     prefix = f"\n[hit {hit_index}]" if hit_index is not None else "\n"
@@ -48,7 +51,7 @@ def run_semantic(
 ):
     embedder = EmbeddingService(
         api_key=config.get("openai_api_key"),
-        model=config.get("embedding_model", "text-embedding-3-small"),
+        model=config.get("dbbuilder_embedding_model", "text-embedding-3-small"),
     )
     vector = embedder.embed(query)
     results = db.search_by_embedding(vector, limit=limit)
@@ -58,31 +61,6 @@ def run_semantic(
         )
     print(f"[search-test] semantic query='{query}' hits={len(results)}")
     print_db_stats(db)
-
-
-def _load_parent_media(db: MediaDatabase, media_id: str):
-    cursor = db.conn.cursor()
-    row = cursor.execute(
-        "SELECT media_id, path, metadata FROM media_items WHERE media_id=?",
-        (media_id,),
-    ).fetchone()
-    if not row:
-        return None
-    return {
-        "media_id": row["media_id"],
-        "path": row["path"],
-        "metadata": json.loads(row["metadata"]),
-    }
-
-
-def _load_embedding(db: MediaDatabase, frame_id: str):
-    cursor = db.conn.cursor()
-    row = cursor.execute(
-        "SELECT embedding FROM embeddings WHERE frame_id=?", (frame_id,)
-    ).fetchone()
-    if not row:
-        return None
-    return json.loads(row["embedding"])
 
 
 def print_db_stats(db: MediaDatabase):
@@ -111,7 +89,7 @@ def main():
     args = parser.parse_args()
 
     config = ConfigManager(args.config).config
-    db_path = Path(config.get("media_database_path", "media_frames.sqlite"))
+    db_path = Path(config.get("agentdraft_metadata_database", "media_frames.sqlite"))
     db = MediaDatabase(db_path)
 
     if not args.keyword and not args.semantic:

@@ -28,7 +28,15 @@ This system analyzes your entire media library by extracting key frames from vid
 
      ✅ organize the rest of the files into the sync folder, then execute.. perhaps, come up with a scheme to only add new media, not redo old media. 
 
-      ⚠️ Next Step: sync db, then build toolset
+    ✅ Next Step: sync db, then build toolset
+    
+    ✅ There's a problem. The filenames are.. bad again in the db. 
+
+    ⚠️ GPT seems to often search for the acronyms like pot series names... re-tokenize the filename to include...
+    ⚠️ Database doesn't include the video duration????!!!!
+    ⚠️ Need to re-write all the prompts with search in mind. Possibly add in direct media_id search as well. Or everything from a given parent? (could tell it to keyword search the parent_id...)
+    ⚠️ So there's 
+
 
 
 Next 2 phases. build toolset for the ageng, then give the agent the ability to call the search tools on the database in order to generate it's videos. 

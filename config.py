@@ -218,9 +218,6 @@ class ConfigManager:
             # Logging Configuration (all optional - defaults to terminal output)
             "log_level": "INFO",
             "log_file": None,
-            "log_max_size": "10MB",
-            "log_backup_count": 5,
-            "log_console_output": True
         }
         
         # Ensure directory exists

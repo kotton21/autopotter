@@ -1,0 +1,13 @@
+{
+  "collection_info": {
+    "collected_at": "2025-08-26T11:23:52.246029",
+    "source": "gcs_manager",
+    "collection_version": "2.1"
+  },
+  "files_by_folder": {
+    "https://storage.googleapis.com/autopot1-printdump/music_uploads/": [
+      "Balynt & chillity - Feelings (Instrumental).mp3",
+      "Spiring - Flowers.wav"
+    ]
+  }
+}

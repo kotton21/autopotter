@@ -8,7 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
-from autopotter_tools.media_models import MediaFrameMetadata, MediaItem
+from autopotter_tools.media_models import MediaFrameMetadata, MediaItem, FrameEmbedding
 from autopotter_tools.simplelogger import Logger
 
 
@@ -119,6 +119,8 @@ class MediaDatabase:
         self.conn.commit()
 
     def search_by_keyword(self, keyword: str, limit: int = 10) -> List[MediaFrameMetadata]:
+        """Search for frames by keyword in the keywords column."""
+        
         keyword_like = f"%{keyword.lower()}%"
         cursor = self.conn.cursor()
         rows = cursor.execute(
@@ -379,6 +381,57 @@ class MediaDatabase:
             embeddings[row["media_id"]] = embedding
 
         return embeddings
+
+    # -------------------- Direct fetch helpers -------------------- #
+    def get_media_item(self, media_id: str) -> Optional[MediaItem]:
+        """
+        Return a single media_item row as a Pydantic MediaItem (or None).
+        """
+        cursor = self.conn.cursor()
+        row = cursor.execute(
+            "SELECT media_id, path, media_type, metadata FROM media_items WHERE media_id = ?",
+            (media_id,),
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            meta = json.loads(row["metadata"])
+        except Exception:
+            meta = {}
+        return MediaItem(
+            media_id=row["media_id"],
+            path=row["path"],
+            media_type=row["media_type"],
+            metadata=meta,
+        )
+
+    def get_embedding(self, frame_id: str) -> Optional[FrameEmbedding]:
+        """
+        Return the embedding as a Pydantic FrameEmbedding, or None if missing.
+        """
+        cursor = self.conn.cursor()
+        row = cursor.execute(
+            "SELECT embedding FROM embeddings WHERE frame_id = ?", (frame_id,)
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            emb_list = json.loads(row["embedding"])
+        except Exception:
+            return None
+        return FrameEmbedding(frame_id=frame_id, embedding=emb_list)
+
+    # -------------------- Utilities -------------------- #
+    @staticmethod
+    def to_dict(model) -> dict:
+        """
+        Convert a Pydantic model (v1 or v2) to a plain dict. Returns the input if no converter is found.
+        """
+        if hasattr(model, "model_dump"):
+            return model.model_dump()
+        if hasattr(model, "dict"):
+            return model.dict()
+        return model
 
     def cluster_media_items(
         self, n_clusters: int = 4, random_state: int = 42

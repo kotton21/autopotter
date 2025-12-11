@@ -89,9 +89,9 @@ class GPTMetadataAnalyzer(BaseMetadataAnalyzer):
         self.total_output_tokens: int = 0
         self.total_image_tokens: int = 0
 
-        previous_response_id = config.get("metadata_previous_response_id")
+        previous_response_id = config.get("dbbuilder_previous_response_id")
         model = config.get("metadata_gpt_model") or config.get("gpt_model")
-        use_prev = bool(config.get("metadata_use_previous_response_id", False))
+        use_prev = bool(config.get("dbbuilder_use_previous_response_id", False))
         if GPTAPI is None:
             raise RuntimeError(
                 "GPTAPI is unavailable. Install OpenAI dependencies to use GPT metadata analysis."
@@ -108,12 +108,12 @@ class GPTMetadataAnalyzer(BaseMetadataAnalyzer):
                 "Failed to initialize GPT client for metadata analysis."
             ) from exc
         self.prompt_context = str(
-            config.get("metadata_prompt_instructions") or DEFAULT_PROMPT_INSTRUCTIONS
+            config.get("dbbuilder_prompt_instructions") or DEFAULT_PROMPT_INSTRUCTIONS
         )
         self.dev_instructions = str(
-            config.get("metadata_system_prompt") or DEFAULT_SYSTEM_INSTRUCTIONS
+            config.get("dbbuilder_system_prompt") or DEFAULT_SYSTEM_INSTRUCTIONS
         ) + "\n" + str( 
-            config.get("campaign_specific_analysis_prompt") or ""
+            config.get("dbbuilder_campaign_specific_analysis_prompt") or ""
         ).strip()
         Logger.info("Initialized GPTMetadataAnalyzer in GPT mode")
 
@@ -207,7 +207,7 @@ class GPTMetadataAnalyzer(BaseMetadataAnalyzer):
 
             if self.gpt_client.previous_response_id:
                 self.config_manager.set(
-                    "metadata_previous_response_id",
+                    "dbbuilder_previous_response_id",
                     self.gpt_client.previous_response_id,
                 )
             return results

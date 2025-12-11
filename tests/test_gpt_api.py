@@ -21,7 +21,7 @@ def main():
     """Test the GPTAPI class with a short conversation."""
     
     # Initialize logging
-    initialize_logging({'log_level': 'INFO', 'log_console_output': True})
+    initialize_logging({'log_level': 'INFO', 'dbbuilder_dbbuilder_embedding_model': True})
     
     print("=" * 60)
     print("GPTAPI Test - Conversation Flow")

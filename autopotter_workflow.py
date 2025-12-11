@@ -18,9 +18,16 @@ from enhanced_autodraft import main_autodraft
 from autopotter_tools.json2video_manager import Json2VideoAPI
 from autopotter_tools.instagram_api import InstagramVideoUploader
 from autopotter_tools.instagram_analytics import InstagramAnalyticsManager
+from config import get_config
 
 
-def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile, video_draft_only):
+def run_autopotter_workflow(
+        config_file, 
+        outfile, 
+        prompt_override, 
+        video_outfile, 
+        video_draft_only, 
+        overrides=None):
     """Run the complete autopotter workflow"""
     
     Logger.info("🚀 Starting Autopotter Workflow...")
@@ -33,8 +40,9 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
     
     try:
         # Load config to check for analytics reload option
-        from config import ConfigManager
-        config = ConfigManager(config_file)
+        config = get_config(config_file, overrides=overrides)
+        # config = ConfigManager(config_file)
+        
         
 
         ####### STEP 0.5: Reload Instagram analytics if configured #######
@@ -121,7 +129,7 @@ def run_autopotter_workflow(config_file, outfile, prompt_override, video_outfile
                 video_duration = movie_info.get('duration')
                 Logger.info(f"⏱️  Duration: {movie_info.get('duration')} seconds")
                 Logger.info(f"📐 Dimensions: {movie_info.get('width')}x{movie_info.get('height')}")
-                Logger.info(f"💾 File size: {movie_info.get('size')}")
+                Logger.info(f"💾 File size: {movie_info.get('size')/1024/1024:.2f} MB")
                 Logger.info(f"🔗 Video URL: {movie_info.get('url')}")
 
                 if video_duration < 2:
@@ -197,8 +205,17 @@ if __name__ == "__main__":
     parser.add_argument('--video-draft-only', '-v',
                        action='store_true', default=False,
                        help='Include to create a video and download, do not upload to Instagram (default: False)')
+    parser.add_argument('--overrides',
+                        default=None,
+                        type=str,
+                        help='Overrides for the config file. Example: "autopost_reload_ig_analytics=true env_file_path=null"')
     
+
     args = parser.parse_args()
+    if args.overrides:
+        overrides = dict(item.split('=') for item in args.overrides.split(' '))
+    else:
+        overrides = None
     
-    success = run_autopotter_workflow(args.config, args.draft_outfile, args.prompt, args.video_outfile, args.video_draft_only)
+    success = run_autopotter_workflow(args.config, args.draft_outfile, args.prompt, args.video_outfile, args.video_draft_only, args.overrides)
     sys.exit(0 if success else 1)

@@ -11,6 +11,17 @@ class MediaItem(BaseModel):
     media_type: Literal["video", "image"]
     metadata: Dict[str, Optional[float | int | str]] = Field(default_factory=dict)
 
+    def to_clean_dict(self, ids: bool = False) -> Dict[str, Any]:
+        """Return a clean dict of the media item."""
+        ret = {
+            "path": self.path,
+            "media_type": self.media_type,
+            "metadata": self.metadata,
+        }
+        if ids:
+            ret["media_id"] = self.media_id
+        return ret
+
 
 class MediaFrameMetadata(BaseModel):
     frame_id: str
@@ -33,6 +44,27 @@ class MediaFrameMetadata(BaseModel):
     image_qualities: List[str] = Field(default_factory=list)
     embedding_hints: List[str] = Field(default_factory=list)
     description: Optional[str] = None
+
+    def to_clean_dict(self, ids: bool = False) -> Dict[str, Any]:
+        """Return a clean dict of the media frame metadata."""
+        
+        ret = {
+            # "image_path": self.image_path,
+            "timestamp": self.timestamp,
+            "shot_type": self.shot_type,
+            "emotional_tone": self.emotional_tone,
+            "use_case": self.use_case,
+            "activities": self.activities,
+            "materials": self.materials,
+            "objects_detected": self.objects_detected,
+            "image_qualities": self.image_qualities,
+            "embedding_hints": self.embedding_hints,
+            "description": self.description,
+        }
+        if ids:
+            ret["frame_id"] = self.frame_id
+            ret["parent_media_id"] = self.parent_media_id
+        return ret
 
     def keyword_blob(self) -> str:
         """Return a flat string suitable for LIKE queries."""

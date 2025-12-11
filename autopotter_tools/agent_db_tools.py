@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import random
 
 from autopotter_tools.embedding_service import EmbeddingService
 from autopotter_tools.gcs_manager import GCSManager
@@ -11,11 +12,11 @@ from autopotter_tools.simplelogger import Logger
 from config import ConfigManager
 
 
-def _frame_to_dict(frame: MediaFrameMetadata) -> Dict[str, Any]:
-    """Return a JSON-serializable representation for agent responses."""
-    if hasattr(frame, "model_dump"):
-        return frame.model_dump()  # Pydantic v2
-    return frame.dict()
+def _strip_image_path(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove image_path if present to keep responses lighter."""
+    if isinstance(data, dict):
+        data.pop("image_path", None)
+    return data
 
 
 class AgentDBTools:
@@ -30,12 +31,10 @@ class AgentDBTools:
         self.config_path = config_path
         self.config = ConfigManager(config_path)
         self._raw_db_setting = (
-            self.config.get("agentdraft_metadata_database")
-            or self.config.get("media_database_path")
-        )
+            self.config.get("agentdraft_metadata_database"))
         if not self._raw_db_setting:
             raise ValueError(
-                "agentdraft_metadata_database (or media_database_path) is required."
+                "agentdraft_metadata_database is required."
             )
 
         self.db_path = self._resolve_db_path(self._raw_db_setting)
@@ -69,7 +68,7 @@ class AgentDBTools:
         Raises FileNotFoundError/RuntimeError on failure.
         """
         if self.db_path.exists():
-            Logger.info(f"[agent_db_tools] Using local database at {self.db_path}")
+            Logger.info(f"Using local database at {self.db_path}")
         else:
             Logger.info(
                 "[agent_db_tools] Database not found locally; attempting GCS download..."
@@ -122,7 +121,7 @@ class AgentDBTools:
         if self._embedder is None:
             self._embedder = EmbeddingService(
                 api_key=self.config.get("openai_api_key"),
-                model=self.config.get("embedding_model", "text-embedding-3-small"),
+                model=self.config.get("dbbuilder_embedding_model", "text-embedding-3-small"),
             )
         return self._embedder
 
@@ -131,9 +130,46 @@ class AgentDBTools:
         if not keyword:
             raise ValueError("keyword is required.")
 
+        # Get frame, and parent path and metadata!
         db = self._ensure_db()
-        results = db.search_by_keyword(keyword, limit=limit)
-        return [_frame_to_dict(item) for item in results]
+        search_results = db.search_by_keyword(keyword, limit=limit)
+        
+        results = [item.to_clean_dict(ids=True) for item in search_results]
+        for item in results:
+            item.pop("image_path", None) # should absolutely not include the frame image path!!!
+            item.pop("frame_id", None)
+            parent_media_id = item.pop("parent_media_id", None)
+            parent_media = db.get_media_item(parent_media_id)
+            if parent_media:
+                item["parent_media"] = parent_media.to_clean_dict()
+        return results
+        
+
+    def search_mult_keywords_rand(self, keywords: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Keywords search over frame metadata."""
+        if not keywords:
+            raise ValueError("keyword is required.")
+
+        terms = [term.strip() for term in keywords.split() if term.strip()]
+        if not terms:
+            raise ValueError("keyword is required.")
+
+        db = self._ensure_db()
+        aggregated = []
+        seen_ids = set[Any]()
+
+        for term in terms:
+            hits = db.search_by_keyword(term, limit=limit)
+            for item in hits:
+                frame_id = getattr(item, "frame_id", None)
+                if frame_id and frame_id in seen_ids:
+                    continue
+                if frame_id:
+                    seen_ids.add(frame_id)
+                aggregated.append(item)
+
+        random.shuffle(aggregated)
+        return [_strip_image_path(db.to_dict(item)) for item in aggregated[:limit]]
 
     def search_semantic(
         self, text: str, limit: int = 10
@@ -146,58 +182,80 @@ class AgentDBTools:
         vector = embedder.embed(text)
         db = self._ensure_db()
         scored = db.search_by_embedding(vector, limit=limit)
+
+        results = [(sim,item.to_clean_dict(ids=True)) for sim,item in scored]
+        for _,item in results:
+            item.pop("image_path", None) # should absolutely not include the frame image path!!!
+            parent_media_id = item.pop("parent_media_id", None)
+            parent_media = db.get_media_item(parent_media_id)
+            if parent_media:
+                item["parent_media"] = parent_media.to_clean_dict()
+        # return results
+        
         return [
-            {"similarity": similarity, "frame": _frame_to_dict(frame)}
-            for similarity, frame in scored
+            {
+                "similarity": similarity,
+                "frame": item,
+            }
+            for similarity, item in results
         ]
 
     @staticmethod
     def get_agent_tool_defs() -> List[Dict[str, Any]]:
-        """Return OpenAI tool definitions for the agent (search only)."""
-        return [
+        """Return tool definitions formatted for the Responses API (toolcalling)."""
+        schema = [
             {
                 "type": "function",
-                "function": {
-                    "name": "search_keyword",
-                    "description": "Find media frames by keyword across indexed metadata fields.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "keyword": {"type": "string", "description": "Keyword or phrase to search for."},
-                            "limit": {
-                                "type": "integer",
-                                "description": "Maximum number of results to return.",
-                                "minimum": 1,
-                                "maximum": 50,
-                                "default": 10,
-                            },
+                "name": "search_keyword",
+                "description": "Find media frames by keyword(s) across indexed metadata fields. This function searches a word, or exact phrase. Use it for single words, or short phrases.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "keyword": {"type": "string", "description": "single keyword or exact phrase"},
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of results to return.",
+                            "minimum": 1,
+                            "maximum": 50,
+                            "default": 10,
                         },
-                        "required": ["keyword"],
                     },
+                    "required": ["keyword"],
                 },
             },
             {
                 "type": "function",
-                "function": {
-                    "name": "search_semantic",
-                    "description": "Semantic similarity search using OpenAI embeddings over media frames.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "text": {"type": "string", "description": "Natural language description to embed and search."},
-                            "limit": {
-                                "type": "integer",
-                                "description": "Maximum number of results to return.",
-                                "minimum": 1,
-                                "maximum": 50,
-                                "default": 10,
-                            },
+                "name": "search_semantic",
+                "description": "Semantic similarity search using OpenAI embeddings over media frames. This function gives ranked results based on similarity of the search text. It can be used for one word, or as many words as you like.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "text": {"type": "string", "description": "Natural language description to embed and search."},
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of results to return.",
+                            "minimum": 1,
+                            "maximum": 50,
+                            "default": 10,
                         },
-                        "required": ["text"],
                     },
+                    "required": ["text"],
                 },
             },
+            # {
+            #     "type": "function",
+            #     "name": "validate_json2video_config",
+            #     "description": "Validation of a json2video config string.",
+            #     "parameters": {
+            #         "type": "object",
+            #         "properties": {
+            #             "json2video_config_str": {"type": "string", "description": "The json2video config string to validate."},
+            #         },
+            #         "required": ["text"],
+            #     },
+            # },
         ]
+        return schema
 
 
 # Convenience export for callers that just need the tool schema.

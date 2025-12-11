@@ -9,7 +9,7 @@ import argparse
 import glob
 from PIL import Image, ExifTags
 
-def fix_image_orientation(input_path, output_suffix="_fixed", quality=95):
+def fix_image_orientation(input_path, output_suffix="_fixed", quality=95, dry_run=False):
     """
     Fix image orientation by applying EXIF rotation and saving with orientation=1.
     
@@ -17,16 +17,18 @@ def fix_image_orientation(input_path, output_suffix="_fixed", quality=95):
         input_path: Path to input image
         output_suffix: Suffix to add to output filename (default: "_fixed")
         quality: JPEG quality (1-100, default 95)
+        dry_run: If True, only log the actions without writing files
     """
     if not os.path.exists(input_path):
         print(f"Error: Image file not found at {input_path}")
-        return False
+        return False, False
     
     # Generate output path using suffix
     name, ext = os.path.splitext(input_path)
     output_path = f"{name}{output_suffix}{ext}"
     
     try:
+        modified = False
         with Image.open(input_path) as img:
             print(f"Processing: {os.path.basename(input_path)}")
             print(f"Original dimensions: {img.size}")
@@ -48,53 +50,74 @@ def fix_image_orientation(input_path, output_suffix="_fixed", quality=95):
                 # Already normal, just copy
                 fixed_img = img.copy()
                 print("No rotation needed")
+                modified = False
             elif orientation == 2:
                 # Mirrored horizontally
                 fixed_img = img.transpose(Image.FLIP_LEFT_RIGHT)
                 print("Applied: Horizontal flip")
+                modified = True
             elif orientation == 3:
                 # Rotated 180°
                 fixed_img = img.rotate(180, expand=True)
                 print("Applied: 180° rotation")
+                modified = True
             elif orientation == 4:
                 # Mirrored vertically
                 fixed_img = img.transpose(Image.FLIP_TOP_BOTTOM)
                 print("Applied: Vertical flip")
+                modified = True
             elif orientation == 5:
                 # Mirrored horizontally, rotated 90° CCW
                 fixed_img = img.transpose(Image.FLIP_LEFT_RIGHT).rotate(90, expand=True)
                 print("Applied: Horizontal flip + 90° CCW rotation")
+                modified = True
             elif orientation == 6:
                 # Rotated 90° CW
                 fixed_img = img.rotate(-90, expand=True)
                 print("Applied: 90° CW rotation")
+                modified = True
             elif orientation == 7:
                 # Mirrored horizontally, rotated 90° CW
                 fixed_img = img.transpose(Image.FLIP_LEFT_RIGHT).rotate(-90, expand=True)
                 print("Applied: Horizontal flip + 90° CW rotation")
+                modified = True
             elif orientation == 8:
                 # Rotated 90° CCW
                 fixed_img = img.rotate(90, expand=True)
                 print("Applied: 90° CCW rotation")
+                modified = True
             else:
                 # Unknown orientation, just copy
                 fixed_img = img.copy()
                 print(f"Unknown orientation {orientation}, no changes applied")
+                modified = False
             
             print(f"New dimensions: {fixed_img.size}")
+
+            if dry_run:
+                if modified:
+                    print(f"Dry run: would save fixed image to {output_path}")
+                else:
+                    print("Dry run: no changes needed; no file would be written")
+                print("Dry run: no file was written")
+                return True, modified
+
+            if not modified:
+                print("No changes needed; skipping write")
+                return True, False
             
-            # Save with orientation=1 (normal) by removing orientation tag
-            # This effectively sets orientation to 1 (normal)
+            # Save with orientation=1 (normal) by removing orientation tag.
+            # This effectively sets orientation to 1 (normal).
             fixed_img.save(output_path, quality=quality)
             print(f"Saved fixed image to: {output_path}")
             
-            return True
+            return True, True
             
     except Exception as e:
         print(f"Error processing image: {e}")
-        return False
+        return False, False
 
-def process_folder(folder_path, output_suffix="_fixed", quality=95):
+def process_folder(folder_path, output_suffix="_fixed", quality=95, dry_run=False):
     """
     Process all images in a folder.
     
@@ -102,6 +125,7 @@ def process_folder(folder_path, output_suffix="_fixed", quality=95):
         folder_path: Path to folder containing images
         output_suffix: Suffix to add to output filenames
         quality: JPEG quality (1-100)
+        dry_run: If True, only log the actions without writing files
     """
     if not os.path.isdir(folder_path):
         print(f"Error: Folder not found at {folder_path}")
@@ -124,17 +148,22 @@ def process_folder(folder_path, output_suffix="_fixed", quality=95):
     
     success_count = 0
     failed_count = 0
+    modified_count = 0
     
     for image_path in sorted(image_files):
         print(f"\nProcessing: {os.path.basename(image_path)}")
-        success = fix_image_orientation(image_path, output_suffix, quality)
+        success, modified = fix_image_orientation(image_path, output_suffix, quality, dry_run=dry_run)
         if success:
             success_count += 1
+            if modified:
+                modified_count += 1
         else:
             failed_count += 1
     
     print("\n" + "=" * 60)
-    print(f"Processing complete!")
+    print("Processing complete!")
+    print(f"Total files processed: {len(image_files)}")
+    print(f"Files modified: {modified_count}")
     print(f"Successfully processed: {success_count} images")
     if failed_count > 0:
         print(f"Failed to process: {failed_count} images")
@@ -161,7 +190,7 @@ Examples:
     
     parser.add_argument('-s', '--suffix', 
                        dest='output_suffix',
-                       default='_fixed',
+                       default='',
                        help='Suffix to add to output filename (default: "_fixed")')
     
     parser.add_argument('-q', '--quality', 
@@ -170,6 +199,10 @@ Examples:
                        choices=range(1, 101),
                        metavar='1-100',
                        help='JPEG quality setting (default: 95)')
+
+    parser.add_argument('--dry-run',
+                       action='store_true',
+                       help='Show actions without writing any files')
     
     args = parser.parse_args()
     
@@ -178,15 +211,28 @@ Examples:
     # Check if input is a file or folder
     if os.path.isfile(args.input_path):
         # Process single file
-        success = fix_image_orientation(args.input_path, args.output_suffix, args.quality)
+        success, modified = fix_image_orientation(
+            args.input_path,
+            args.output_suffix,
+            args.quality,
+            dry_run=args.dry_run
+        )
         if success:
             print("Image orientation fixed successfully!")
+            print("Processing complete!")
+            print("Total files processed: 1")
+            print(f"Files modified: {1 if modified else 0}")
         else:
             print("Failed to fix image orientation.")
             sys.exit(1)
     elif os.path.isdir(args.input_path):
         # Process folder
-        success = process_folder(args.input_path, args.output_suffix, args.quality)
+        success = process_folder(
+            args.input_path,
+            args.output_suffix,
+            args.quality,
+            dry_run=args.dry_run
+        )
         if not success:
             sys.exit(1)
     else:

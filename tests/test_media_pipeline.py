@@ -88,11 +88,11 @@ def test_pipeline_indexes_media_and_supports_keyword_search(tmp_path):
 
     pipeline = MediaDatabasePipeline(
         overrides={
-            "media_library_dir": str(media_root),
-            "media_preview_dir": str(preview_root),
-            "media_database_path": str(db_path),
-            "max_frames_per_media": 1,
-            "media_supported_extensions": ["jpg", "mp4"],
+            "dbbuilder_media_library_dir": str(media_root),
+            "dbbuilder_media_preview_dir": str(preview_root),
+            "dbbuilder_media_database_path": str(db_path),
+            "dbbuilder_max_frames_per_media": 1,
+            "dbbuilder_media_supported_extensions": ["jpg", "mp4"],
             "gcs_folders": ["."],
         }
     )

@@ -16,10 +16,12 @@
 
 
 ##The naming convention usually has a print id for each series:
-- TU indicates a tumbler. A small tumlber cup with no handle and spiral designs. These gcs videos files are usually about 2-3 sec long.
-- TA is a tall tumbler cup with more digital forms. These gcs videos files are usually about 3 sec long.
-- TM is a Martini Tumbler. Its a martini glass with no stem. These gcs videos files are usually about 2-3 sec long.
-- TT is a Tumbly Tumbler. It's a tumbler but with a conical bottom so that it doesn't sit quite flat on the table. These gcs files are usually about 2 sec long.
+- TU indicates a Tumbler. A small tumlber cup with no handle and spiral designs. These gcs videos files are usually about 2-3 sec long.
+- TA stands for tall tumbler. It is a tall cup with more digital forms. These gcs videos files are usually about 3 sec long.
+- TM stands for Martini Tumbler. Its a martini glass with no stem. These gcs videos files are usually about 2-3 sec long.
+- TT is Tumbly Tumbler. It's a tumbler but with a conical bottom so that it doesn't sit quite flat on the table. These gcs files are usually about 2 sec long.
 - SV loosly stands for Summer Vase, or spline vase. It's the first series which used splines to create the surface textures. These gcs video files are usually about 7 sec long.
 - RV is Random Vase. It's fully random shapes with a smooth texture. These gcs videos files are usually about 7 sec long.
 - SM stands for Spline Mug. It's a spline based mug using cross sections to build the shapes. These gcs videos files are usually about 1-2 sec long.
+
+Though these acronyms are useful shortcuts for knowing what type of shape the object in the file is, they are not human readable. You should only use the human readable name in the text labels and voiceovers in the videos. If you use the acronym in the caption, you must explain its meaning.

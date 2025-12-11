@@ -49,14 +49,14 @@ class MediaDatabasePipeline:
         self.config_manager = ConfigManager(config_path, overrides=overrides)
         self.config: Dict[str, object] = dict(self.config_manager.config)
 
-        self.media_root = Path(self.config["media_library_dir"]).resolve()
-        self.preview_root = Path(self.config["media_preview_dir"]).resolve()
+        self.media_root = Path(self.config["dbbuilder_media_library_dir"]).resolve()
+        self.preview_root = Path(self.config["dbbuilder_media_preview_dir"]).resolve()
         self.preview_root.mkdir(parents=True, exist_ok=True)
 
-        self.downsample_px = int(self.config.get("downsample_max_px", 320))
-        self.frame_interval = float(self.config.get("frame_interval_seconds", 2.0))
-        self.max_frames_per_media = int(self.config.get("max_frames_per_media", 5))
-        raw_exts = self.config.get("media_supported_extensions", [])
+        self.downsample_px = int(self.config.get("dbbuilder_downsample_max_px", 320))
+        self.frame_interval = float(self.config.get("dbbuilder_frame_interval_seconds", 2.0))
+        self.dbbuilder_max_frames_per_media = int(self.config.get("dbbuilder_max_frames_per_media", 5))
+        raw_exts = self.config.get("dbbuilder_media_supported_extensions", [])
         self.supported_extensions = {
             str(ext).lower().lstrip(".") for ext in raw_exts
         } if raw_exts else set()
@@ -75,7 +75,7 @@ class MediaDatabasePipeline:
         self._existing_media_cache: Optional[List[Path]] = None
 
 
-        database_path = Path(self.config.get("media_database_path", "media_frames.sqlite")).resolve()
+        database_path = Path(self.config.get("dbbuilder_media_database_path", "media_frames.sqlite")).resolve()
         self.db = MediaDatabase(database_path)
         frames_per_call = int(self.config.get("gpt_frames_per_call", 10))
         self.metadata_analyzer = GPTMetadataAnalyzer(
@@ -85,7 +85,7 @@ class MediaDatabasePipeline:
         )
         self.embedding_service = EmbeddingService(
             api_key=self.config.get("openai_api_key"),
-            model=self.config.get("embedding_model", "text-embedding-3-small"),
+            model=self.config.get("dbbuilder_embedding_model", "text-embedding-3-small"),
         )
 
     def run(self, limit_media: Optional[int] = None) -> Dict[str, object]:
@@ -291,7 +291,7 @@ class MediaDatabasePipeline:
         iterator = frame_extractor(
             path,
             interval_seconds=self.frame_interval,
-            max_frames=self.max_frames_per_media,
+            max_frames=self.dbbuilder_max_frames_per_media,
         )
 
         try:
@@ -478,7 +478,7 @@ def _build_cli(parser=None):
         "--clean",
         action="store_true",
         default=False,
-        help="Delete the media database file and reset metadata_previous_response_id before building.",
+        help="Delete the media database file and reset dbbuilder_previous_response_id before building.",
     )
     
     return parser
@@ -496,7 +496,7 @@ def main():
     if args.clean:
         config_manager = ConfigManager(str(config_path))
         db_value = config_manager.config.get(
-            "media_database_path", "media_frames.sqlite"
+            "dbbuilder_media_database_path", "media_frames.sqlite"
         )
         db_path = Path(db_value)
         if not db_path.is_absolute():
@@ -509,8 +509,8 @@ def main():
             print(f"[media-pipeline] Removed existing database at {db_path}")
         else:
             print(f"[media-pipeline] No existing database to remove at {db_path}")
-        config_manager.set("metadata_previous_response_id", None)
-        print("[media-pipeline] Cleared metadata_previous_response_id in config.")
+        config_manager.set("dbbuilder_previous_response_id", None)
+        print("[media-pipeline] Cleared dbbuilder_previous_response_id in config.")
 
     pipeline = MediaDatabasePipeline(config_path=str(config_path), filter_existing_media=not args.clean)
 
