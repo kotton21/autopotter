@@ -23,7 +23,7 @@ def analyze_single_frame(config_path: str, media_path: Path) -> None:
             # "dbbuilder_campaign_specific_analysis_prompt": "analyze this 3d printed pottery image",
         },
     )
-    config = dict(config_manager.config)
+    config = dict(config_manager._config)
 
     media_path = media_path.resolve()
     if not media_path.exists():

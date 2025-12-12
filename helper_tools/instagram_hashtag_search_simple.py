@@ -26,7 +26,7 @@ class InstagramHashtagSearcher:
     def __init__(self, config_path: str = "autopost_config.enhanced.json"):
         """Initialize with configuration."""
         self.config_manager = ConfigManager(config_path)
-        self.config = self.config_manager.config  # Always use full config
+        self.config = self.config_manager._config  # Always use full config
         self.base_url = "https://graph.facebook.com/v23.0"
         
         # Validate required Instagram credentials

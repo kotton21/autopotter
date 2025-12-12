@@ -33,12 +33,12 @@ class Json2VideoAPI:
         self.config_manager = ConfigManager(config_path)
         
         # Initialize API settings from config
-        self.api_key = self.config_manager.config["json2video_api_key"]
-        self.base_url = self.config_manager.config["json2video_base_url"]
-        self.timeout = self.config_manager.config["json2video_timeout"]
-        self.gcs_bucket = self.config_manager.config.get("gcs_bucket", "").strip()
-        self.gcs_folders = tuple(self.config_manager.config.get("gcs_folders", []) or [])
-        self.gcs_draft_folder = self.config_manager.config.get("gcs_draft_folder", "")
+        self.api_key = self.config_manager._config["json2video_api_key"]
+        self.base_url = self.config_manager._config["json2video_base_url"]
+        self.timeout = self.config_manager._config["json2video_timeout"]
+        self.gcs_bucket = self.config_manager._config.get("gcs_bucket", "").strip()
+        self.gcs_folders = tuple(self.config_manager._config.get("gcs_folders", []) or [])
+        self.gcs_draft_folder = self.config_manager._config.get("gcs_draft_folder", "")
         
         self.headers = {
             "Content-Type": "application/json",

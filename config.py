@@ -16,39 +16,39 @@ class ConfigManager:
         config_path: str = "autopost_config.enhanced.json",
         overrides: Optional[Dict[str, Any]] = None,
     ):
-        self.config_path = config_path
-        self.temp_config_path = config_path.replace('.json', '.temp.json')
-        self.overrides = dict(overrides) if overrides else {}
-        self.config = {}
+        self._config_path = config_path
+        self._temp_config_path = config_path.replace('.json', '.temp.json')
+        self._overrides = dict(overrides) if overrides else {}
+        self._config = {}
         self.load_config()
     
     def load_config(self) -> Dict[str, Any]:
         """Load configuration from file with environment variable resolution."""
         try:
-            Logger.info(f"Loading configuration from {self.config_path}")
+            Logger.info(f"Loading configuration from {self._config_path}")
             
-            if not os.path.exists(self.config_path):
-                Logger.warning(f"Config file {self.config_path} not found. Creating default configuration.")
+            if not os.path.exists(self._config_path):
+                Logger.warning(f"Config file {self._config_path} not found. Creating default configuration.")
                 self.create_default_config()
             
-            with open(self.config_path, 'r') as f:
-                self.config = json.load(f)
+            with open(self._config_path, 'r') as f:
+                self._config = json.load(f)
             
             # Load temporary config parameters if temp file exists
-            if os.path.exists(self.temp_config_path):
+            if os.path.exists(self._temp_config_path):
                 try:
-                    with open(self.temp_config_path, 'r') as f:
+                    with open(self._temp_config_path, 'r') as f:
                         temp_config = json.load(f)
                     
                     # Merge temp config into main config (temp values override main values)
-                    self.config.update(temp_config)
-                    Logger.info(f"Loaded {len(temp_config)} temporary configuration parameters from {self.temp_config_path}")
+                    self._config.update(temp_config)
+                    Logger.info(f"Loaded {len(temp_config)} temporary configuration parameters from {self._temp_config_path}")
                     
                 except Exception as e:
-                    Logger.warning(f"Could not load temporary config from {self.temp_config_path}: {e}")
+                    Logger.warning(f"Could not load temporary config from {self._temp_config_path}: {e}")
             
             # First, load environment variables from .env file
-            env_file_path = self.config.get('env_file_path', None)
+            env_file_path = self._config.get('env_file_path', None)
             if env_file_path:
                 self.load_dotenv(env_file_path)
             else:
@@ -56,16 +56,16 @@ class ConfigManager:
             
             
             # Resolve environment variables
-            self.config = self.resolve_environment_variables(self.config)
+            self._config = self.resolve_environment_variables(self._config)
             
-            if self.overrides:
-                self.config.update(self.overrides)
+            if self._overrides:
+                self._config.update(self._overrides)
                 Logger.info(
-                    f"Applied {len(self.overrides)} override configuration parameters"
+                    f"Applied {len(self._overrides)} override configuration parameters"
                 )
             
             Logger.info("Configuration loaded successfully")
-            return self.config
+            return self._config
             
         except Exception as e:
             Logger.error(f"Failed to load configuration: {e}")
@@ -79,19 +79,19 @@ class ConfigManager:
                 Logger.info("Instagram token is expired or expiring soon. Attempting automatic refresh...")
                 self.refresh_instagram_token()
         
-        return self.config.get(key, default)
+        return self._config.get(key, default)
     
     def set(self, key: str, value: Any):
         """Set a configuration value and save to temporary config file."""
         try:
             # Update in-memory configuration
-            self.config[key] = value
+            self._config[key] = value
             
             # Load existing temp config if it exists
             temp_config = {}
-            if os.path.exists(self.temp_config_path):
+            if os.path.exists(self._temp_config_path):
                 try:
-                    with open(self.temp_config_path, 'r') as f:
+                    with open(self._temp_config_path, 'r') as f:
                         temp_config = json.load(f)
                 except Exception as e:
                     Logger.warning(f"Could not read existing temp config file: {e}")
@@ -100,10 +100,10 @@ class ConfigManager:
             temp_config[key] = value
             
             # Save to temporary config file
-            with open(self.temp_config_path, 'w') as f:
+            with open(self._temp_config_path, 'w') as f:
                 json.dump(temp_config, f, indent=4)
             
-            Logger.info(f"Configuration value '{key}' set and saved to temporary config: {self.temp_config_path}")
+            Logger.info(f"Configuration value '{key}' set and saved to temporary config: {self._temp_config_path}")
             
         except Exception as e:
             Logger.error(f"Failed to set configuration value '{key}': {e}")
@@ -221,22 +221,22 @@ class ConfigManager:
         }
         
         # Ensure directory exists
-        config_dir = os.path.dirname(self.config_path)
+        config_dir = os.path.dirname(self._config_path)
         if config_dir and not os.path.exists(config_dir):
             os.makedirs(config_dir)
         
-        with open(self.config_path, 'w') as f:
+        with open(self._config_path, 'w') as f:
             json.dump(default_config, f, indent=4)
         
-        Logger.info(f"Default configuration created at {self.config_path}")
-        self.config = default_config
+        Logger.info(f"Default configuration created at {self._config_path}")
+        self._config = default_config
 
     
     
     
     def _update_env_file(self, key: str, value: str) -> bool:
         """Update a key-value pair in the .env file."""
-        env_file_path = self.config.get('env_file_path', '.env')
+        env_file_path = self._config.get('env_file_path', '.env')
         
         try:
             if not os.path.exists(env_file_path):
@@ -293,9 +293,9 @@ class ConfigManager:
             url = "https://graph.facebook.com/v22.0/oauth/access_token"
             params = {
                 "grant_type": "fb_exchange_token",
-                "client_id": self.config.get('instagram_app_id'),
-                "client_secret": self.config.get('instagram_app_secret'),
-                "fb_exchange_token": self.config.get('instagram_access_token')
+                "client_id": self._config.get('instagram_app_id'),
+                "client_secret": self._config.get('instagram_app_secret'),
+                "fb_exchange_token": self._config.get('instagram_access_token')
             }
             
             response = requests.get(url, params=params)
@@ -376,7 +376,7 @@ class ConfigManager:
     def is_instagram_token_expired(self) -> bool:
         """Check if Instagram token is expired or expiring soon using Facebook API."""
         try:
-            access_token = self.config['instagram_access_token']
+            access_token = self._config['instagram_access_token']
             if not access_token or access_token.startswith('${'):
                 Logger.error("No valid Instagram access token available")
                 exit(1)
@@ -391,7 +391,7 @@ class ConfigManager:
                 exit(1)
                 
             days_left = (expiration_date - datetime.now()).days
-            days_before_refresh = self.config.get('instagram_days_before_token_should_autorefresh', 7)
+            days_before_refresh = self._config.get('instagram_days_before_token_should_autorefresh', 7)
             
             Logger.debug(f"Instagram token expires in {days_left} days (from Facebook API)")
             return days_left <= days_before_refresh
@@ -430,15 +430,22 @@ def get_config(
                 "Config overrides were provided but an existing ConfigManager instance "
                 "is being reused; overrides ignored. Use force_reload to apply them."
             )
-        if _config_manager.config_path != config_path:
+        if _config_manager._config_path != config_path:
             Logger.warning(
-                f"Config already loaded from {_config_manager.config_path}; ignoring new path {config_path}"
+                f"Config already loaded from {_config_manager._config_path}; ignoring new path {config_path}"
             )
     
     return _config_manager
 
 
 if __name__ == "__main__":
-    config = get_config()
-    print(json.dumps(config.config, indent=2))
+    import argparse
+    parser = argparse.ArgumentParser(description='Config manager')
+    parser.add_argument('config', type=str,
+                       help='Config file path (default: autopost_config.enhanced.json)')
+    args = parser.parse_args()
+
+    config = get_config(args.config)
+    print(json.dumps(config._config, indent=2))
+    print("IG token: ", config.get("instagram_access_token"))
 

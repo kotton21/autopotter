@@ -47,7 +47,7 @@ class MediaDatabasePipeline:
         filter_existing_media: bool = True,
     ):
         self.config_manager = ConfigManager(config_path, overrides=overrides)
-        self.config: Dict[str, object] = dict(self.config_manager.config)
+        self.config: Dict[str, object] = dict(self.config_manager._config)
 
         self.media_root = Path(self.config["dbbuilder_media_library_dir"]).resolve()
         self.preview_root = Path(self.config["dbbuilder_media_preview_dir"]).resolve()
@@ -495,7 +495,7 @@ def main():
     config_path = Path(args.config).resolve()
     if args.clean:
         config_manager = ConfigManager(str(config_path))
-        db_value = config_manager.config.get(
+        db_value = config_manager._config.get(
             "dbbuilder_media_database_path", "media_frames.sqlite"
         )
         db_path = Path(db_value)

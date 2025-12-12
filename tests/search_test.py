@@ -98,7 +98,7 @@ def main():
     )
     args = parser.parse_args()
 
-    config = ConfigManager(args.config).config
+    config = ConfigManager(args.config)._config
     db_path = Path(config.get("agentdraft_metadata_database", "media_frames.sqlite"))
     db = MediaDatabase(db_path)
 
